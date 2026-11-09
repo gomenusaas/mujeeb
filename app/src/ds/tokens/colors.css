@@ -1,0 +1,108 @@
+:root {
+  /* Brand violet */
+  --violet-50: oklch(0.97 0.02 292);
+  --violet-100: oklch(0.94 0.04 292);
+  --violet-200: oklch(0.88 0.08 292);
+  --violet-300: oklch(0.79 0.13 292);
+  --violet-400: oklch(0.68 0.19 292);
+  --violet-500: oklch(0.58 0.23 292);
+  --violet-600: oklch(0.51 0.24 292);
+  --violet-700: oklch(0.44 0.21 292);
+  --violet-800: oklch(0.36 0.17 292);
+  --violet-900: oklch(0.27 0.12 292);
+
+  /* Neutrals (cool, faintly violet) */
+  --neutral-0: oklch(1 0 0);
+  --neutral-25: oklch(0.985 0.004 285);
+  --neutral-50: oklch(0.97 0.006 285);
+  --neutral-100: oklch(0.94 0.008 285);
+  --neutral-200: oklch(0.895 0.01 285);
+  --neutral-300: oklch(0.81 0.013 285);
+  --neutral-400: oklch(0.68 0.016 285);
+  --neutral-500: oklch(0.56 0.018 285);
+  --neutral-600: oklch(0.45 0.02 285);
+  --neutral-700: oklch(0.36 0.022 285);
+  --neutral-800: oklch(0.27 0.022 285);
+  --neutral-900: oklch(0.2 0.02 285);
+
+  /* Category palette — equal lightness & chroma, varied hue */
+  --cat-coral-50: oklch(0.965 0.03 28);
+  --cat-coral-100: oklch(0.925 0.06 28);
+  --cat-coral-500: oklch(0.66 0.16 28);
+  --cat-coral-600: oklch(0.56 0.17 28);
+  --cat-coral-800: oklch(0.38 0.1 28);
+  --cat-amber-50: oklch(0.965 0.03 72);
+  --cat-amber-100: oklch(0.925 0.06 72);
+  --cat-amber-500: oklch(0.74 0.15 72);
+  --cat-amber-600: oklch(0.6 0.14 72);
+  --cat-amber-800: oklch(0.38 0.1 72);
+  --cat-green-50: oklch(0.965 0.03 150);
+  --cat-green-100: oklch(0.925 0.06 150);
+  --cat-green-500: oklch(0.66 0.16 150);
+  --cat-green-600: oklch(0.56 0.17 150);
+  --cat-green-800: oklch(0.38 0.1 150);
+  --cat-teal-50: oklch(0.965 0.03 190);
+  --cat-teal-100: oklch(0.925 0.06 190);
+  --cat-teal-500: oklch(0.66 0.16 190);
+  --cat-teal-600: oklch(0.56 0.17 190);
+  --cat-teal-800: oklch(0.38 0.1 190);
+  --cat-sky-50: oklch(0.965 0.03 240);
+  --cat-sky-100: oklch(0.925 0.06 240);
+  --cat-sky-500: oklch(0.66 0.16 240);
+  --cat-sky-600: oklch(0.56 0.17 240);
+  --cat-sky-800: oklch(0.38 0.1 240);
+  --cat-indigo-50: oklch(0.965 0.03 268);
+  --cat-indigo-100: oklch(0.925 0.06 268);
+  --cat-indigo-500: oklch(0.66 0.16 268);
+  --cat-indigo-600: oklch(0.56 0.17 268);
+  --cat-indigo-800: oklch(0.38 0.1 268);
+  --cat-violet-50: oklch(0.965 0.03 300);
+  --cat-violet-100: oklch(0.925 0.06 300);
+  --cat-violet-500: oklch(0.66 0.16 300);
+  --cat-violet-600: oklch(0.56 0.17 300);
+  --cat-violet-800: oklch(0.38 0.1 300);
+  --cat-pink-50: oklch(0.965 0.03 355);
+  --cat-pink-100: oklch(0.925 0.06 355);
+  --cat-pink-500: oklch(0.66 0.16 355);
+  --cat-pink-600: oklch(0.56 0.17 355);
+  --cat-pink-800: oklch(0.38 0.1 355);
+
+  /* Semantic */
+  --success: oklch(0.56 0.15 150);
+  --success-tint: oklch(0.95 0.04 150);
+  --warning: oklch(0.7 0.15 70);
+  --warning-tint: oklch(0.96 0.045 80);
+  --danger: oklch(0.57 0.2 25);
+  --danger-tint: oklch(0.95 0.03 25);
+  --info: oklch(0.56 0.15 240);
+  --info-tint: oklch(0.95 0.03 240);
+  --star: oklch(0.8 0.16 80);
+
+  /* Aliases */
+  --brand: var(--violet-600);
+  --brand-pressed: var(--violet-700);
+  --brand-tint: var(--violet-50);
+  --brand-tint-strong: var(--violet-100);
+  --brand-ink: var(--violet-700);
+  --accent: var(--cat-coral-600);
+  --accent-tint: var(--cat-coral-50);
+
+  --bg-app: var(--neutral-25);
+  --surface-card: var(--neutral-0);
+  --surface-sunken: var(--neutral-50);
+  --surface-inverse: var(--neutral-900);
+  --surface-brand: var(--violet-600);
+  --surface-scrim: oklch(0.2 0.02 285 / 0.45);
+
+  --text-primary: var(--neutral-900);
+  --text-secondary: var(--neutral-600);
+  --text-tertiary: var(--neutral-500);
+  --text-disabled: var(--neutral-400);
+  --text-on-brand: var(--neutral-0);
+  --text-link: var(--violet-600);
+
+  --border-subtle: var(--neutral-100);
+  --border-default: var(--neutral-200);
+  --border-strong: var(--neutral-300);
+  --focus-ring: oklch(0.58 0.23 292 / 0.35);
+}

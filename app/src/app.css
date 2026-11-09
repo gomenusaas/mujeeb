@@ -1,0 +1,57 @@
+@import './ds/tokens/colors.css';
+@import './ds/tokens/typography.css';
+@import './ds/tokens/spacing.css';
+@import './ds/tokens/effects.css';
+@import './ds/tokens/base.css';
+
+/* MUJEEB category hues added on top of the Servly palette (from the design file). */
+:root {
+  --cat-orange-50: oklch(0.97 0.03 50); --cat-orange-100: oklch(0.93 0.07 50); --cat-orange-500: oklch(0.7 0.18 50); --cat-orange-600: oklch(0.64 0.19 47); --cat-orange-700: oklch(0.52 0.16 45); --cat-orange-800: oklch(0.4 0.12 45);
+  --cat-gold-50: oklch(0.97 0.035 88); --cat-gold-100: oklch(0.94 0.08 88); --cat-gold-500: oklch(0.78 0.15 82); --cat-gold-600: oklch(0.66 0.14 78); --cat-gold-700: oklch(0.54 0.12 75); --cat-gold-800: oklch(0.42 0.09 72);
+  --cat-ruby-50: oklch(0.965 0.025 15); --cat-ruby-100: oklch(0.92 0.06 15); --cat-ruby-500: oklch(0.6 0.2 18); --cat-ruby-600: oklch(0.52 0.19 18); --cat-ruby-700: oklch(0.44 0.16 18); --cat-ruby-800: oklch(0.36 0.12 18);
+  --cat-steel-50: oklch(0.97 0.008 250); --cat-steel-100: oklch(0.92 0.018 250); --cat-steel-500: oklch(0.6 0.04 250); --cat-steel-600: oklch(0.5 0.045 250); --cat-steel-700: oklch(0.42 0.04 250); --cat-steel-800: oklch(0.33 0.035 250);
+  --cat-wood-50: oklch(0.97 0.02 60); --cat-wood-100: oklch(0.92 0.045 60); --cat-wood-500: oklch(0.6 0.1 55); --cat-wood-600: oklch(0.5 0.1 52); --cat-wood-700: oklch(0.42 0.085 50); --cat-wood-800: oklch(0.34 0.07 48);
+
+  /* Plus Jakarta Sans has no Arabic glyphs; IBM Plex Sans Arabic covers them. */
+  --font-sans: 'Plus Jakarta Sans', 'IBM Plex Sans Arabic', ui-sans-serif, system-ui, sans-serif;
+
+  /* Phone-frame mode: a fake 44px status bar; no home-indicator inset. */
+  --top-inset: 44px;
+  --safe-bottom: 0px;
+}
+
+html, body, #root { margin: 0; }
+body { background: #efedf3; font-family: var(--font-sans); color: var(--text-primary); }
+a { color: var(--brand); text-decoration: none; }
+a:hover { color: var(--brand-pressed); }
+button { -webkit-tap-highlight-color: transparent; }
+:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+input[type=search]::-webkit-search-cancel-button { -webkit-appearance: none; }
+
+/* Arabic script must not be letter-spaced. */
+[dir=rtl], [dir=rtl] * { letter-spacing: 0 !important; }
+[dir=rtl] .ds-mirror { transform: scaleX(-1); }
+
+.mj-s { scrollbar-width: none; }
+.mj-s::-webkit-scrollbar { display: none; }
+.mj-press:active { transform: scale(.97); }
+.mj-press-sm:active { transform: scale(.98); }
+
+/* ── Layout: phone frame with demo panel on wide screens ── */
+.mj-root { min-height: 100vh; display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 40px; padding: 40px 24px; box-sizing: border-box; }
+.mj-frame { position: relative; flex: none; width: 390px; height: 844px; border-radius: 44px; overflow: hidden; background: var(--bg-app); box-shadow: 0 0 0 10px #17151c, 0 30px 60px rgba(30, 20, 60, .25); }
+.mj-status { position: absolute; top: 0; inset-inline: 0; z-index: 20; height: 44px; display: flex; justify-content: space-between; align-items: center; padding: 0 30px; font: 600 15px var(--font-sans); pointer-events: none; }
+.mj-scroll { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; overflow-anchor: none; overscroll-behavior: contain; }
+.mj-panel { flex: 0 1 260px; display: flex; flex-direction: column; gap: 14px; padding-top: 8px; }
+
+/* ── Layout: full-screen on phones (and installed as a home-screen app) ── */
+@media (max-width: 520px), (display-mode: standalone) {
+  :root {
+    --top-inset: max(env(safe-area-inset-top), 12px);
+    --safe-bottom: env(safe-area-inset-bottom);
+  }
+  body { background: var(--bg-app); }
+  .mj-root { display: block; padding: 0; min-height: 0; }
+  .mj-frame { width: 100%; height: 100dvh; border-radius: 0; box-shadow: none; }
+  .mj-status, .mj-panel { display: none; }
+}

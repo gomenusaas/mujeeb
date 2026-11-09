@@ -1,0 +1,31 @@
+:root {
+  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --fw-regular: 400; /* @kind other */ --fw-medium: 500; /* @kind other */ --fw-semibold: 600; /* @kind other */ --fw-bold: 700; /* @kind other */ --fw-extrabold: 800; /* @kind other */
+
+  /* size / line-height pairs (mobile, px) */
+  --fs-display: 32px; --lh-display: 38px;
+  --fs-h1: 26px; --lh-h1: 32px;
+  --fs-h2: 22px; --lh-h2: 28px;
+  --fs-h3: 18px; --lh-h3: 24px;
+  --fs-title: 16px; --lh-title: 22px;
+  --fs-body: 15px; --lh-body: 22px;
+  --fs-body-sm: 13px; --lh-body-sm: 18px;
+  --fs-caption: 12px; --lh-caption: 16px;
+  --fs-overline: 11px; --lh-overline: 14px;
+  --ls-tight: -0.02em; --ls-snug: -0.01em; --ls-wide: 0.08em;
+
+  /* Semantic font shorthands */
+  --type-display: var(--fw-extrabold) var(--fs-display)/var(--lh-display) var(--font-sans);
+  --type-h1: var(--fw-extrabold) var(--fs-h1)/var(--lh-h1) var(--font-sans);
+  --type-h2: var(--fw-bold) var(--fs-h2)/var(--lh-h2) var(--font-sans);
+  --type-h3: var(--fw-bold) var(--fs-h3)/var(--lh-h3) var(--font-sans);
+  --type-title: var(--fw-bold) var(--fs-title)/var(--lh-title) var(--font-sans);
+  --type-body: var(--fw-regular) var(--fs-body)/var(--lh-body) var(--font-sans);
+  --type-body-strong: var(--fw-semibold) var(--fs-body)/var(--lh-body) var(--font-sans);
+  --type-body-sm: var(--fw-medium) var(--fs-body-sm)/var(--lh-body-sm) var(--font-sans);
+  --type-caption: var(--fw-semibold) var(--fs-caption)/var(--lh-caption) var(--font-sans);
+  --type-overline: var(--fw-bold) var(--fs-overline)/var(--lh-overline) var(--font-sans);
+  --type-mono: var(--fw-medium) 12px/16px var(--font-mono);
+}
