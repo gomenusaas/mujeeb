@@ -17,7 +17,7 @@
     ['تلميع الرخام', 'Marble Polishing', 'تلميع الرخام', 'Marble polish', 'sparkles'],
     ['خدمات السيارات', 'Automotive Services', 'سيارات', 'Automotive', 'car'],
     ['خدمات النقل', 'Transportation Services', 'نقل', 'Transport', 'truck'],
-    ['أعمال التكييف والتبريد', 'Air Conditioning & Refrigeration', 'تكييف وتبريد', 'AC & cooling', 'snowflake'],
+    ['التكييف والتبريد', 'Air Conditioning & Refrigeration', 'تكييف وتبريد', 'AC & cooling', 'snowflake'],
     ['البيوت الذكية', 'Smart Home Systems', 'بيوت ذكية', 'Smart home', 'wifi'],
     ['استشارات هندسية', 'Engineering Consultancy', 'استشارات هندسية', 'Engineering', 'drafting-compass'],
     ['التطوير العقاري', 'Real Estate Development', 'تطوير عقاري', 'Real estate', 'building'],
@@ -135,7 +135,7 @@
 
   // Keep 10 categories only; remap old indices
   const MAP = { 0: 0, 16: 0, 14: 1, 3: 2, 4: 3, 1: 4, 2: 5, 19: 6, 18: 7, 8: 8, 6: 9 };
-  const NEW = [[0, 'مقاولات البناء واستشارات هندسية', 'Construction & Engineering Consultancy', 'مقاولات وهندسة', 'Construction'], [14, 'أعمال التكييف والتبريد', 'Air Conditioning & Refrigeration', 'تكييف وتبريد', 'AC & cooling'], [3, 'الكهرباء والطاقة', 'Electrical & Power Works', 'كهرباء وطاقة', 'Electrical & power'], [4, 'السباكة وشبكات المياه', 'Plumbing & Water Systems', 'سباكة', 'Plumbing'], [1, 'التصميم الداخلي والديكور', 'Interior Design & Decoration', 'تصميم داخلي', 'Interiors'], [2, 'الحدادة والألمنيوم والزجاج', 'Metal, Aluminum & Glass Works', 'حدادة وألمنيوم', 'Metal & glass'], [19, 'الكاميرات والأنظمة الأمنية والمراقبة', 'Cameras, Security & Surveillance', 'كاميرات ومراقبة', 'Security & CCTV'], [18, 'أنظمة الحريق والإنذار', 'Fire & Alarm Systems', 'حريق وإنذار', 'Fire & alarm'], [8, 'تصميم الحدائق', 'Garden Design', 'حدائق', 'Gardens'], [6, 'المطابخ والخزانات', 'Kitchens & Cabinets', 'مطابخ', 'Kitchens']];
+  const NEW = [[0, 'مقاولات البناء واستشارات هندسية', 'Construction & Engineering Consultancy', 'مقاولات وهندسة', 'Construction'], [14, 'التكييف والتبريد', 'Air Conditioning & Refrigeration', 'تكييف وتبريد', 'AC & cooling'], [3, 'الكهرباء والطاقة', 'Electrical & Power Works', 'كهرباء وطاقة', 'Electrical & power'], [4, 'السباكة وشبكات المياه', 'Plumbing & Water Systems', 'سباكة', 'Plumbing'], [1, 'التصميم الداخلي والديكور', 'Interior Design & Decoration', 'تصميم داخلي', 'Interiors'], [2, 'الحدادة والألمنيوم والزجاج', 'Metal, Aluminum & Glass Works', 'حدادة وألمنيوم', 'Metal & glass'], [19, 'الكاميرات والأنظمة الأمنية والمراقبة', 'Cameras, Security & Surveillance', 'كاميرات ومراقبة', 'Security & CCTV'], [18, 'أنظمة الحريق والإنذار', 'Fire & Alarm Systems', 'حريق وإنذار', 'Fire & alarm'], [8, 'تصميم الحدائق', 'Garden Design', 'حدائق', 'Gardens'], [6, 'المطابخ والخزانات', 'Kitchens & Cabinets', 'مطابخ', 'Kitchens']];
   const HUES10 = ['orange', 'teal', 'gold', 'sky', 'violet', 'steel', 'indigo', 'ruby', 'green', 'wood'];
   const CATS10 = NEW.map(([o, ar, en, sar, sen], i) => ({ ...CATS[o], i, ar, en, sar, sen, color: HUES10[i] }));
   const mc = x => (x in MAP ? MAP[x] : null);
