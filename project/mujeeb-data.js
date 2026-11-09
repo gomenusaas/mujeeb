@@ -17,7 +17,7 @@
     ['تلميع الرخام', 'Marble Polishing', 'تلميع الرخام', 'Marble polish', 'sparkles'],
     ['خدمات السيارات', 'Automotive Services', 'سيارات', 'Automotive', 'car'],
     ['خدمات النقل', 'Transportation Services', 'نقل', 'Transport', 'truck'],
-    ['التكييف والتبريد', 'Air Conditioning & Refrigeration', 'تكييف وتبريد', 'AC & cooling', 'snowflake'],
+    ['التكييف والتهوية', 'HVAC', 'تكييف وتهوية', 'HVAC', 'snowflake'],
     ['البيوت الذكية', 'Smart Home Systems', 'بيوت ذكية', 'Smart home', 'wifi'],
     ['استشارات هندسية', 'Engineering Consultancy', 'استشارات هندسية', 'Engineering', 'drafting-compass'],
     ['التطوير العقاري', 'Real Estate Development', 'تطوير عقاري', 'Real estate', 'building'],
@@ -125,7 +125,7 @@
       COMPANIES.push(C(id, ar, en, [c].concat(second), city[0], city[1], city[2], cov, pool[j % pool.length], {
         logo: 'assets/logos/' + id + '.png', since: 2004 + ((c + j * 3) % 19), verified: (c + j) % 4 !== 0, book: (c + j) % 5 !== 0,
         dar: 'شركة عُمانية متخصصة في ' + CATS[c].ar + '، تخدم عملاءها في ' + city[0] + ' وما حولها مع زيارة معاينة وعرض سعر مفصل.',
-        den: 'Omani company specialising in ' + CATS[c].en.toLowerCase() + ', serving ' + city[1] + ' and nearby areas with a site visit and a detailed quotation.',
+        den: 'Omani company specialising in ' + (/^[A-Z]+$/.test(CATS[c].en) ? CATS[c].en : CATS[c].en.toLowerCase()) + ', serving ' + city[1] + ' and nearby areas with a site visit and a detailed quotation.',
         branches: [[city[0], city[1], true]],
       }));
       SVC[c].forEach((s, k) => SERVICES.push(S('s' + id + '-' + k, id, c, s[0], s[1], [pool[(j + k) % pool.length], pool[(j + k + 1) % pool.length]], s[0] + ' من ' + ar + '. نبدأ بزيارة للموقع ثم نرسل لك عرض سعر واضح.', s[1] + ' by ' + en + '. We start with a site visit, then send you a clear quotation.')));
@@ -135,7 +135,7 @@
 
   // Keep 10 categories only; remap old indices
   const MAP = { 0: 0, 16: 0, 14: 1, 3: 2, 4: 3, 1: 4, 2: 5, 19: 6, 18: 7, 8: 8, 6: 9 };
-  const NEW = [[0, 'مقاولات البناء واستشارات هندسية', 'Construction & Engineering Consultancy', 'مقاولات وهندسة', 'Construction'], [14, 'التكييف والتبريد', 'Air Conditioning & Refrigeration', 'تكييف وتبريد', 'AC & cooling'], [3, 'الكهرباء والطاقة', 'Electrical & Power Works', 'كهرباء وطاقة', 'Electrical & power'], [4, 'السباكة وشبكات المياه', 'Plumbing & Water Systems', 'سباكة', 'Plumbing'], [1, 'التصميم الداخلي والديكور', 'Interior Design & Decoration', 'تصميم داخلي', 'Interiors'], [2, 'الحدادة والألمنيوم والزجاج', 'Metal, Aluminum & Glass Works', 'حدادة وألمنيوم', 'Metal & glass'], [19, 'الكاميرات والأنظمة الأمنية والمراقبة', 'Cameras, Security & Surveillance', 'كاميرات ومراقبة', 'Security & CCTV'], [18, 'أنظمة الحريق والإنذار', 'Fire & Alarm Systems', 'حريق وإنذار', 'Fire & alarm'], [8, 'تصميم الحدائق', 'Garden Design', 'حدائق', 'Gardens'], [6, 'المطابخ والخزانات', 'Kitchens & Cabinets', 'مطابخ', 'Kitchens']];
+  const NEW = [[0, 'مقاولات البناء واستشارات هندسية', 'Construction & Engineering Consultancy', 'مقاولات وهندسة', 'Construction'], [14, 'التكييف والتهوية', 'HVAC', 'تكييف وتهوية', 'HVAC'], [3, 'الكهرباء والطاقة', 'Electrical & Power Works', 'كهرباء وطاقة', 'Electrical & power'], [4, 'السباكة وشبكات المياه', 'Plumbing & Water Systems', 'سباكة', 'Plumbing'], [1, 'التصميم الداخلي والديكور', 'Interior Design & Decoration', 'تصميم داخلي', 'Interiors'], [2, 'الحدادة والألمنيوم والزجاج', 'Metal, Aluminum & Glass Works', 'حدادة وألمنيوم', 'Metal & glass'], [19, 'الكاميرات والأنظمة الأمنية والمراقبة', 'Cameras, Security & Surveillance', 'كاميرات ومراقبة', 'Security & CCTV'], [18, 'أنظمة الحريق والإنذار', 'Fire & Alarm Systems', 'حريق وإنذار', 'Fire & alarm'], [8, 'تصميم الحدائق', 'Garden Design', 'حدائق', 'Gardens'], [6, 'المطابخ والخزانات', 'Kitchens & Cabinets', 'مطابخ', 'Kitchens']];
   const HUES10 = ['orange', 'teal', 'gold', 'sky', 'violet', 'steel', 'indigo', 'ruby', 'green', 'wood'];
   const CATS10 = NEW.map(([o, ar, en, sar, sen], i) => ({ ...CATS[o], i, ar, en, sar, sen, color: HUES10[i] }));
   const mc = x => (x in MAP ? MAP[x] : null);
