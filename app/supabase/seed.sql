@@ -10,7 +10,7 @@ insert into public.locations (id, name_ar, name_en, sort_order) values
 insert into public.categories (id, name_ar, name_en, short_ar, short_en, icon, color, art_url, sort_order) values
   (0, 'مقاولات البناء واستشارات هندسية', 'Construction & Engineering Consultancy', 'مقاولات وهندسة', 'Construction', 'building-2', 'orange', 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Building%20construction/3D/building_construction_3d.png', 0),
   (1, 'أعمال التكييف والتبريد', 'Air Conditioning & Refrigeration', 'تكييف وتبريد', 'AC & cooling', 'snowflake', 'teal', 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Snowflake/3D/snowflake_3d.png', 1),
-  (2, 'أعمال الكهرباء والطاقة', 'Electrical & Power Works', 'كهرباء وطاقة', 'Electrical & power', 'zap', 'gold', 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Light%20bulb/3D/light_bulb_3d.png', 2),
+  (2, 'الكهرباء والطاقة', 'Electrical & Power Works', 'كهرباء وطاقة', 'Electrical & power', 'zap', 'gold', 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Light%20bulb/3D/light_bulb_3d.png', 2),
   (3, 'السباكة وشبكات المياه', 'Plumbing & Water Systems', 'سباكة', 'Plumbing', 'droplets', 'sky', 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Shower/3D/shower_3d.png', 3),
   (4, 'التصميم الداخلي والديكور', 'Interior Design & Decoration', 'تصميم داخلي', 'Interiors', 'lamp', 'violet', 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Couch%20and%20lamp/3D/couch_and_lamp_3d.png', 4),
   (5, 'الحدادة والألمنيوم والزجاج', 'Metal, Aluminum & Glass Works', 'حدادة وألمنيوم', 'Metal & glass', 'frame', 'steel', 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Window/3D/window_3d.png', 5),
