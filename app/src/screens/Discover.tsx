@@ -49,16 +49,7 @@ export function Home() {
         </div>
       </div>
 
-      <HScroll>
-        {promos.map(([tar, ten, color, image, id]) => (
-          <div key={id} style={{ flex: 'none', width: 'min(350px, calc(100vw - 40px))', scrollSnapAlign: 'start' }}>
-            <PromoBanner eyebrow={t.sponsored} title={ar ? tar : ten} cta={t.viewOffer} color={color} imageLabel={image} onClick={() => a.go('company', { id })} />
-          </div>
-        ))}
-      </HScroll>
-
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <div style={{ padding: '0 20px' }}><SectionHeader title={t.categories} action={t.viewAll + ' (' + h.num(catalog.cats.length) + ')'} onAction={() => a.setTab('categories')} /></div>
         <div className="mj-s" style={{ display: 'grid', gridTemplateRows: 'repeat(2,auto)', gridAutoFlow: 'column', gridAutoColumns: 'calc(100% - 64px)', gap: 10, overflowX: 'auto', scrollSnapType: 'x mandatory', scrollPaddingInline: 20, padding: '4px 20px 12px', margin: '-4px 0 -12px', scrollbarWidth: 'none' }}>
           {featCats.map(c => (
             <button key={c.i} type="button" className="mj-press-sm" onClick={() => a.go('listing', { cat: c.i })}
@@ -72,6 +63,14 @@ export function Home() {
           ))}
         </div>
       </div>
+
+      <HScroll>
+        {promos.map(([tar, ten, color, image, id]) => (
+          <div key={id} style={{ flex: 'none', width: 'min(350px, calc(100vw - 40px))', scrollSnapAlign: 'start' }}>
+            <PromoBanner eyebrow={t.sponsored} title={ar ? tar : ten} cta={t.viewOffer} color={color} imageLabel={image} onClick={() => a.go('company', { id })} />
+          </div>
+        ))}
+      </HScroll>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div style={{ padding: '0 20px' }}><SectionHeader title={t.featuredCo} action={t.seeAll} onAction={() => a.go('listing')} /></div>
