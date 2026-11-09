@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/servly-design-system-94552060-1a3d-44c6-97e0-97a8c7fb28b8/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/servly-design-system-94552060-1a3d-44c6-97e0-97a8c7fb28b8/tokens/colors.css">
+<link rel="stylesheet" href="_ds/servly-design-system-94552060-1a3d-44c6-97e0-97a8c7fb28b8/tokens/typography.css">
+<link rel="stylesheet" href="_ds/servly-design-system-94552060-1a3d-44c6-97e0-97a8c7fb28b8/tokens/spacing.css">
+<link rel="stylesheet" href="_ds/servly-design-system-94552060-1a3d-44c6-97e0-97a8c7fb28b8/tokens/effects.css">
+<link rel="stylesheet" href="_ds/servly-design-system-94552060-1a3d-44c6-97e0-97a8c7fb28b8/tokens/base.css">
+<link rel="stylesheet" href="_ds/servly-design-system-94552060-1a3d-44c6-97e0-97a8c7fb28b8/styles.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
+<script src="_ds/servly-design-system-94552060-1a3d-44c6-97e0-97a8c7fb28b8/_ds_bundle.js"></script>
+<script src="mujeeb-data.js"></script>
+<script src="mujeeb-provider-data.js"></script>
+<style>
+:root{--font-sans:'Plus Jakarta Sans','IBM Plex Sans Arabic',ui-sans-serif,system-ui,sans-serif}
+body{margin:0;background:var(--bg-app);font-family:var(--font-sans);color:var(--text-primary)}
+a{color:var(--brand);text-decoration:none}a:hover{color:var(--brand-pressed)}
+[dir=rtl],[dir=rtl] *{letter-spacing:0 !important}
+[dir=rtl] button,[dir=rtl] label{text-align:start}
+[dir=rtl] svg:has(> path[d="m9 18 6-6-6-6"]),[dir=rtl] svg:has(> path[d="m12 19-7-7 7-7"]),[dir=rtl] svg:has(> path[d="m12 5 7 7-7 7"]){transform:scaleX(-1)}
+input,textarea,select{font-family:var(--font-sans)}
+</style>
+</helmet>
+<div dir="{{ dir }}" style="display:flex;min-height:100vh;background:var(--bg-app)">
+  <aside style="flex:none;width:256px;position:sticky;top:0;height:100vh;overflow-y:auto;scrollbar-width:thin;background:var(--surface-card);border-inline-end:1px solid var(--border-subtle);display:flex;flex-direction:column;gap:18px;padding:20px 14px;box-sizing:border-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:0 8px">
+      <span style="font:800 21px/24px var(--font-sans);letter-spacing:-.02em">{{ t.brand }}<span style="color:var(--brand)">.</span></span>
+      <x-import component-from-global-scope="ServlyDesignSystem_945520.Badge" tone="brand" size="sm" hint-size="auto,20px">{{ t.providerBadge }}</x-import>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:var(--radius-md);background:var(--surface-sunken)">
+      <x-import component-from-global-scope="ServlyDesignSystem_945520.Avatar" name="Qimmah" src="assets/logos/c4.png" size="{{ 40 }}" verified="{{ true }}" hint-size="40px,40px"></x-import>
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font:var(--type-body-sm);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.coName }}</span><span style="font:var(--type-caption);font-weight:500;color:var(--text-tertiary)">{{ t.planLine }}</span></div>
+    </div>
+    <nav style="display:flex;flex-direction:column;gap:14px">
+      <sc-for list="{{ nav }}" as="g" hint-placeholder-count="4">
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <span style="font:var(--type-overline);text-transform:uppercase;letter-spacing:var(--ls-wide);color:var(--text-tertiary);padding:0 10px 4px">{{ g.label }}</span>
+          <sc-for list="{{ g.items }}" as="it" hint-placeholder-count="3">
+            <button type="button" onClick="{{ it.go }}" style="display:flex;align-items:center;gap:10px;height:38px;padding:0 10px;border:none;border-radius:var(--radius-sm);cursor:pointer;font:var(--type-body-sm);font-weight:{{ it.fw }};background:{{ it.bg }};color:{{ it.fg }};transition:background var(--dur-fast)" style-hover="background:var(--surface-sunken)">
+              <x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="{{ it.icon }}" size="{{ 18 }}" hint-size="18px,18px"></x-import>
+              <span style="flex:1">{{ it.label }}</span>
+              <sc-if value="{{ it.badge }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="ServlyDesignSystem_945520.Badge" tone="accent" size="sm" hint-size="auto,20px">{{ it.badge }}</x-import></sc-if>
+            </button>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+  </aside>
+  <main style="flex:1;min-width:0;display:flex;flex-direction:column">
+    <header style="position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:16px;height:68px;padding:0 32px;background:oklch(0.985 0.004 285 / 0.88);backdrop-filter:var(--blur-bar);-webkit-backdrop-filter:var(--blur-bar);box-shadow:0 1px 0 var(--border-subtle)">
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+        <span style="font:var(--type-caption);font-weight:500;color:var(--text-tertiary)">{{ crumb }}</span>
+        <span style="font:var(--type-h3)">{{ pageTitle }}</span>
+      </div>
+      <x-import component-from-global-scope="ServlyDesignSystem_945520.SegmentedControl" options="{{ langOpts }}" value="{{ lang }}" onChange="{{ setLang }}" style="width:180px" hint-size="180px,46px"></x-import>
+      <x-import component-from-global-scope="ServlyDesignSystem_945520.IconButton" icon="bell" dot="{{ true }}" onClick="{{ goNotifs }}" hint-size="44px,44px"></x-import>
+      <x-import component-from-global-scope="ServlyDesignSystem_945520.Avatar" name="Khalid Rawahi" size="{{ 40 }}" hint-size="40px,40px"></x-import>
+    </header>
+    <div style="flex:1;padding:28px 32px 48px;max-width:1280px;width:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+      <sc-if value="{{ is.dashboard }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px">
+          <div style="display:flex;flex-direction:column;gap:2px"><span style="font:var(--type-h1)">{{ t.hello }}</span><span style="font:var(--type-body-sm);color:var(--text-secondary)">{{ t.last14 }} · {{ t.vsPrev }}</span></div>
+        </div>
+        <div style="position:relative;overflow:hidden;display:flex;flex-wrap:wrap;align-items:center;gap:16px;padding:20px 24px;border-radius:var(--radius-card);background:var(--brand);color:#fff">
+          <span style="position:absolute;inset-inline-end:-40px;top:-60px;width:200px;height:200px;border-radius:50%;background:oklch(1 0 0 / .08)"></span>
+          <span style="position:relative;width:48px;height:48px;border-radius:var(--radius-tile);background:oklch(1 0 0 / .16);display:flex;align-items:center;justify-content:center"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="gem" size="{{ 24 }}" hint-size="24px,24px"></x-import></span>
+          <div style="position:relative;flex:1 1 260px;display:flex;flex-direction:column;gap:2px"><span style="font:var(--type-title)">{{ t.trialTitle }}</span><span style="font:var(--type-body-sm);opacity:.9">{{ t.trialBody }}</span></div>
+          <x-import component-from-global-scope="ServlyDesignSystem_945520.Button" variant="outline" onClick="{{ toMembership }}" style="position:relative" hint-size="auto,44px">{{ t.choosePlan }}</x-import>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px">
+          <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="8">
+            <div style="display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm)">
+              <div style="display:flex;align-items:center;justify-content:space-between"><span style="width:36px;height:36px;border-radius:10px;background:{{ k.bg }};color:{{ k.fg }};display:flex;align-items:center;justify-content:center"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="{{ k.icon }}" size="{{ 18 }}" hint-size="18px,18px"></x-import></span><span style="font:var(--type-caption);color:{{ k.dc }}" dir="ltr">{{ k.d }}</span></div>
+              <div style="display:flex;flex-direction:column;gap:2px"><span style="font:var(--type-h2)">{{ k.val }}</span><span style="font:var(--type-body-sm);color:var(--text-secondary)">{{ k.label }}</span></div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px">
+          <div style="display:flex;flex-direction:column;gap:16px;padding:20px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm)">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="font:var(--type-title)">{{ t.viewsChart }}</span><span style="font:var(--type-caption);font-weight:500;color:var(--text-tertiary)">{{ t.clickNote }}</span></div>
+            <div style="display:flex;align-items:flex-end;gap:6px;height:180px" dir="ltr">
+              <sc-for list="{{ bars }}" as="b" hint-placeholder-count="14">
+                <div style="flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px"><div style="width:100%;height:{{ b.h }};border-radius:6px 6px 2px 2px;background:{{ b.bg }}" title="{{ b.n }}"></div><span style="font:var(--type-caption);font-size:10px;font-weight:500;color:var(--text-tertiary)">{{ b.lbl }}</span></div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
+            <sc-for list="{{ miniStats }}" as="m" hint-placeholder-count="4">
+              <div style="display:flex;flex-direction:column;justify-content:space-between;gap:10px;padding:16px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm)"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="{{ m.i }}" size="{{ 20 }}" color="var(--brand)" hint-size="20px,20px"></x-import><div style="display:flex;flex-direction:column"><span style="font:var(--type-h2)">{{ m.n }}</span><span style="font:var(--type-body-sm);color:var(--text-secondary)">{{ m.l }}</span></div></div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px">
+          <div style="display:flex;flex-direction:column;gap:12px;padding:20px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm)">
+            <x-import component-from-global-scope="ServlyDesignSystem_945520.SectionHeader" title="{{ t.newRequests }}" action="{{ t.seeAll }}" onAction="{{ toQuotes }}" hint-size="100%,28px"></x-import>
+            <sc-for list="{{ dashRfqs }}" as="r" hint-placeholder-count="2">
+              <button type="button" onClick="{{ r.go }}" style="display:flex;align-items:center;gap:12px;padding:12px;border:none;border-radius:var(--radius-md);background:var(--surface-sunken);cursor:pointer;font-family:var(--font-sans)">
+                <x-import component-from-global-scope="ServlyDesignSystem_945520.Avatar" name="{{ r.cust }}" size="{{ 40 }}" hint-size="40px,40px"></x-import>
+                <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font:var(--type-body-strong);color:var(--text-primary)">{{ r.title }}</span><span style="font:var(--type-caption);font-weight:500;color:var(--text-tertiary)">{{ r.cust }} · {{ r.loc }} · {{ r.date }}</span></span>
+                <x-import component-from-global-scope="ServlyDesignSystem_945520.Badge" tone="{{ r.b.tone }}" size="sm" hint-size="auto,20px">{{ r.b.label }}</x-import>
+              </button>
+            </sc-for>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px;padding:20px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm)">
+            <x-import component-from-global-scope="ServlyDesignSystem_945520.SectionHeader" title="{{ t.upcoming }}" action="{{ t.seeAll }}" onAction="{{ toBookings }}" hint-size="100%,28px"></x-import>
+            <sc-for list="{{ dashBks }}" as="b" hint-placeholder-count="3">
+              <div style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:var(--radius-md);background:var(--surface-sunken)">
+                <span style="width:40px;height:40px;border-radius:12px;background:var(--cat-amber-100);color:var(--cat-amber-600);display:flex;align-items:center;justify-content:center"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="calendar" size="{{ 18 }}" hint-size="18px,18px"></x-import></span>
+                <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font:var(--type-body-strong)">{{ b.p }} · {{ b.cust }}</span><span style="font:var(--type-caption);font-weight:500;color:var(--text-tertiary)">{{ b.when }} · {{ b.loc }}</span></span>
+                <x-import component-from-global-scope="ServlyDesignSystem_945520.Badge" tone="{{ b.b.tone }}" size="sm" hint-size="auto,20px">{{ b.b.label }}</x-import>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ is.analytics }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px">
+          <div style="display:flex;flex-direction:column;gap:16px;padding:20px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm)">
+            <span style="font:var(--type-title)">{{ t.contactMix }}</span>
+            <sc-for list="{{ contactMix }}" as="c" hint-placeholder-count="5">
+              <div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between;font:var(--type-body-sm)"><span style="color:var(--text-secondary)">{{ c.l }}</span><span style="font-weight:700">{{ c.n }}</span></div><div style="height:8px;border-radius:8px;background:var(--neutral-100);overflow:hidden"><div style="height:100%;width:{{ c.w }};border-radius:8px;background:{{ c.bg }}"></div></div></div>
+            </sc-for>
+            <span style="display:flex;gap:6px;font:var(--type-caption);font-weight:500;color:var(--text-tertiary)"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="info" size="{{ 14 }}" hint-size="14px,14px"></x-import>{{ t.clickNote }}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px;padding:20px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm)">
+            <span style="font:var(--type-title)">{{ t.topServices }}</span>
+            <sc-for list="{{ topSvcs }}" as="x" hint-placeholder-count="4">
+              <div style="display:flex;align-items:center;gap:12px"><span style="flex:none;width:56px;aspect-ratio:4/3;border-radius:10px;overflow:hidden;background:var(--neutral-100)"><img src="{{ x.img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;transform:{{ x.tf }}"></span><span style="flex:1;font:var(--type-body-sm);font-weight:600">{{ x.title }}</span><span style="font:var(--type-body-sm);font-weight:700">{{ x.views }}</span></div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;padding:20px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm)">
+          <span style="font:var(--type-title)">{{ t.viewsChart }} · {{ t.last14 }}</span>
+          <div style="display:flex;align-items:flex-end;gap:8px;height:220px" dir="ltr">
+            <sc-for list="{{ bars }}" as="b" hint-placeholder-count="14">
+              <div style="flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px"><span style="font:var(--type-caption);font-size:10px;color:var(--text-secondary)">{{ b.n }}</span><div style="width:100%;height:{{ b.h }};border-radius:6px 6px 2px 2px;background:{{ b.bg }}"></div><span style="font:var(--type-caption);font-size:10px;font-weight:500;color:var(--text-tertiary)">{{ b.lbl }}</span></div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ is.library }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px">
+          <x-import component-from-global-scope="ServlyDesignSystem_945520.SegmentedControl" options="{{ mtabOpts }}" value="{{ mtab }}" onChange="{{ setMtab }}" style="width:420px;max-width:100%" hint-size="420px,46px"></x-import>
+          <span style="flex:1"></span>
+          <x-import component-from-global-scope="ServlyDesignSystem_945520.Button" iconLeft="upload" onClick="{{ upload }}" hint-size="auto,44px">{{ t.upload }}</x-import>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:16px;padding:16px 20px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm)">
+          <div style="flex:1 1 260px;display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;justify-content:space-between;font:var(--type-body-sm)"><span style="font-weight:700">{{ t.storageUsed }}</span><span style="color:var(--text-secondary)">{{ storage.used }} {{ t.of }} {{ storage.cap }} · {{ storage.rem }} {{ t.remaining }}</span></div>
+            <div style="height:8px;border-radius:8px;background:var(--neutral-100);overflow:hidden"><div style="height:100%;width:{{ storage.pct }};background:var(--brand);border-radius:8px"></div></div>
+          </div>
+          <div style="display:flex;gap:16px;font:var(--type-body-sm);color:var(--text-secondary)"><span style="display:flex;align-items:center;gap:6px"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="image" size="{{ 16 }}" hint-size="16px,16px"></x-import>{{ storage.imgs }} {{ t.images }}</span><span style="display:flex;align-items:center;gap:6px"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="video" size="{{ 16 }}" hint-size="16px,16px"></x-import>{{ storage.vids }} {{ t.videos }}</span></div>
+        </div>
+        <sc-if value="{{ hasUploads }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:10px;padding:16px 20px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm)">
+            <div style="display:flex;justify-content:space-between;align-items:center"><span style="font:var(--type-title)">{{ t.uploading }}</span><x-import component-from-global-scope="ServlyDesignSystem_945520.IconButton" icon="x" variant="plain" size="{{ 36 }}" onClick="{{ clearUploads }}" hint-size="36px,36px"></x-import></div>
+            <span style="font:var(--type-caption);font-weight:500;color:var(--text-tertiary)">{{ t.rules }}</span>
+            <sc-for list="{{ uploads }}" as="u" hint-placeholder-count="0">
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <div style="display:flex;align-items:center;gap:8px;font:var(--type-body-sm)"><span style="flex:1;font-weight:600" dir="ltr">{{ u.name }}</span><span style="color:var(--text-tertiary)">{{ u.size }}</span>
+                  <sc-if value="{{ u.ok }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="ServlyDesignSystem_945520.Badge" tone="success" size="sm" hint-size="auto,20px">{{ t.uploaded }}</x-import></sc-if>
+                  <sc-if value="{{ u.bad }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="ServlyDesignSystem_945520.Badge" tone="danger" size="sm" hint-size="auto,20px">{{ t.failed }}</x-import></sc-if>
+                  <sc-if value="{{ u.busy }}" hint-placeholder-val="{{ false }}"><span style="font:var(--type-caption);color:var(--brand)">{{ u.w }}</span></sc-if>
+                </div>
+                <div style="height:6px;border-radius:6px;background:var(--neutral-100);overflow:hidden"><div style="height:100%;width:{{ u.w }};background:{{ u.bar }};transition:width 240ms var(--ease-out)"></div></div>
+                <sc-if value="{{ u.bad }}" hint-placeholder-val="{{ false }}"><span style="font:var(--type-caption);font-weight:500;color:var(--danger)">{{ u.err }}</span></sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ mLib }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px">
+            <div style="flex:1 1 240px;max-width:340px"><x-import component-from-global-scope="ServlyDesignSystem_945520.SearchBar" placeholder="{{ t.search }}" value="{{ mq }}" onChange="{{ setMq }}" onFilter="{{ null }}" elevated="{{ false }}" hint-size="100%,52px"></x-import></div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px"><sc-for list="{{ mKinds }}" as="c" hint-placeholder-count="4"><x-import component-from-global-scope="ServlyDesignSystem_945520.Chip" size="sm" selected="{{ c.on }}" onClick="{{ c.go }}" hint-size="auto,32px">{{ c.label }}</x-import></sc-for></div>
+            <span style="flex:1"></span>
+            <x-import component-from-global-scope="ServlyDesignSystem_945520.SegmentedControl" options="{{ mSortOpts }}" value="{{ mSort }}" onChange="{{ setMSort }}" style="width:340px" hint-size="340px,46px"></x-import>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px">
+            <x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="folder" size="{{ 16 }}" color="var(--text-tertiary)" hint-size="16px,16px"></x-import>
+            <sc-for list="{{ mAlbChips }}" as="c" hint-placeholder-count="4"><x-import component-from-global-scope="ServlyDesignSystem_945520.Chip" size="sm" selected="{{ c.on }}" onClick="{{ c.go }}" hint-size="auto,32px">{{ c.label }}</x-import></sc-for>
+            <span style="flex:1"></span>
+            <span style="font:var(--type-caption);font-weight:500;color:var(--text-tertiary)">{{ mCount }}</span>
+            <x-import component-from-global-scope="ServlyDesignSystem_945520.Button" variant="ghost" size="sm" iconLeft="square-check" onClick="{{ toggleSelMode }}" hint-size="auto,36px">{{ t.select }}</x-import>
+          </div>
+          <sc-if value="{{ hasSel }}" hint-placeholder-val="{{ false }}">
+            <div style="position:sticky;top:80px;z-index:10;display:flex;align-items:center;gap:10px;padding:10px 12px 10px 16px;border-radius:var(--radius-pill);background:var(--surface-inverse);color:#fff;box-shadow:var(--shadow-lg)">
+              <span style="flex:1;font:var(--type-body-sm);font-weight:700">{{ selCount }}</span>
+              <x-import component-from-global-scope="ServlyDesignSystem_945520.Button" size="sm" variant="secondary" iconLeft="folder-plus" onClick="{{ bulkAlbum }}" hint-size="auto,36px">{{ t.addToAlbum }}</x-import>
+              <x-import component-from-global-scope="ServlyDesignSystem_945520.Button" size="sm" variant="danger" iconLeft="trash-2" onClick="{{ bulkDelete }}" hint-size="auto,36px">{{ t.del }}</x-import>
+              <x-import component-from-global-scope="ServlyDesignSystem_945520.Button" size="sm" variant="ghost" onClick="{{ clearSel }}" style="color:#fff" hint-size="auto,36px">{{ t.clearSel }}</x-import>
+            </div>
+          </sc-if>
+          <sc-if value="{{ mEmpty }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="ServlyDesignSystem_945520.EmptyState" icon="image-off" title="{{ t.notUsed }}" hint-size="100%,220px"></x-import></sc-if>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px">
+            <sc-for list="{{ mItems }}" as="m" hint-placeholder-count="8">
+              <div onClick="{{ m.click }}" style="display:flex;flex-direction:column;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm);overflow:hidden;cursor:pointer" style-hover="box-shadow:var(--shadow-md)">
+                <div style="position:relative;aspect-ratio:1/1;background:var(--neutral-100)">
+                  <img src="{{ m.img }}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block">
+                  <span style="position:absolute;inset:0;box-shadow:{{ m.ring }};pointer-events:none"></span>
+                  <sc-if value="{{ m.selMode }}" hint-placeholder-val="{{ false }}"><span onClick="{{ m.toggle }}" style="position:absolute;top:10px;inset-inline-start:10px;padding:4px;border-radius:9px;background:oklch(1 0 0 / .9)"><x-import component-from-global-scope="ServlyDesignSystem_945520.Checkbox" checked="{{ m.on }}" hint-size="22px,22px"></x-import></span></sc-if>
+                  <sc-if value="{{ m.isVid }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;bottom:10px;inset-inline-end:10px"><x-import component-from-global-scope="ServlyDesignSystem_945520.Badge" tone="dark" size="sm" icon="play" hint-size="auto,20px">{{ m.dur }}</x-import></span></sc-if>
+                </div>
+                <div style="padding:10px 12px 12px;display:flex;flex-direction:column;gap:4px">
+                  <span style="font:var(--type-body-sm);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" dir="ltr">{{ m.name }}</span>
+                  <span style="font:var(--type-caption);font-weight:500;color:var(--text-tertiary)" dir="ltr">{{ m.meta }}</span>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px"><span style="font:var(--type-caption);font-weight:500;color:var(--text-tertiary)">{{ m.date }}</span><x-import component-from-global-scope="ServlyDesignSystem_945520.Badge" tone="{{ m.usedTone }}" size="sm" hint-size="auto,20px">{{ m.usedLbl }}</x-import></div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <span style="display:flex;gap:8px;font:var(--type-body-sm);color:var(--text-secondary)"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="info" size="{{ 16 }}" color="var(--info)" hint-size="16px,16px"></x-import>{{ t.onlyHere }}</span>
+        </sc-if>
+        <sc-if value="{{ mAlb }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><span style="font:var(--type-body-sm);color:var(--text-secondary)">{{ t.privateNote }}</span><x-import component-from-global-scope="ServlyDesignSystem_945520.Button" variant="secondary" iconLeft="folder-plus" onClick="{{ newPrivAlbum }}" hint-size="auto,44px">{{ t.newAlbum }}</x-import></div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px">
+            <sc-for list="{{ privAlbums }}" as="a" hint-placeholder-count="4">
+              <div onClick="{{ a.go }}" style="display:flex;flex-direction:column;gap:12px;padding:12px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm);cursor:pointer">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;aspect-ratio:4/3;border-radius:var(--radius-md);overflow:hidden;background:var(--surface-sunken)">
+                  <sc-for list="{{ a.covers }}" as="c" hint-placeholder-count="4"><img src="{{ c.img }}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block"></sc-for>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="lock" size="{{ 14 }}" color="var(--text-tertiary)" hint-size="14px,14px"></x-import><span style="flex:1;font:var(--type-body-strong)">{{ a.name }}</span><span style="font:var(--type-caption);font-weight:500;color:var(--text-tertiary)">{{ a.n }}</span></div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ mSto }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:16px;padding:20px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm);max-width:640px">
+            <sc-for list="{{ stoRows }}" as="r" hint-placeholder-count="2">
+              <div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between;font:var(--type-body-sm)"><span style="font-weight:700">{{ r.l }} · {{ r.n }}</span><span style="color:var(--text-secondary)">{{ r.mb }}</span></div><div style="height:8px;border-radius:8px;background:var(--neutral-100);overflow:hidden"><div style="height:100%;width:{{ r.w }};background:var(--brand);border-radius:8px"></div></div></div>
+            </sc-for>
+            <span style="font:var(--type-body-sm);color:var(--text-secondary)">{{ t.countedOnce }}</span>
+          </div>
+        </sc-if>
+      </sc-if>
+      <sc-if value="{{ is.services }}" hint-placeholder-val="{{ false }}">
+        <sc-if value="{{ listSvc }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;justify-content:flex-end"><x-import component-from-global-scope="ServlyDesignSystem_945520.Button" iconLeft="plus" onClick="{{ newSvc }}" hint-size="auto,44px">{{ t.newService }}</x-import></div>
+          <div style="display:flex;flex-direction:column;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm);overflow:hidden">
+            <sc-for list="{{ svcRows }}" as="x" hint-placeholder-count="3">
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:16px;padding:14px 18px;border-bottom:1px solid var(--border-subtle)">
+                <span style="flex:none;width:96px;aspect-ratio:4/3;border-radius:var(--radius-md);overflow:hidden;background:var(--neutral-100)"><img src="{{ x.img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;transform:{{ x.tf }}"></span>
+                <span style="flex:1 1 200px;display:flex;flex-direction:column;gap:3px"><span style="font:var(--type-title)">{{ x.title }}</span><span style="font:var(--type-body-sm);color:var(--text-secondary)">{{ x.cat }} · {{ x.n }} · {{ x.views }}</span></span>
+                <x-import component-from-global-scope="ServlyDesignSystem_945520.Badge" tone="{{ x.pubTone }}" size="sm" hint-size="auto,20px">{{ x.pubLbl }}</x-import>
+                <x-import component-from-global-scope="ServlyDesignSystem_945520.Switch" checked="{{ x.pub }}" onChange="{{ x.toggle }}" hint-size="50px,30px"></x-import>
+                <x-import component-from-global-scope="ServlyDesignSystem_945520.Button" variant="outline" size="sm" iconLeft="pencil" onClick="{{ x.edit }}" hint-size="auto,36px">{{ t.edit }}</x-import>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ editingSvc }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px">
+            <x-import component-from-global-scope="ServlyDesignSystem_945520.Button" variant="ghost" iconLeft="arrow-left" onClick="{{ esCancel }}" hint-size="auto,44px">{{ t.back }}</x-import>
+            <span style="flex:1"></span>
+            <x-import component-from-global-scope="ServlyDesignSystem_945520.Switch" label="{{ t.published }}" checked="{{ esPub }}" onChange="{{ esSetPub }}" style="gap:10px" hint-size="140px,30px"></x-import>
+            <x-import component-from-global-scope="ServlyDesignSystem_945520.Button" variant="outline" iconLeft="eye" onClick="{{ esPreview }}" hint-size="auto,44px">{{ t.previewPage }}</x-import>
+            <x-import component-from-global-scope="ServlyDesignSystem_945520.Button" iconLeft="check" onClick="{{ esSave }}" hint-size="auto,44px">{{ t.save }}</x-import>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px;align-items:start">
+            <div style="display:flex;flex-direction:column;gap:16px;padding:20px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm)">
+              <x-import component-from-global-scope="ServlyDesignSystem_945520.TextField" label="{{ t.titleAr }}" value="{{ es.ar }}" onChange="{{ esOn.ar }}" hint-size="100%,80px"></x-import>
+              <x-import component-from-global-scope="ServlyDesignSystem_945520.TextField" label="{{ t.titleEn }}" value="{{ es.en }}" onChange="{{ esOn.en }}" hint-size="100%,80px"></x-import>
+              <div style="display:flex;flex-direction:column;gap:8px"><span style="font:var(--type-body-sm);font-weight:600">{{ t.category }}</span><div style="display:flex;flex-wrap:wrap;gap:8px"><sc-for list="{{ esCats }}" as="c" hint-placeholder-count="2"><x-import component-from-global-scope="ServlyDesignSystem_945520.Chip" selected="{{ c.on }}" onClick="{{ c.go }}" hint-size="auto,38px">{{ c.label }}</x-import></sc-for></div><span style="font:var(--type-caption);font-weight:500;color:var(--text-tertiary)">{{ t.catNote }}</span></div>
+              <x-import component-from-global-scope="ServlyDesignSystem_945520.TextField" label="{{ t.descAr }}" multiline="{{ true }}" value="{{ es.dar }}" onChange="{{ esOn.dar }}" hint-size="100%,120px"></x-import>
+              <x-import component-from-global-scope="ServlyDesignSystem_945520.TextField" label="{{ t.descEn }}" multiline="{{ true }}" value="{{ es.den }}" onChange="{{ esOn.den }}" hint-size="100%,120px"></x-import>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:16px">
+              <div style="display:flex;flex-direction:column;gap:12px;padding:20px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm)">
+                <div style="display:flex;justify-content:space-between;align-items:center"><span style="font:var(--type-title)">{{ t.coverImage }}</span><x-import component-from-global-scope="ServlyDesignSystem_945520.Badge" tone="neutral" size="sm" hint-size="auto,20px">4:3</x-import></div>
+                <div style="position:relative;aspect-ratio:4/3;border-radius:var(--radius-md);overflow:hidden;background:var(--surface-sunken)">
+                  <sc-if value="{{ esHasCover }}" hint-placeholder-val="{{ true }}"><img src="{{ esCover.img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;transform:{{ esCover.tf }}"></sc-if>
+                  <sc-if value="{{ esNoCover }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="ServlyDesignSystem_945520.ImageSlot" label="4:3 cover" tone="violet" hint-size="100%,100%"></x-import></sc-if>
+                </div>
+                <div style="display:flex;gap:10px"><x-import component-from-global-scope="ServlyDesignSystem_945520.Button" variant="secondary" iconLeft="images" onClick="{{ esPickCover }}" style="flex:1" hint-size="100%,44px">{{ t.chooseLib }}</x-import><x-import component-from-global-scope="ServlyDesignSystem_945520.Button" variant="outline" iconLeft="crop" onClick="{{ esCrop }}" disabled="{{ esNoCover }}" hint-size="auto,44px">{{ t.adjustCrop }}</x-import></div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:12px;padding:20px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm)">
+                <div style="display:flex;justify-content:space-between;align-items:center"><span style="font:var(--type-title)">{{ t.gallery }}</span><x-import component-from-global-scope="ServlyDesignSystem_945520.Button" variant="ghost" size="sm" iconLeft="plus" onClick="{{ esPickGallery }}" hint-size="auto,36px">{{ t.addFromLib }}</x-import></div>
+                <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">
+                  <sc-for list="{{ esGallery }}" as="g" hint-placeholder-count="3">
+                    <div style="position:relative;aspect-ratio:4/3;border-radius:var(--radius-sm);overflow:hidden;background:var(--neutral-100)">
+                      <img src="{{ g.img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;transform:{{ g.tf }}">
+                      <sc-if value="{{ g.isVid }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;bottom:6px;inset-inline-start:6px"><x-import component-from-global-scope="ServlyDesignSystem_945520.Badge" tone="dark" size="sm" icon="play" hint-size="auto,20px">{{ g.dur }}</x-import></span></sc-if>
+                      <span style="position:absolute;top:4px;inset-inline-end:4px;display:flex;gap:4px">
+                        <x-import component-from-global-scope="ServlyDesignSystem_945520.IconButton" icon="arrow-up" variant="glass" size="{{ 28 }}" onClick="{{ g.up }}" hint-size="28px,28px"></x-import>
+                        <x-import component-from-global-scope="ServlyDesignSystem_945520.IconButton" icon="crop" variant="glass" size="{{ 28 }}" onClick="{{ g.crop }}" hint-size="28px,28px"></x-import>
+                        <x-import component-from-global-scope="ServlyDesignSystem_945520.IconButton" icon="x" variant="glass" size="{{ 28 }}" onClick="{{ g.del }}" hint-size="28px,28px"></x-import>
+                      </span>
+                    </div>
+                  </sc-for>
+                </div>
+                <span style="display:flex;gap:6px;font:var(--type-caption);font-weight:500;color:var(--text-tertiary)"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="info" size="{{ 14 }}" hint-size="14px,14px"></x-import>{{ t.onlyHere }}</span>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+      </sc-if>
+      <sc-if value="{{ is.quotations }}" hint-placeholder-val="{{ false }}">
+        <sc-if value="{{ qList }}" hint-placeholder-val="{{ true }}">
+          <x-import component-from-global-scope="ServlyDesignSystem_945520.SegmentedControl" options="{{ qtabOpts }}" value="{{ qtab }}" onChange="{{ setQtab }}" style="max-width:620px" hint-size="620px,46px"></x-import>
+          <div style="display:grid;grid-template-columns:minmax(260px,360px) minmax(0,1fr);gap:16px;align-items:start">
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <sc-if value="{{ rfqEmpty }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="ServlyDesignSystem_945520.EmptyState" icon="inbox" title="{{ t.allReq }}" hint-size="100%,200px"></x-import></sc-if>
+              <sc-for list="{{ rfqList }}" as="r" hint-placeholder-count="3">
+                <button type="button" onClick="{{ r.go }}" style="display:flex;flex-direction:column;gap:8px;padding:14px;border:none;border-radius:var(--radius-card);background:{{ r.bg }};box-shadow:{{ r.ring }};cursor:pointer;font-family:var(--font-sans)">
+                  <span style="display:flex;justify-content:space-between;gap:8px;width:100%"><span style="font:var(--type-body-strong);color:var(--text-primary)">{{ r.title }}</span><x-import component-from-global-scope="ServlyDesignSystem_945520.Badge" tone="{{ r.b.tone }}" size="sm" hint-size="auto,20px">{{ r.b.label }}</x-import></span>
+                  <span style="font:var(--type-caption);font-weight:500;color:var(--text-secondary)">{{ r.cust }} · {{ r.loc }}</span>
+                  <span style="display:flex;justify-content:space-between;width:100%;font:var(--type-mono);font-size:11px;color:var(--text-tertiary)"><span>{{ r.id }}</span><span>{{ r.date }}</span></span>
+                </button>
+              </sc-for>
+            </div>
+            <sc-if value="{{ hasRq }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;flex-direction:column;gap:18px;padding:22px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm)">
+                <div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:12px">
+                  <div style="flex:1 1 240px;display:flex;flex-direction:column;gap:4px"><span style="font:var(--type-mono);color:var(--text-tertiary)">{{ rq.id }}</span><span style="font:var(--type-h2)">{{ rq.title }}</span><span style="font:var(--type-body-sm);color:var(--text-secondary)">{{ t.service }}: {{ rq.svc }} · {{ rq.date }}</span></div>
+                  <x-import component-from-global-scope="ServlyDesignSystem_945520.Badge" tone="{{ rq.b.tone }}" hint-size="auto,24px">{{ rq.b.label }}</x-import>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">
+                  <div style="display:flex;align-items:center;gap:10px;padding:12px;border-radius:var(--radius-md);background:var(--surface-sunken)"><x-import component-from-global-scope="ServlyDesignSystem_945520.Avatar" name="{{ rq.cust }}" size="{{ 36 }}" hint-size="36px,36px"></x-import><span style="display:flex;flex-direction:column"><span style="font:var(--type-caption);font-weight:500;color:var(--text-tertiary)">{{ t.customer }}</span><span style="font:var(--type-body-sm);font-weight:700">{{ rq.cust }}</span></span></div>
+                  <div style="display:flex;flex-direction:column;gap:2px;padding:12px;border-radius:var(--radius-md);background:var(--surface-sunken)"><span style="font:var(--type-caption);font-weight:500;color:var(--text-tertiary)">{{ t.location }}</span><span style="font:var(--type-body-sm);font-weight:700">{{ rq.loc }}</span></div>
+                  <div style="display:flex;flex-direction:column;gap:2px;padding:12px;border-radius:var(--radius-md);background:var(--surface-sunken)"><span style="font:var(--type-caption);font-weight:500;color:var(--text-tertiary)">{{ t.budget }}</span><span style="font:var(--type-body-sm);font-weight:700">{{ rq.budget }}</span></div>
+                  <div style="display:flex;flex-direction:column;gap:2px;padding:12px;border-radius:var(--radius-md);background:var(--surface-sunken)"><span style="font:var(--type-caption);font-weight:500;color:var(--text-tertiary)">{{ t.startPref }}</span><span style="font:var(--type-body-sm);font-weight:700">{{ rq.start }}</span></div>
+                </div>
+                <span style="font:var(--type-body);color:var(--text-secondary);text-wrap:pretty">{{ rq.desc }}</span>
+                <sc-if value="{{ rq.hasFiles }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-direction:column;gap:8px"><span style="font:var(--type-body-sm);font-weight:700">{{ t.attachments }}</span><div style="display:flex;flex-wrap:wrap;gap:8px"><sc-for list="{{ rq.files }}" as="f" hint-placeholder-count="2"><x-import component-from-global-scope="ServlyDesignSystem_945520.Chip" size="sm" icon="{{ f.icon }}" hint-size="auto,32px">{{ f.f }}</x-import></sc-for></div></div>
+                </sc-if>
+                <sc-if value="{{ rq.sent }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:var(--radius-md);background:var(--success-tint);font:var(--type-body-sm);color:var(--success)"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="circle-check" size="{{ 18 }}" hint-size="18px,18px"></x-import><span style="flex:1;font-weight:700">{{ t.sentQ }}</span><span style="font-weight:800">{{ rq.total }}</span></div>
+                </sc-if>
+                <div style="display:flex;flex-wrap:wrap;gap:10px;padding-top:6px;border-top:1px solid var(--border-subtle)">
+                  <sc-if value="{{ rq.open }}" hint-placeholder-val="{{ true }}">
+                    <x-import component-from-global-scope="ServlyDesignSystem_945520.Button" iconLeft="file-plus" onClick="{{ rqBuild }}" hint-size="auto,44px">{{ t.createQuote }}</x-import>
+                    <x-import component-from-global-scope="ServlyDesignSystem_945520.Button" variant="outline" iconLeft="upload" onClick="{{ rqPdf }}" hint-size="auto,44px">{{ t.uploadPdf }}</x-import>
+                    <x-import component-from-global-scope="ServlyDesignSystem_945520.Button" variant="secondary" iconLeft="circle-help" onClick="{{ rqInfo }}" hint-size="auto,44px">{{ t.requestInfo }}</x-import>
+                  </sc-if>
+                  <x-import component-from-global-scope="ServlyDesignSystem_945520.Button" variant="ghost" iconLeft="message-circle" onClick="{{ rqReply }}" hint-size="auto,44px">{{ t.reply }}</x-import>
+                  <sc-if value="{{ rq.open }}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="ServlyDesignSystem_945520.Button" variant="danger" onClick="{{ rqDecline }}" hint-size="auto,44px">{{ t.decline }}</x-import></sc-if>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+        <sc-if value="{{ qBuild }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px">
+            <x-import component-from-global-scope="ServlyDesignSystem_945520.Button" variant="ghost" iconLeft="arrow-left" onClick="{{ bdBack }}" hint-size="auto,44px">{{ t.back }}</x-import>
+            <span style="flex:1"></span>
+            <x-import component-from-global-scope="ServlyDesignSystem_945520.Button" variant="outline" onClick="{{ bdDraft }}" hint-size="auto,44px">{{ t.saveDraft }}</x-import>
+            <x-import component-from-global-scope="ServlyDesignSystem_945520.Button" iconLeft="send" onClick="{{ bdSend }}" hint-size="auto,44px">{{ t.sendQuote }}</x-import>
+          </div>
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,320px);gap:16px;align-items:start">
+            <div style="display:flex;flex-direction:column;gap:18px;padding:22px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm)">
+              <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px">
+                <div style="display:flex;align-items:center;gap:12px"><x-import component-from-global-scope="ServlyDesignSystem_945520.Avatar" name="Qimmah" src="assets/logos/c4.png" size="{{ 48 }}" hint-size="48px,48px"></x-import><span style="display:flex;flex-direction:column"><span style="font:var(--type-title)">{{ t.coName }}</span><span style="font:var(--type-caption);font-weight:500;color:var(--text-tertiary)">CR 1234567 · VATIN OM110000000</span></span></div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px"><span style="font:var(--type-mono)">{{ bd.no }}</span><span style="font:var(--type-caption);font-weight:500;color:var(--text-tertiary)">{{ bd.date }} · {{ bd.rfq }}</span></div>
+              </div>
+              <div style="padding:12px 14px;border-radius:var(--radius-md);background:var(--surface-sunken);font:var(--type-body-sm)"><span style="color:var(--text-tertiary)">{{ t.customer }}: </span><span style="font-weight:700">{{ bd.cust }}</span></div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div style="display:grid;grid-template-columns:minmax(0,1fr) 80px 110px 120px 36px;gap:8px;font:var(--type-caption);color:var(--text-tertiary);padding:0 4px"><span>{{ t.item }}</span><span>{{ t.qty }}</span><span>{{ t.unitPrice }}</span><span style="text-align:end">{{ t.amount }}</span><span></span></div>
+                <sc-for list="{{ bdLines }}" as="l" hint-placeholder-count="3">
+                  <div style="display:grid;grid-template-columns:minmax(0,1fr) 80px 110px 120px 36px;gap:8px;align-items:center">
+                    <input value="{{ l.name }}" onChange="{{ l.setName }}" style="height:42px;padding:0 12px;border:none;outline:none;border-radius:var(--radius-sm);box-shadow:inset 0 0 0 1.5px var(--border-default);font:var(--type-body-sm);font-weight:600;color:var(--text-primary);background:var(--surface-card);min-width:0">
+                    <input value="{{ l.qty }}" onChange="{{ l.setQty }}" inputmode="decimal" dir="ltr" style="height:42px;padding:0 10px;border:none;outline:none;border-radius:var(--radius-sm);box-shadow:inset 0 0 0 1.5px var(--border-default);font:var(--type-body-sm);color:var(--text-primary);background:var(--surface-card);min-width:0">
+                    <input value="{{ l.price }}" onChange="{{ l.setPrice }}" inputmode="decimal" dir="ltr" style="height:42px;padding:0 10px;border:none;outline:none;border-radius:var(--radius-sm);box-shadow:inset 0 0 0 1.5px var(--border-default);font:var(--type-body-sm);color:var(--text-primary);background:var(--surface-card);min-width:0">
+                    <span style="font:var(--type-body-sm);font-weight:700;text-align:end">{{ l.amt }}</span>
+                    <x-import component-from-global-scope="ServlyDesignSystem_945520.IconButton" icon="trash-2" variant="plain" size="{{ 36 }}" onClick="{{ l.del }}" hint-size="36px,36px"></x-import>
+                  </div>
+                </sc-for>
+                <div><x-import component-from-global-scope="ServlyDesignSystem_945520.Button" variant="ghost" size="sm" iconLeft="plus" onClick="{{ bdAdd }}" hint-size="auto,36px">{{ t.addLine }}</x-import></div>
+              </div>
+              <x-import component-from-global-scope="ServlyDesignSystem_945520.TextField" label="{{ t.terms }}" multiline="{{ true }}" value="{{ bd.terms }}" onChange="{{ bdTerms }}" hint-size="100%,120px"></x-import>
+              <x-import component-from-global-scope="ServlyDesignSystem_945520.TextField" label="{{ t.notes }}" multiline="{{ true }}" value="{{ bd.notes }}" onChange="{{ bdNotes }}" hint-size="100%,120px"></x-import>
+            </div>
+            <div style="position:sticky;top:88px;display:flex;flex-direction:column;gap:14px;padding:20px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm)">
+              <div style="display:flex;justify-content:space-between;font:var(--type-body-sm);color:var(--text-secondary)"><span>{{ t.subtotal }}</span><span style="color:var(--text-primary);font-weight:700">{{ bd.sub }}</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;font:var(--type-body-sm);color:var(--text-secondary)"><span>{{ t.discount }} ({{ t.omr }})</span><input value="{{ bd.disc }}" onChange="{{ bdDisc }}" dir="ltr" style="width:100px;height:38px;padding:0 10px;border:none;outline:none;border-radius:var(--radius-sm);box-shadow:inset 0 0 0 1.5px var(--border-default);font:var(--type-body-sm);color:var(--text-primary)"></div>
+              <x-import component-from-global-scope="ServlyDesignSystem_945520.Switch" label="{{ t.vat }}" checked="{{ bd.vatOn }}" onChange="{{ bdVat }}" hint-size="100%,30px"></x-import>
+              <div style="display:flex;justify-content:space-between;font:var(--type-body-sm);color:var(--text-secondary)"><span>{{ t.vat }}</span><span style="color:var(--text-primary);font-weight:700">{{ bd.vat }}</span></div>
+              <div style="height:1px;background:var(--border-default)"></div>
+              <div style="display:flex;justify-content:space-between;font:var(--type-h3)"><span>{{ t.total }}</span><span style="font-weight:800">{{ bd.total }}</span></div>
+              <div style="display:flex;flex-direction:column;gap:8px"><span style="font:var(--type-body-sm);font-weight:600">{{ t.validity }}</span><div style="display:flex;gap:8px"><sc-for list="{{ bdValid }}" as="c" hint-placeholder-count="3"><x-import component-from-global-scope="ServlyDesignSystem_945520.Chip" size="sm" selected="{{ c.on }}" onClick="{{ c.go }}" hint-size="auto,32px">{{ c.label }}</x-import></sc-for></div></div>
+              <span style="display:flex;gap:8px;font:var(--type-caption);font-weight:500;color:var(--text-tertiary)"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="info" size="{{ 14 }}" hint-size="14px,14px"></x-import>{{ t.qNote }}</span>
+            </div>
+          </div>
+        </sc-if>
+      </sc-if>
+      <sc-if value="{{ is.bookings }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:16px;padding:16px 20px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm)">
+          <x-import component-from-global-scope="ServlyDesignSystem_945520.Switch" label="{{ t.acceptBookings }}" checked="{{ acceptBk }}" onChange="{{ setAcceptBk }}" style="gap:14px" hint-size="220px,30px"></x-import>
+          <span style="flex:1 1 300px;display:flex;gap:8px;font:var(--type-body-sm);color:var(--text-secondary)"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="shield-check" size="{{ 16 }}" color="var(--success)" hint-size="16px,16px"></x-import>{{ t.globalOn }}</span>
+        </div>
+        <x-import component-from-global-scope="ServlyDesignSystem_945520.SegmentedControl" options="{{ btabOpts }}" value="{{ btab }}" onChange="{{ setBtab }}" style="max-width:520px" hint-size="520px,46px"></x-import>
+        <sc-if value="{{ bCal }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:12px;padding:20px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm);overflow-x:auto">
+            <div style="display:flex;justify-content:space-between"><span style="font:var(--type-title)">{{ t.weekOf }}</span><span style="font:var(--type-caption);font-weight:500;color:var(--text-tertiary)">{{ t.muscatTime }}</span></div>
+            <div style="display:grid;grid-template-columns:56px repeat(7,minmax(110px,1fr));gap:6px;min-width:860px">
+              <span></span>
+              <sc-for list="{{ calDays }}" as="d" hint-placeholder-count="7"><div style="display:flex;flex-direction:column;align-items:center;padding:6px 0"><span style="font:var(--type-caption);color:var(--text-tertiary)">{{ d.d }}</span><span style="font:var(--type-h3)">{{ d.n }}</span></div></sc-for>
+              <div style="display:flex;flex-direction:column"><sc-for list="{{ hours }}" as="h" hint-placeholder-count="11"><span style="height:52px;font:var(--type-caption);font-weight:500;color:var(--text-tertiary)" dir="ltr">{{ h.h }}</span></sc-for></div>
+              <sc-for list="{{ calDays }}" as="d" hint-placeholder-count="7">
+                <div style="position:relative;height:572px;border-radius:var(--radius-sm);background:{{ d.bg }};box-shadow:inset 0 0 0 1px var(--border-subtle);background-image:repeating-linear-gradient(to bottom,transparent 0 51px,var(--border-subtle) 51px 52px)">
+                  <sc-for list="{{ d.evs }}" as="e" hint-placeholder-count="0">
+                    <div style="position:absolute;inset-inline:4px;top:{{ e.top }};height:48px;padding:6px 8px;box-sizing:border-box;border-radius:8px;background:{{ e.bg }};color:{{ e.fg }};display:flex;flex-direction:column;gap:1px;overflow:hidden"><span style="font:var(--type-caption)">{{ e.t }} · {{ e.p }}</span><span style="font:var(--type-caption);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ e.cust }}</span></div>
+                  </sc-for>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ bReq }}" hint-placeholder-val="{{ false }}">
+          <sc-if value="{{ bkNone }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="ServlyDesignSystem_945520.EmptyState" icon="calendar-check" title="{{ t.requests }}" hint-size="100%,200px"></x-import></sc-if>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px">
+            <sc-for list="{{ bkPending }}" as="b" hint-placeholder-count="2">
+              <div style="display:flex;flex-direction:column;gap:14px;padding:16px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm)">
+                <div style="display:flex;align-items:center;gap:12px"><x-import component-from-global-scope="ServlyDesignSystem_945520.Avatar" name="{{ b.cust }}" size="{{ 44 }}" hint-size="44px,44px"></x-import><span style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font:var(--type-title)">{{ b.cust }}</span><span style="font:var(--type-body-sm);color:var(--text-secondary)">{{ b.p }}</span></span><x-import component-from-global-scope="ServlyDesignSystem_945520.Badge" tone="{{ b.b.tone }}" size="sm" hint-size="auto,20px">{{ b.b.label }}</x-import></div>
+                <div style="display:flex;flex-wrap:wrap;gap:16px;padding:10px 12px;border-radius:var(--radius-sm);background:var(--surface-sunken);font:var(--type-body-sm)"><span style="display:inline-flex;align-items:center;gap:6px"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="calendar" size="{{ 15 }}" color="var(--text-tertiary)" hint-size="15px,15px"></x-import>{{ b.when }}</span><span style="display:inline-flex;align-items:center;gap:6px"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="map-pin" size="{{ 15 }}" color="var(--text-tertiary)" hint-size="15px,15px"></x-import>{{ b.loc }}</span></div>
+                <span style="font:var(--type-mono);font-size:11px;color:var(--text-tertiary)">{{ b.id }}</span>
+                <sc-if value="{{ b.pending }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex;flex-wrap:wrap;gap:8px"><x-import component-from-global-scope="ServlyDesignSystem_945520.Button" size="sm" iconLeft="check" onClick="{{ b.accept }}" hint-size="auto,36px">{{ t.accept }}</x-import><x-import component-from-global-scope="ServlyDesignSystem_945520.Button" size="sm" variant="secondary" iconLeft="calendar-clock" onClick="{{ b.propose }}" hint-size="auto,36px">{{ t.propose }}</x-import><x-import component-from-global-scope="ServlyDesignSystem_945520.Button" size="sm" variant="danger" onClick="{{ b.reject }}" hint-size="auto,36px">{{ t.reject }}</x-import></div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ bAv }}" hint-placeholder-val="{{ false }}">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:16px;align-items:start">
+            <div style="display:flex;flex-direction:column;padding:8px 20px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm)">
+              <sc-for list="{{ availRows }}" as="a" hint-placeholder-count="7">
+                <div style="display:flex;align-items:center;gap:14px;min-height:56px;border-bottom:1px solid var(--border-subtle)"><span style="width:84px;font:var(--type-body-strong)">{{ a.d }}</span><span style="flex:1;font:var(--type-body-sm);color:var(--text-secondary)" dir="ltr">{{ a.txt }}</span><x-import component-from-global-scope="ServlyDesignSystem_945520.Switch" checked="{{ a.on }}" onChange="{{ a.set }}" hint-size="50px,30px"></x-import></div>
+              </sc-for>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:18px;padding:20px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm)">
+              <div style="display:flex;flex-direction:column;gap:8px"><span style="font:var(--type-body-sm);font-weight:600">{{ t.confirmMode }}</span><x-import component-from-global-scope="ServlyDesignSystem_945520.SegmentedControl" options="{{ bkModeOpts }}" value="{{ bkMode }}" onChange="{{ setBkMode }}" hint-size="100%,46px"></x-import></div>
+              <div style="display:flex;flex-direction:column;gap:8px"><span style="font:var(--type-body-sm);font-weight:600">{{ t.duration }}</span><div style="display:flex;gap:8px"><sc-for list="{{ durChips }}" as="c" hint-placeholder-count="3"><x-import component-from-global-scope="ServlyDesignSystem_945520.Chip" size="sm" selected="{{ c.on }}" onClick="{{ c.go }}" hint-size="auto,32px">{{ c.label }}</x-import></sc-for></div></div>
+              <div style="display:flex;flex-direction:column;gap:8px"><span style="font:var(--type-body-sm);font-weight:600">{{ t.buffer }}</span><div style="display:flex;gap:8px"><sc-for list="{{ bufChips }}" as="c" hint-placeholder-count="3"><x-import component-from-global-scope="ServlyDesignSystem_945520.Chip" size="sm" selected="{{ c.on }}" onClick="{{ c.go }}" hint-size="auto,32px">{{ c.label }}</x-import></sc-for></div></div>
+              <div style="display:flex;flex-direction:column;gap:8px"><span style="font:var(--type-body-sm);font-weight:600">{{ t.notice }}</span><div style="display:flex;gap:8px"><sc-for list="{{ noticeChips }}" as="c" hint-placeholder-count="3"><x-import component-from-global-scope="ServlyDesignSystem_945520.Chip" size="sm" selected="{{ c.on }}" onClick="{{ c.go }}" hint-size="auto,32px">{{ c.label }}</x-import></sc-for></div></div>
+              <div style="display:flex;flex-direction:column;gap:8px"><span style="font:var(--type-body-sm);font-weight:600">{{ t.capacity }}</span><div style="display:flex;gap:8px"><sc-for list="{{ capChips }}" as="c" hint-placeholder-count="3"><x-import component-from-global-scope="ServlyDesignSystem_945520.Chip" size="sm" selected="{{ c.on }}" onClick="{{ c.go }}" hint-size="auto,32px">{{ c.label }}</x-import></sc-for></div></div>
+            </div>
+          </div>
+        </sc-if>
+      </sc-if>
+      <sc-if value="{{ is.messages }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:minmax(240px,320px) minmax(0,1fr);height:calc(100vh - 150px);min-height:480px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm);overflow:hidden">
+          <div style="display:flex;flex-direction:column;border-inline-end:1px solid var(--border-subtle);overflow-y:auto">
+            <sc-for list="{{ convList }}" as="c" hint-placeholder-count="3">
+              <button type="button" onClick="{{ c.go }}" style="display:flex;gap:12px;align-items:center;padding:14px 16px;border:none;border-bottom:1px solid var(--border-subtle);background:{{ c.bg }};cursor:pointer;font-family:var(--font-sans)">
+                <x-import component-from-global-scope="ServlyDesignSystem_945520.Avatar" name="{{ c.name }}" size="{{ 44 }}" hint-size="44px,44px"></x-import>
+                <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="display:flex;justify-content:space-between;gap:8px"><span style="font:var(--type-body-strong);color:var(--text-primary)">{{ c.name }}</span><span style="font:var(--type-caption);font-weight:500;color:var(--text-tertiary)">{{ c.time }}</span></span><span style="font:var(--type-body-sm);color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.last }}</span><span style="font:var(--type-mono);font-size:10.5px;color:var(--text-tertiary)">{{ c.ref }}</span></span>
+                <sc-if value="{{ c.has }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="ServlyDesignSystem_945520.Badge" tone="accent" size="sm" hint-size="auto,20px">{{ c.unread }}</x-import></sc-if>
+              </button>
+            </sc-for>
+          </div>
+          <div style="display:flex;flex-direction:column;min-width:0;background:var(--bg-app)">
+            <div style="display:flex;align-items:center;gap:12px;padding:12px 18px;background:var(--surface-card);box-shadow:0 1px 0 var(--border-subtle)">
+              <x-import component-from-global-scope="ServlyDesignSystem_945520.Avatar" name="{{ cv.name }}" size="{{ 40 }}" online="{{ true }}" hint-size="40px,40px"></x-import>
+              <span style="flex:1;display:flex;flex-direction:column"><span style="font:var(--type-title)">{{ cv.name }}</span><span style="font:var(--type-mono);font-size:11px;color:var(--text-tertiary)">{{ cv.ref }}</span></span>
+              <x-import component-from-global-scope="ServlyDesignSystem_945520.Button" variant="outline" size="sm" iconLeft="user-plus" hint-size="auto,36px">{{ t.assign }}</x-import>
+              <x-import component-from-global-scope="ServlyDesignSystem_945520.Button" variant="ghost" size="sm" iconLeft="archive" hint-size="auto,36px">{{ t.archive }}</x-import>
+            </div>
+            <div style="flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:12px">
+              <sc-for list="{{ cvMsgs }}" as="m" hint-placeholder-count="3"><x-import component-from-global-scope="ServlyDesignSystem_945520.ChatBubble" mine="{{ m.mine }}" time="{{ m.time }}" hint-size="100%,56px">{{ m.text }}</x-import></sc-for>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:12px 14px;background:var(--surface-card);box-shadow:var(--shadow-up)">
+              <x-import component-from-global-scope="ServlyDesignSystem_945520.IconButton" icon="paperclip" variant="plain" hint-size="44px,44px"></x-import>
+              <input value="{{ draft }}" onChange="{{ setDraft }}" onKeyDown="{{ msgKey }}" placeholder="{{ t.typeMsg }}" style="flex:1;min-width:0;height:44px;padding:0 16px;border:none;outline:none;border-radius:var(--radius-pill);background:var(--surface-sunken);font:var(--type-body);color:var(--text-primary)">
+              <x-import component-from-global-scope="ServlyDesignSystem_945520.IconButton" icon="send" variant="filled" onClick="{{ sendMsg }}" hint-size="44px,44px"></x-import>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ is.portfolio }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px"><span style="font:var(--type-body-sm);color:var(--text-secondary);max-width:560px">{{ t.publicNote }}</span><x-import component-from-global-scope="ServlyDesignSystem_945520.Button" iconLeft="plus" onClick="{{ newPubAlbum }}" hint-size="auto,44px">{{ t.newAlbum }}</x-import></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px">
+          <sc-for list="{{ pubAlbums }}" as="a" hint-placeholder-count="3">
+            <div style="display:flex;flex-direction:column;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm);overflow:hidden">
+              <div style="position:relative;aspect-ratio:4/3;overflow:hidden;background:var(--neutral-100)"><img src="{{ a.img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;transform:{{ a.tf }}"><span style="position:absolute;top:10px;inset-inline-start:10px"><x-import component-from-global-scope="ServlyDesignSystem_945520.Badge" tone="{{ a.pubTone }}" size="sm" hint-size="auto,20px">{{ a.pubLbl }}</x-import></span><span style="position:absolute;top:8px;inset-inline-end:8px;display:flex;gap:6px"><x-import component-from-global-scope="ServlyDesignSystem_945520.IconButton" icon="arrow-up" variant="glass" size="{{ 32 }}" onClick="{{ a.up }}" hint-size="32px,32px"></x-import><x-import component-from-global-scope="ServlyDesignSystem_945520.IconButton" icon="crop" variant="glass" size="{{ 32 }}" onClick="{{ a.crop }}" hint-size="32px,32px"></x-import></span></div>
+              <div style="padding:14px 16px;display:flex;align-items:center;gap:12px"><span style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font:var(--type-title)">{{ a.title }}</span><span style="font:var(--type-caption);font-weight:500;color:var(--text-tertiary)">{{ a.place }} · {{ a.n }} · {{ a.views }}</span></span><x-import component-from-global-scope="ServlyDesignSystem_945520.Switch" checked="{{ a.pub }}" onChange="{{ a.toggle }}" hint-size="50px,30px"></x-import></div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{ is.membership }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px">
+          <sc-for list="{{ meters }}" as="m" hint-placeholder-count="4">
+            <div style="display:flex;flex-direction:column;gap:8px;padding:16px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm)"><span style="font:var(--type-body-sm);color:var(--text-secondary)">{{ m.l }}</span><span style="font:var(--type-h3)">{{ m.a }} <span style="font:var(--type-body-sm);color:var(--text-tertiary)">/ {{ m.b }}</span></span><div style="height:6px;border-radius:6px;background:var(--neutral-100);overflow:hidden"><div style="height:100%;width:{{ m.w }};background:var(--brand)"></div></div></div>
+          </sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px">
+          <sc-for list="{{ plans }}" as="p" hint-placeholder-count="3">
+            <div style="display:flex;flex-direction:column;gap:14px;padding:20px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:{{ p.ring }}">
+              <div style="display:flex;justify-content:space-between;align-items:center"><span style="font:var(--type-h2)">{{ p.name }}</span><sc-if value="{{ p.cur }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="ServlyDesignSystem_945520.Badge" tone="solid" size="sm" hint-size="auto,20px">{{ t.current }}</x-import></sc-if></div>
+              <div style="display:flex;flex-direction:column">
+                <sc-for list="{{ p.rows }}" as="r" hint-placeholder-count="10"><div style="display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-subtle);font:var(--type-body-sm)"><span style="color:var(--text-secondary)">{{ r.l }}</span><span style="font-weight:700">{{ r.v }}</span></div></sc-for>
+              </div>
+              <x-import component-from-global-scope="ServlyDesignSystem_945520.Button" variant="secondary" fullWidth="{{ true }}" onClick="{{ p.go }}" hint-size="100%,44px">{{ t.upgrade }}</x-import>
+            </div>
+          </sc-for>
+        </div>
+        <span style="display:flex;gap:8px;font:var(--type-body-sm);color:var(--text-secondary)"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="info" size="{{ 16 }}" color="var(--info)" hint-size="16px,16px"></x-import>{{ t.priceAdmin }}</span>
+      </sc-if>
+      <sc-if value="{{ is.advertising }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px"><span style="font:var(--type-body-sm);color:var(--text-secondary)">{{ t.sponsoredLbl }}</span><x-import component-from-global-scope="ServlyDesignSystem_945520.Button" iconLeft="plus" onClick="{{ createAd }}" hint-size="auto,44px">{{ t.createAd }}</x-import></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px">
+          <sc-for list="{{ adKpis }}" as="k" hint-placeholder-count="4">
+            <div style="display:flex;align-items:center;gap:12px;padding:16px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm)"><span style="width:40px;height:40px;border-radius:12px;background:{{ k.bg }};color:{{ k.fg }};display:flex;align-items:center;justify-content:center"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="{{ k.icon }}" size="{{ 20 }}" hint-size="20px,20px"></x-import></span><span style="display:flex;flex-direction:column"><span style="font:var(--type-h3)">{{ k.val }}</span><span style="font:var(--type-caption);font-weight:500;color:var(--text-tertiary)">{{ k.label }}</span></span></div>
+          </sc-for>
+        </div>
+        <div style="display:flex;flex-direction:column;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm);overflow:hidden">
+          <span style="font:var(--type-title);padding:16px 18px 8px">{{ t.campaigns }}</span>
+          <sc-for list="{{ adRows }}" as="a" hint-placeholder-count="2">
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:16px;padding:14px 18px;border-top:1px solid var(--border-subtle)">
+              <span style="flex:none;width:128px;aspect-ratio:16/9;border-radius:var(--radius-sm);overflow:hidden;background:var(--neutral-100)"><img src="{{ a.img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;transform:{{ a.tf }}"></span>
+              <span style="flex:1 1 200px;display:flex;flex-direction:column;gap:3px"><span style="font:var(--type-title)">{{ a.title }}</span><span style="font:var(--type-body-sm);color:var(--text-secondary)">{{ a.pl }} · {{ a.when }}</span><span style="font:var(--type-mono);font-size:11px;color:var(--text-tertiary)">{{ a.id }}</span></span>
+              <span style="display:flex;gap:20px;font:var(--type-body-sm)"><span style="display:flex;flex-direction:column"><span style="color:var(--text-tertiary);font:var(--type-caption)">{{ t.impressions }}</span><b>{{ a.imp }}</b></span><span style="display:flex;flex-direction:column"><span style="color:var(--text-tertiary);font:var(--type-caption)">{{ t.clicks }}</span><b>{{ a.clk }}</b></span><span style="display:flex;flex-direction:column"><span style="color:var(--text-tertiary);font:var(--type-caption)">{{ t.ctr }}</span><b>{{ a.ctr }}</b></span></span>
+              <x-import component-from-global-scope="ServlyDesignSystem_945520.Badge" tone="{{ a.b.tone }}" size="sm" hint-size="auto,20px">{{ a.b.label }}</x-import>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{ is.support }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;justify-content:flex-end"><x-import component-from-global-scope="ServlyDesignSystem_945520.Button" iconLeft="plus" onClick="{{ toggleTk }}" hint-size="auto,44px">{{ t.createTicket }}</x-import></div>
+        <sc-if value="{{ showTk }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:16px;padding:20px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm)">
+            <x-import component-from-global-scope="ServlyDesignSystem_945520.TextField" label="{{ t.subject }}" value="{{ tk.s }}" onChange="{{ tkS }}" hint-size="100%,80px"></x-import>
+            <div style="display:flex;flex-direction:column;gap:8px"><span style="font:var(--type-body-sm);font-weight:600">{{ t.category }}</span><div style="display:flex;flex-wrap:wrap;gap:8px"><sc-for list="{{ tkCats }}" as="c" hint-placeholder-count="8"><x-import component-from-global-scope="ServlyDesignSystem_945520.Chip" size="sm" selected="{{ c.on }}" onClick="{{ c.go }}" hint-size="auto,32px">{{ c.label }}</x-import></sc-for></div></div>
+            <div style="display:flex;flex-direction:column;gap:8px;max-width:360px"><span style="font:var(--type-body-sm);font-weight:600">{{ t.priority }}</span><x-import component-from-global-scope="ServlyDesignSystem_945520.SegmentedControl" options="{{ tkPrOpts }}" value="{{ tkPr }}" onChange="{{ setTkPr }}" hint-size="100%,46px"></x-import></div>
+            <x-import component-from-global-scope="ServlyDesignSystem_945520.TextField" label="{{ t.description }}" multiline="{{ true }}" value="{{ tk.d }}" onChange="{{ tkD }}" hint-size="100%,120px"></x-import>
+            <div style="display:flex;gap:10px"><x-import component-from-global-scope="ServlyDesignSystem_945520.Button" variant="outline" iconLeft="paperclip" hint-size="auto,44px">{{ t.attachments }}</x-import><span style="flex:1"></span><x-import component-from-global-scope="ServlyDesignSystem_945520.Button" variant="ghost" onClick="{{ toggleTk }}" hint-size="auto,44px">{{ t.cancel }}</x-import><x-import component-from-global-scope="ServlyDesignSystem_945520.Button" iconLeft="send" disabled="{{ tkDisabled }}" onClick="{{ tkSubmit }}" hint-size="auto,44px">{{ t.submit }}</x-import></div>
+          </div>
+        </sc-if>
+        <div style="display:grid;grid-template-columns:minmax(0,2fr) minmax(240px,1fr);gap:16px;align-items:start">
+          <div style="display:flex;flex-direction:column;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm);overflow:hidden">
+            <span style="font:var(--type-title);padding:16px 18px 8px">{{ t.myTickets }}</span>
+            <sc-for list="{{ tickets }}" as="k" hint-placeholder-count="2">
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:14px 18px;border-top:1px solid var(--border-subtle)"><span style="flex:1 1 220px;display:flex;flex-direction:column;gap:3px"><span style="font:var(--type-body-strong)">{{ k.s }}</span><span style="font:var(--type-caption);font-weight:500;color:var(--text-tertiary)">{{ k.c }} · {{ t.priority }}: {{ k.pr }} · {{ k.date }}</span><span style="font:var(--type-mono);font-size:11px;color:var(--text-tertiary)">{{ k.id }}</span></span><x-import component-from-global-scope="ServlyDesignSystem_945520.Badge" tone="{{ k.b.tone }}" size="sm" hint-size="auto,20px">{{ k.b.label }}</x-import></div>
+            </sc-for>
+          </div>
+          <div style="display:flex;flex-direction:column;padding:8px 12px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm)">
+            <span style="font:var(--type-title);padding:10px 4px 4px">{{ t.faq }}</span>
+            <sc-for list="{{ faqs }}" as="f" hint-placeholder-count="3"><x-import component-from-global-scope="ServlyDesignSystem_945520.ListItem" icon="circle-help" color="sky" title="{{ f.q }}" hint-size="100%,60px"></x-import></sc-for>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ is.profile }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px"><x-import component-from-global-scope="ServlyDesignSystem_945520.Button" variant="outline" iconLeft="eye" onClick="{{ pfPreview }}" hint-size="auto,44px">{{ t.previewProfile }}</x-import><x-import component-from-global-scope="ServlyDesignSystem_945520.Button" iconLeft="check" onClick="{{ pfSave }}" hint-size="auto,44px">{{ t.save }}</x-import></div>
+        <div style="display:flex;flex-direction:column;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm);overflow:hidden">
+          <div style="position:relative;aspect-ratio:16/9;max-height:320px;width:100%;overflow:hidden;background:var(--neutral-100)"><img src="{{ pfCover.img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;transform:{{ pfCover.tf }}"><span style="position:absolute;bottom:14px;inset-inline-end:14px;display:flex;gap:8px"><x-import component-from-global-scope="ServlyDesignSystem_945520.Button" size="sm" variant="outline" iconLeft="images" onClick="{{ pfPickCover }}" hint-size="auto,36px">{{ t.chooseLib }}</x-import><x-import component-from-global-scope="ServlyDesignSystem_945520.Button" size="sm" variant="outline" iconLeft="crop" onClick="{{ pfCrop }}" hint-size="auto,36px">{{ t.adjustCrop }}</x-import></span><span style="position:absolute;top:14px;inset-inline-start:14px"><x-import component-from-global-scope="ServlyDesignSystem_945520.Badge" tone="dark" size="sm" hint-size="auto,20px">{{ t.cover }} · 16:9</x-import></span></div>
+          <div style="display:flex;align-items:flex-end;gap:14px;padding:0 20px 18px;margin-top:-36px;position:relative"><x-import component-from-global-scope="ServlyDesignSystem_945520.Avatar" name="Qimmah" src="assets/logos/c4.png" size="{{ 84 }}" verified="{{ true }}" style="border-radius:50%;box-shadow:0 0 0 4px var(--surface-card)" hint-size="84px,84px"></x-import><span style="padding-bottom:6px;font:var(--type-caption);font-weight:500;color:var(--text-tertiary)">{{ t.logo }} · 1:1</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px;align-items:start">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;padding:20px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm)">
+            <x-import component-from-global-scope="ServlyDesignSystem_945520.TextField" label="{{ t.nameAr }}" value="{{ pf.nameAr }}" onChange="{{ pfOn.nameAr }}" hint-size="100%,80px"></x-import>
+            <x-import component-from-global-scope="ServlyDesignSystem_945520.TextField" label="{{ t.nameEn }}" value="{{ pf.nameEn }}" onChange="{{ pfOn.nameEn }}" hint-size="100%,80px"></x-import>
+            <x-import component-from-global-scope="ServlyDesignSystem_945520.TextField" label="{{ t.phone }}" icon="phone" value="{{ pf.phone }}" onChange="{{ pfOn.phone }}" hint-size="100%,80px"></x-import>
+            <x-import component-from-global-scope="ServlyDesignSystem_945520.TextField" label="{{ t.whatsapp }}" icon="message-circle" value="{{ pf.wa }}" onChange="{{ pfOn.wa }}" hint-size="100%,80px"></x-import>
+            <x-import component-from-global-scope="ServlyDesignSystem_945520.TextField" label="{{ t.email }}" icon="mail" value="{{ pf.email }}" onChange="{{ pfOn.email }}" hint-size="100%,80px"></x-import>
+            <x-import component-from-global-scope="ServlyDesignSystem_945520.TextField" label="{{ t.website }}" icon="globe" value="{{ pf.web }}" onChange="{{ pfOn.web }}" hint-size="100%,80px"></x-import>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:16px;padding:20px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm)">
+            <div style="display:flex;flex-direction:column;gap:8px"><span style="font:var(--type-body-sm);font-weight:600">{{ t.categories }}</span><div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ pfCats }}" as="c" hint-placeholder-count="2"><span style="display:inline-flex;align-items:center;height:30px;padding:0 12px;border-radius:var(--radius-pill);background:var(--cat-{{ c.color }}-100);color:var(--cat-{{ c.color }}-800);font:var(--type-caption)">{{ c.label }}</span></sc-for></div><span style="font:var(--type-caption);font-weight:500;color:var(--text-tertiary)">{{ t.catLimit }}</span></div>
+            <div style="display:flex;flex-direction:column;gap:8px"><span style="font:var(--type-body-sm);font-weight:600">{{ t.hours }}</span><sc-for list="{{ pfHours }}" as="h" hint-placeholder-count="2"><div style="display:flex;justify-content:space-between;padding:10px 12px;border-radius:var(--radius-sm);background:var(--surface-sunken);font:var(--type-body-sm)"><span>{{ h.d }}</span><span style="font-weight:700" dir="ltr">{{ h.h }}</span></div></sc-for></div>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ is.branches }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px;align-items:start">
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center"><span style="font:var(--type-h3)">{{ t.branches }}</span><x-import component-from-global-scope="ServlyDesignSystem_945520.Button" variant="secondary" size="sm" iconLeft="plus" onClick="{{ addBranch }}" hint-size="auto,36px">{{ t.addBranch }}</x-import></div>
+            <sc-for list="{{ branchRows }}" as="b" hint-placeholder-count="2">
+              <div style="display:flex;flex-direction:column;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm);overflow:hidden">
+                <div style="height:120px;position:relative"><x-import component-from-global-scope="ServlyDesignSystem_945520.ImageSlot" label="map pin" tone="sky" hint-size="100%,120px"></x-import></div>
+                <div style="display:flex;align-items:center;gap:12px;padding:14px 16px"><span style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="display:flex;align-items:center;gap:8px;font:var(--type-title)">{{ b.n }}<sc-if value="{{ b.p }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="ServlyDesignSystem_945520.Badge" size="sm" hint-size="auto,20px">{{ t.primary }}</x-import></sc-if></span><span style="font:var(--type-body-sm);color:var(--text-secondary)">{{ b.a }}</span></span><x-import component-from-global-scope="ServlyDesignSystem_945520.Switch" label="{{ t.active }}" checked="{{ b.on }}" onChange="{{ b.set }}" style="gap:8px" hint-size="110px,30px"></x-import></div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:16px;padding:20px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm)">
+            <span style="font:var(--type-h3)">{{ t.coverage }}</span>
+            <x-import component-from-global-scope="ServlyDesignSystem_945520.Switch" label="{{ t.allOman }}" checked="{{ covAll }}" onChange="{{ setCovAll }}" hint-size="100%,30px"></x-import>
+            <div style="display:flex;flex-wrap:wrap;gap:8px"><sc-for list="{{ covChips }}" as="c" hint-placeholder-count="5"><x-import component-from-global-scope="ServlyDesignSystem_945520.Chip" icon="route" selected="{{ c.on }}" onClick="{{ c.go }}" hint-size="auto,38px">{{ c.label }}</x-import></sc-for></div>
+            <span style="display:flex;gap:8px;font:var(--type-body-sm);color:var(--text-secondary)"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="info" size="{{ 16 }}" color="var(--info)" hint-size="16px,16px"></x-import>{{ t.covNote }}</span>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ is.notifications }}" hint-placeholder-val="{{ false }}">
+        <div style="max-width:760px;padding:6px 14px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm)">
+          <sc-for list="{{ notifs }}" as="n" hint-placeholder-count="5"><x-import component-from-global-scope="ServlyDesignSystem_945520.ListItem" icon="{{ n.icon }}" color="{{ n.color }}" title="{{ n.title }}" subtitle="{{ n.sub }}" chevron="{{ false }}" hint-size="100%,64px"></x-import></sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{ is.settings }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:16px;align-items:start">
+          <div style="display:flex;flex-direction:column;gap:18px;padding:20px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm)">
+            <div style="display:flex;flex-direction:column;gap:4px"><x-import component-from-global-scope="ServlyDesignSystem_945520.Switch" label="{{ t.rfqToggle }}" checked="{{ rfqOn }}" onChange="{{ setRfqOn }}" hint-size="100%,30px"></x-import><span style="font:var(--type-caption);font-weight:500;color:var(--text-tertiary)">{{ t.rfqToggleSub }}</span></div>
+            <div style="display:flex;flex-direction:column;gap:4px"><x-import component-from-global-scope="ServlyDesignSystem_945520.Switch" label="{{ t.acceptBookings }}" checked="{{ acceptBk }}" onChange="{{ setAcceptBk }}" hint-size="100%,30px"></x-import><span style="font:var(--type-caption);font-weight:500;color:var(--text-tertiary)">{{ t.bkToggleSub }}</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:16px;padding:20px;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm)">
+            <span style="font:var(--type-title)">{{ t.notifPrefs }}</span>
+            <sc-for list="{{ npRows }}" as="n" hint-placeholder-count="4"><x-import component-from-global-scope="ServlyDesignSystem_945520.Switch" label="{{ n.l }}" checked="{{ n.on }}" onChange="{{ n.set }}" hint-size="100%,30px"></x-import></sc-for>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </main>
+  <sc-if value="{{ hasDetail }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeDetail }}" style="position:fixed;inset:0;z-index:50;background:var(--surface-scrim)"></div>
+    <div style="position:fixed;top:0;bottom:0;inset-inline-end:0;z-index:51;width:440px;max-width:100vw;background:var(--surface-card);box-shadow:var(--shadow-lg);display:flex;flex-direction:column;overflow-y:auto">
+      <div style="display:flex;align-items:center;gap:10px;padding:16px 20px"><span style="flex:1;font:var(--type-h3)">{{ t.details }}</span><x-import component-from-global-scope="ServlyDesignSystem_945520.IconButton" icon="x" variant="plain" onClick="{{ closeDetail }}" hint-size="44px,44px"></x-import></div>
+      <div style="position:relative;margin:0 20px;border-radius:var(--radius-md);overflow:hidden;background:var(--neutral-100)"><img src="{{ det.img }}" alt="" style="width:100%;display:block"><sc-if value="{{ det.isVid }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><x-import component-from-global-scope="ServlyDesignSystem_945520.IconButton" icon="play" variant="glass" size="{{ 56 }}" hint-size="56px,56px"></x-import></span></sc-if></div>
+      <div style="padding:16px 20px 24px;display:flex;flex-direction:column;gap:16px">
+        <span style="font:var(--type-caption);font-weight:500;color:var(--text-tertiary)" dir="ltr">{{ det.meta }}</span>
+        <x-import component-from-global-scope="ServlyDesignSystem_945520.TextField" label="{{ t.fileName }}" defaultValue="{{ det.name }}" hint-size="100%,80px"></x-import>
+        <x-import component-from-global-scope="ServlyDesignSystem_945520.TextField" label="{{ t.description }}" multiline="{{ true }}" hint-size="100%,120px"></x-import>
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="font:var(--type-body-sm);font-weight:700">{{ t.usage }}</span>
+          <sc-if value="{{ det.unused }}" hint-placeholder-val="{{ false }}"><span style="font:var(--type-body-sm);color:var(--text-tertiary)">{{ t.notUsed }}</span></sc-if>
+          <sc-for list="{{ det.usage }}" as="u" hint-placeholder-count="0"><span style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:var(--radius-sm);background:var(--surface-sunken);font:var(--type-body-sm)"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="link" size="{{ 14 }}" color="var(--brand)" hint-size="14px,14px"></x-import>{{ u.x }}</span></sc-for>
+        </div>
+        <div style="display:flex;gap:10px"><x-import component-from-global-scope="ServlyDesignSystem_945520.Button" variant="danger" iconLeft="trash-2" onClick="{{ detDelete }}" hint-size="auto,44px">{{ t.del }}</x-import><span style="flex:1"></span><x-import component-from-global-scope="ServlyDesignSystem_945520.Button" onClick="{{ closeDetail }}" hint-size="auto,44px">{{ t.save }}</x-import></div>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ hasDlg }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:70;background:var(--surface-scrim);display:flex;align-items:center;justify-content:center;padding:20px">
+      <div style="width:480px;max-width:100%;max-height:80vh;overflow-y:auto;padding:24px;border-radius:var(--radius-sheet);background:var(--surface-card);box-shadow:var(--shadow-lg);display:flex;flex-direction:column;gap:16px">
+        <sc-if value="{{ dlg.blocked }}" hint-placeholder-val="{{ false }}">
+          <span style="width:56px;height:56px;border-radius:18px;background:var(--warning-tint);color:oklch(0.48 0.11 65);display:flex;align-items:center;justify-content:center"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="shield-alert" size="{{ 28 }}" hint-size="28px,28px"></x-import></span>
+          <span style="font:var(--type-h3)">{{ t.cantDelete }}</span><span style="font:var(--type-body);color:var(--text-secondary)">{{ t.cantDeleteBody }}</span>
+        </sc-if>
+        <sc-if value="{{ dlg.confirm }}" hint-placeholder-val="{{ false }}">
+          <span style="width:56px;height:56px;border-radius:18px;background:var(--danger-tint);color:var(--danger);display:flex;align-items:center;justify-content:center"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="trash-2" size="{{ 28 }}" hint-size="28px,28px"></x-import></span>
+          <span style="font:var(--type-h3)">{{ t.confirmDelete }}</span><span style="font:var(--type-body);color:var(--text-secondary)">{{ t.confirmDeleteBody }}</span>
+        </sc-if>
+        <sc-for list="{{ dlg.items }}" as="d" hint-placeholder-count="1">
+          <div style="display:flex;gap:12px;padding:12px;border-radius:var(--radius-md);background:var(--surface-sunken)"><img src="{{ d.img }}" alt="" style="flex:none;width:56px;height:56px;border-radius:10px;object-fit:cover"><span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px"><span style="font:var(--type-body-sm);font-weight:700" dir="ltr">{{ d.name }}</span><sc-for list="{{ d.uses }}" as="u" hint-placeholder-count="0"><span style="display:flex;align-items:center;gap:6px;font:var(--type-caption);font-weight:500;color:var(--text-secondary)"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="link" size="{{ 12 }}" hint-size="12px,12px"></x-import>{{ u.x }}</span></sc-for></span></div>
+        </sc-for>
+        <div style="display:flex;justify-content:flex-end;gap:10px">
+          <x-import component-from-global-scope="ServlyDesignSystem_945520.Button" variant="ghost" onClick="{{ closeDlg }}" hint-size="auto,44px">{{ t.close }}</x-import>
+          <sc-if value="{{ dlg.confirm }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="ServlyDesignSystem_945520.Button" variant="danger" iconLeft="trash-2" onClick="{{ dlgDelete }}" hint-size="auto,44px">{{ t.del }}</x-import></sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ hasPicker }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:60;background:var(--surface-scrim);display:flex;align-items:center;justify-content:center;padding:24px">
+      <div style="width:960px;max-width:100%;height:min(720px,90vh);border-radius:var(--radius-sheet);background:var(--surface-card);box-shadow:var(--shadow-lg);display:flex;flex-direction:column;overflow:hidden">
+        <div style="display:flex;align-items:center;gap:12px;padding:18px 22px;border-bottom:1px solid var(--border-subtle)"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="images" size="{{ 22 }}" color="var(--brand)" hint-size="22px,22px"></x-import><span style="flex:1;font:var(--type-h3)">{{ pk.title }}</span><x-import component-from-global-scope="ServlyDesignSystem_945520.IconButton" icon="x" variant="plain" onClick="{{ closePicker }}" hint-size="44px,44px"></x-import></div>
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:14px 22px">
+          <div style="flex:1 1 220px;max-width:300px"><x-import component-from-global-scope="ServlyDesignSystem_945520.SearchBar" placeholder="{{ t.search }}" value="{{ pk.q }}" onChange="{{ pkSetQ }}" onFilter="{{ null }}" elevated="{{ false }}" hint-size="100%,52px"></x-import></div>
+          <sc-for list="{{ pkKinds }}" as="c" hint-placeholder-count="3"><x-import component-from-global-scope="ServlyDesignSystem_945520.Chip" size="sm" selected="{{ c.on }}" onClick="{{ c.go }}" hint-size="auto,32px">{{ c.label }}</x-import></sc-for>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:0 22px 12px"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="folder" size="{{ 16 }}" color="var(--text-tertiary)" hint-size="16px,16px"></x-import><sc-for list="{{ pkAlbums }}" as="c" hint-placeholder-count="4"><x-import component-from-global-scope="ServlyDesignSystem_945520.Chip" size="sm" selected="{{ c.on }}" onClick="{{ c.go }}" hint-size="auto,32px">{{ c.label }}</x-import></sc-for></div>
+        <div style="flex:1;overflow-y:auto;padding:4px 22px 18px">
+          <sc-if value="{{ pk.empty }}" hint-placeholder-val="{{ false }}">
+            <x-import component-from-global-scope="ServlyDesignSystem_945520.EmptyState" icon="image-off" title="{{ t.pickerTitle }}" body="{{ t.pickerEmpty }}" hint-size="100%,240px"></x-import>
+            <div style="display:flex;justify-content:center"><x-import component-from-global-scope="ServlyDesignSystem_945520.Button" variant="secondary" onClick="{{ pkGoMedia }}" hint-size="auto,44px">{{ t.goMedia }}</x-import></div>
+          </sc-if>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px">
+            <sc-for list="{{ pkItems }}" as="m" hint-placeholder-count="8">
+              <button type="button" onClick="{{ m.go }}" style="position:relative;padding:0;border:none;border-radius:var(--radius-md);overflow:hidden;cursor:pointer;aspect-ratio:1/1;background:var(--neutral-100)">
+                <img src="{{ m.img }}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block">
+                <span style="position:absolute;inset:0;border-radius:var(--radius-md);box-shadow:{{ m.ring }}"></span>
+                <sc-if value="{{ m.on }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;top:8px;inset-inline-start:8px;width:26px;height:26px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font:var(--type-caption);box-shadow:0 0 0 2px #fff">{{ m.n }}</span></sc-if>
+                <sc-if value="{{ m.isVid }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;bottom:8px;inset-inline-end:8px"><x-import component-from-global-scope="ServlyDesignSystem_945520.Badge" tone="dark" size="sm" icon="play" hint-size="auto,20px">{{ m.dur }}</x-import></span></sc-if>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:14px 22px;border-top:1px solid var(--border-subtle)">
+          <span style="flex:1;font:var(--type-body-sm);color:var(--text-secondary)">{{ pk.count }}</span>
+          <x-import component-from-global-scope="ServlyDesignSystem_945520.Button" variant="ghost" onClick="{{ closePicker }}" hint-size="auto,44px">{{ t.cancel }}</x-import>
+          <x-import component-from-global-scope="ServlyDesignSystem_945520.Button" iconLeft="check" disabled="{{ pk.none }}" onClick="{{ pkConfirm }}" hint-size="auto,44px">{{ t.confirmSel }}</x-import>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ hasCrop }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:65;background:var(--surface-scrim);display:flex;align-items:center;justify-content:center;padding:24px">
+      <div style="width:960px;max-width:100%;max-height:92vh;overflow-y:auto;border-radius:var(--radius-sheet);background:var(--surface-card);box-shadow:var(--shadow-lg);display:flex;flex-direction:column">
+        <div style="display:flex;align-items:center;gap:12px;padding:18px 22px;border-bottom:1px solid var(--border-subtle)"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="crop" size="{{ 22 }}" color="var(--brand)" hint-size="22px,22px"></x-import><span style="flex:1;display:flex;flex-direction:column"><span style="font:var(--type-h3)">{{ t.cropTitle }} · {{ cr.pl }}</span><span style="font:var(--type-caption);font-weight:500;color:var(--text-tertiary)" dir="ltr">{{ cr.name }}</span></span><x-import component-from-global-scope="ServlyDesignSystem_945520.Badge" icon="lock" hint-size="auto,24px">{{ t.locked }} · {{ cr.ratio }}</x-import><x-import component-from-global-scope="ServlyDesignSystem_945520.IconButton" icon="x" variant="plain" onClick="{{ closeCrop }}" hint-size="44px,44px"></x-import></div>
+        <div style="display:flex;flex-wrap:wrap;gap:22px;padding:22px">
+          <div style="flex:1 1 400px;display:flex;flex-direction:column;align-items:center;gap:14px">
+            <div style="width:100%;display:flex;justify-content:center;padding:24px;box-sizing:border-box;border-radius:var(--radius-md);background:var(--neutral-800)">
+              <div onPointerDown="{{ crDown }}" style="position:relative;width:{{ cr.fw }};max-width:100%;aspect-ratio:{{ cr.ar }};overflow:hidden;cursor:grab;touch-action:none;box-shadow:0 0 0 2px #fff,0 0 0 9999px oklch(0.2 0.02 285 / .5);background:var(--neutral-700)" dir="ltr">
+                <img src="{{ cr.img }}" alt="" draggable="false" style="position:absolute;left:50%;top:50%;width:{{ cr.w }};max-width:none;transform:{{ cr.tf }};user-select:none;pointer-events:none">
+                <span style="position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(to right,transparent 33.2%,oklch(1 0 0 / .45) 33.3%,transparent 33.5%,transparent 66.5%,oklch(1 0 0 / .45) 66.6%,transparent 66.8%),linear-gradient(to bottom,transparent 33.2%,oklch(1 0 0 / .45) 33.3%,transparent 33.5%,transparent 66.5%,oklch(1 0 0 / .45) 66.6%,transparent 66.8%)"></span>
+              </div>
+            </div>
+            <span style="display:flex;align-items:center;gap:6px;font:var(--type-caption);font-weight:500;color:var(--text-tertiary)"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="move" size="{{ 14 }}" hint-size="14px,14px"></x-import>{{ t.dragHint }}</span>
+            <div style="width:100%;display:flex;flex-wrap:wrap;align-items:center;gap:14px">
+              <span style="font:var(--type-body-sm);font-weight:600">{{ t.zoom }}</span>
+              <input type="range" min="1" max="3" step="0.01" value="{{ cr.z }}" onChange="{{ crZoom }}" style="flex:1 1 160px;accent-color:var(--brand)">
+              <span style="width:44px;font:var(--type-body-sm);font-weight:700" dir="ltr">{{ cr.zoom }}</span>
+              <x-import component-from-global-scope="ServlyDesignSystem_945520.Button" variant="outline" size="sm" iconLeft="rotate-cw" onClick="{{ crRotate }}" hint-size="auto,36px">{{ t.rotate }}</x-import>
+              <x-import component-from-global-scope="ServlyDesignSystem_945520.Button" variant="ghost" size="sm" iconLeft="undo-2" onClick="{{ crReset }}" hint-size="auto,36px">{{ t.reset }}</x-import>
+            </div>
+          </div>
+          <div style="flex:0 1 240px;display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;flex-direction:column;gap:8px"><span style="font:var(--type-body-sm);font-weight:700">{{ t.preview }}</span>
+              <div style="position:relative;width:160px;aspect-ratio:{{ cr.ar }};border-radius:var(--radius-sm);overflow:hidden;background:var(--neutral-200);box-shadow:var(--shadow-sm)" dir="ltr"><img src="{{ cr.img }}" alt="" style="position:absolute;left:50%;top:50%;width:{{ cr.w }};max-width:none;transform:{{ crPrevTf }}"></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px"><span style="font:var(--type-body-sm);font-weight:700">{{ t.otherPlacements }}</span>
+              <sc-for list="{{ crOthers }}" as="o" hint-placeholder-count="3">
+                <div style="display:flex;align-items:center;gap:10px"><span style="flex:none;width:48px;aspect-ratio:{{ o.ar }};border-radius:6px;overflow:hidden;background:var(--neutral-100)"><img src="{{ cr.img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></span><span style="flex:1;display:flex;flex-direction:column"><span style="font:var(--type-caption)">{{ o.l }} · {{ o.ratio }}</span><span style="font:var(--type-caption);font-weight:500;color:var(--text-tertiary)">{{ o.st }}</span></span></div>
+              </sc-for>
+            </div>
+            <span style="display:flex;gap:6px;font:var(--type-caption);font-weight:500;color:var(--text-secondary)"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="shield-check" size="{{ 14 }}" color="var(--success)" hint-size="14px,14px"></x-import>{{ t.independent }}</span>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:10px;padding:14px 22px;border-top:1px solid var(--border-subtle)">
+          <x-import component-from-global-scope="ServlyDesignSystem_945520.Button" variant="ghost" onClick="{{ closeCrop }}" hint-size="auto,44px">{{ t.cancel }}</x-import>
+          <x-import component-from-global-scope="ServlyDesignSystem_945520.Button" iconLeft="check" onClick="{{ crApply }}" hint-size="auto,44px">{{ t.applyCrop }}</x-import>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;bottom:24px;inset-inline-start:50%;transform:translateX(-50%);width:380px;max-width:calc(100vw - 32px);z-index:100"><x-import component-from-global-scope="ServlyDesignSystem_945520.Toast" message="{{ toast.msg }}" tone="{{ toast.tone }}" hint-size="100%,48px"></x-import></div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;lang&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;ar&quot;,&quot;en&quot;],&quot;default&quot;:&quot;ar&quot;,&quot;tsType&quot;:&quot;'ar' | 'en'&quot;}}">
+const RATIO = { cover: [16, 9], logo: [1, 1], service: [4, 3], gallery: [4, 3], album: [4, 3], thumb: [1, 1], ad: [16, 9] };
+const U = (id, w) => 'https://images.unsplash.com/photo-' + id + '?w=' + (w || 400) + '&q=70&auto=format&fit=crop';
+const fmt = n => n.toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+const clone = o => JSON.parse(JSON.stringify(o));
+class Component extends DCLogic {
+  state = { lang: this.props.lang ?? 'ar', page: 'dashboard', ready: !!window.MJP, toast: null };
+  componentDidMount() {
+    const init = () => {
+      const P = window.MJP; if (!P || !window.MJ) return false;
+      this.setState({ ready: true, media: clone(P.MEDIA), priv: clone(P.PRIV), services: clone(P.SERVICES), albums: clone(P.ALBUMS), rfqs: clone(P.RFQS), bookings: clone(P.BOOKINGS), convos: clone(P.CONVOS), tickets: clone(P.TICKETS), ads: clone(P.ADS),
+        profile: { cover: 'm2', nameAr: 'قمة المطابخ', nameEn: 'Qimmah Kitchens', phone: '+968 2456 7810', wa: '+968 9456 7810', email: 'hello@qimmah.om', web: 'qimmah.om' },
+        crops: {}, mf: { kind: 'all', q: '', sort: 'new', album: '' }, sel: [], selMode: false, uploads: [], mtab: 'library', detail: null, dlg: null, picker: null, crop: null,
+        editSvc: null, qtab: 'new', rfqSel: 'MJB-RFQ-000128', builder: null, btab: 'calendar', acceptBk: true, bkMode: 'manual', dur: 60, buf: 30, notice: 24, cap: 1,
+        avail: [[1, '08:00 – 13:00 · 16:00 – 19:00'], [1, '08:00 – 13:00 · 16:00 – 19:00'], [1, '08:00 – 13:00 · 16:00 – 19:00'], [1, '08:00 – 13:00 · 16:00 – 19:00'], [1, '08:00 – 13:00'], [0, ''], [1, '09:00 – 13:00']],
+        convSel: 'k2', draft: '', rfqOn: true, np: { msg: true, rfq: true, bk: true, bill: true }, cov: { all: true, muscat: true, batinah: true, dakhiliyah: true, dhofar: false, sharqiyah: false }, br: [true, true],
+        tk: { s: '', c: 4, pr: 'medium', d: '' }, showTk: false, seq: { q: 458, tk: 215, al: 12, ad: 35 } });
+      return true;
+    };
+    if (!init()) this._iv = setInterval(() => { if (init()) clearInterval(this._iv); }, 80);
+    this._mv = e => { const d = this._drag; if (!d) return; this.setState(s => ({ crop: { ...s.crop, x: d.x + (e.clientX - d.cx), y: d.y + (e.clientY - d.cy) } })); };
+    this._up = () => { this._drag = null; };
+    window.addEventListener('pointermove', this._mv); window.addEventListener('pointerup', this._up);
+  }
+  componentWillUnmount() { clearInterval(this._iv); clearInterval(this._ut); clearTimeout(this._tt); window.removeEventListener('pointermove', this._mv); window.removeEventListener('pointerup', this._up); }
+  componentDidUpdate(pp, ps) { if (pp.lang !== this.props.lang && this.props.lang) this.setState({ lang: this.props.lang }); if (ps.page !== this.state.page) window.scrollTo(0, 0); }
+  toast(msg, tone) { clearTimeout(this._tt); this.setState({ toast: { msg, tone: tone || 'success' } }); this._tt = setTimeout(() => this.setState({ toast: null }), 2400); }
+  go(page) { this.setState({ page, detail: null, editSvc: page === 'services' ? null : this.state.editSvc, builder: page === 'quotations' ? this.state.builder : null }); }
+  usage(mid, L) {
+    const s = this.state, out = [];
+    if (s.profile.cover === mid) out.push(L(['ملف الشركة · الغلاف', 'Company profile · cover']));
+    s.services.forEach(v => { if (v.cover === mid) out.push(L(['خدمة', 'Service']) + ': ' + L([v.ar, v.en]) + ' · ' + L(['الغلاف', 'cover'])); else if (v.gallery.includes(mid)) out.push(L(['خدمة', 'Service']) + ': ' + L([v.ar, v.en])); });
+    s.albums.forEach(a => { if (a.media.includes(mid) || a.cover === mid) out.push(L(['ألبوم', 'Album']) + ': ' + L([a.ar, a.en])); });
+    s.ads.forEach(a => { if (a.media === mid) out.push(L(['إعلان', 'Ad']) + ': ' + L(a.t)); });
+    return out;
+  }
+  openPicker(target, multi, preset) { this.setState({ picker: { target, multi, sel: preset ? preset.slice() : [], q: '', kind: target === 'service' || target === 'cover' || target === 'ad' || target === 'albumCover' ? 'img' : 'all', album: '' } }); }
+  openCrop(mid, pl, onDone) { const k = pl + ':' + mid, c = this.state.crops[k] || { z: 1, x: 0, y: 0, r: 0 }; this._cropDone = onDone; this.setState({ crop: { mid, pl, ...c } }); }
+  confirmPicker() {
+    const p = this.state.picker; if (!p.sel.length) return;
+    const t = p.target, first = p.sel[0];
+    this.setState({ picker: null });
+    if (t === 'service') { this.setState(s => ({ editSvc: { ...s.editSvc, cover: first } })); this.openCrop(first, 'service'); }
+    else if (t === 'gallery') this.setState(s => ({ editSvc: { ...s.editSvc, gallery: Array.from(new Set([...s.editSvc.gallery, ...p.sel])) } }));
+    else if (t === 'cover') { this.setState(s => ({ profile: { ...s.profile, cover: first } })); this.openCrop(first, 'cover'); }
+    else if (t === 'album') { const id = 'a' + this.state.seq.al; this.setState(s => ({ seq: { ...s.seq, al: s.seq.al + 1 }, albums: [...s.albums, { id, ar: 'ألبوم جديد', en: 'New album', cover: first, media: p.sel, pub: false, place: ['مسقط', 'Muscat'], views: 0 }] })); this.openCrop(first, 'album'); this.toast(this.L(window.MJP.STR.albumT)); }
+    else if (t === 'ad') { const id = 'AD-00' + this.state.seq.ad; this.setState(s => ({ seq: { ...s.seq, ad: s.seq.ad + 1 }, ads: [...s.ads, { id, t: ['حملة جديدة', 'New campaign'], pl: ['بانر الصفحة الرئيسية', 'Homepage top banner'], media: first, st: 'pending', imp: 0, clk: 0, when: ['يحدد لاحقًا', 'To be scheduled'] }] })); this.openCrop(first, 'ad', () => this.toast(this.L(window.MJP.STR.adT))); }
+  }
+  L(p) { return this.state.lang === 'ar' ? p[0] : p[1]; }
+  startUpload() {
+    const base = this.state.uploads.length;
+    const items = [['kitchen-khuwair-01.jpg', 4.6, 'ok'], ['kitchen-khuwair-02.jpg', 5.2, 'ok'], ['whatsapp-image.jpg', 0.3, 'bad']].map((u, k) => ({ id: 'u' + (base + k) + Date.now(), name: u[0], mb: u[1], res: u[2], pct: 0 }));
+    this.setState(s => ({ uploads: [...items, ...s.uploads] }));
+    clearInterval(this._ut);
+    this._ut = setInterval(() => {
+      let done = true;
+      this.setState(s => {
+        const add = [];
+        const ups = s.uploads.map(u => { if (u.pct >= 100) return u; done = false; const pct = Math.min(100, u.pct + (u.res === 'bad' ? 34 : 14 + Math.random() * 10)); if (pct >= 100 && u.res === 'ok') add.push({ id: 'n' + Math.random().toString(36).slice(2, 7), img: ['1600566753190-17f0baa2a6c3', '1484154218962-a197022b5858'][add.length % 2], name: u.name, kind: 'img', mb: u.mb, dims: '4000×2667', date: '7 Nov 2026', w: 4000, h: 2667, dur: '' }); return { ...u, pct }; });
+        return { uploads: ups, media: add.length ? [...add, ...s.media] : s.media };
+      });
+      if (done) clearInterval(this._ut);
+    }, 260);
+  }
+  renderVals() {
+    const P = window.MJP, MJ = window.MJ, s = this.state;
+    const ar = s.lang === 'ar', L = p => (ar ? p[0] : p[1]);
+    const v = { dir: ar ? 'rtl' : 'ltr', lang: s.lang, toast: s.toast, t: {}, nav: [], langOpts: [{ value: 'ar', label: 'العربية' }, { value: 'en', label: 'English' }], setLang: x => this.setState({ lang: x }), goNotifs: () => this.go('notifications') };
+    if (!P || !s.ready || !s.media) return v;
+    const t = v.t; for (const k in P.STR) t[k] = L(P.STR[k]);
+    const pg = s.page; v.is = { [pg]: true };
+    if (window.__bisect === 1) return v;
+    const mById = id => s.media.find(m => m.id === id);
+    const cropOf = (mid, pl) => s.crops[pl + ':' + mid] || { z: 1, x: 0, y: 0, r: 0 };
+    const thumb = (mid, pl, w) => { const m = mById(mid); if (!m) return { img: '', tf: 'none' }; const c = cropOf(mid, pl), [rw, rh] = RATIO[pl] || [4, 3], rf = rw / rh, fw = rf >= 1.5 ? 560 : rf > 1 ? 480 : 380; return { img: U(m.img, w || 400), tf: 'translate(' + (c.x / fw * 100).toFixed(2) + '%,' + (c.y / (fw / rf) * 100).toFixed(2) + '%) scale(' + c.z + ') rotate(' + c.r + 'deg)', isVid: m.kind === 'vid', dur: m.dur }; };
+    const unread = s.convos.reduce((n, c) => n + c.unread, 0), newRfq = s.rfqs.filter(r => r.st === 'new').length, pendBk = s.bookings.filter(b => b.st === 'pending').length;
+    const N = (id, icon, badge) => ({ id, icon, label: t[id], badge: badge ? String(badge) : '', fw: pg === id ? 700 : 600, bg: pg === id ? 'var(--brand-tint-strong)' : 'transparent', fg: pg === id ? 'var(--brand-ink)' : 'var(--text-secondary)', go: () => this.go(id) });
+    v.nav = [
+      { label: t.gMain, items: [N('dashboard', 'layout-dashboard'), N('analytics', 'chart-column')] },
+      { label: t.gCompany, items: [N('profile', 'building-2'), N('services', 'briefcase'), N('branches', 'map-pin')] },
+      { label: t.gMedia, items: [N('library', 'images'), N('portfolio', 'gallery-horizontal-end')] },
+      { label: t.gCustomers, items: [N('quotations', 'file-text', newRfq), N('bookings', 'calendar-check', pendBk), N('messages', 'message-circle', unread)] },
+      { label: t.gGrowth, items: [N('advertising', 'megaphone'), N('membership', 'gem')] },
+      { label: t.gAccount, items: [N('support', 'life-buoy'), N('notifications', 'bell'), N('settings', 'settings')] },
+    ];
+    const navAll = v.nav.flatMap(g => g.items.map(i => [i.id, g.label]));
+    const cur = navAll.find(x => x[0] === pg) || ['', ''];
+    v.pageTitle = s.editSvc && pg === 'services' ? t.editService : s.builder && pg === 'quotations' ? t.builder : t[pg]; v.crumb = t.coName + ' · ' + cur[1];
+    // dashboard
+    const kpi = (label, val, d, icon, color) => ({ label, val, d, icon, bg: 'var(--cat-' + color + '-100)', fg: 'var(--cat-' + color + '-600)', up: d[0] !== '-', dc: d[0] !== '-' ? 'var(--success)' : 'var(--danger)' });
+    v.kpis = [kpi(t.profileViews, '1,327', '+18%', 'eye', 'violet'), kpi(t.serviceViews, '2,760', '+9%', 'briefcase', 'sky'), kpi(t.portfolioViews, '1,900', '+24%', 'images', 'pink'), kpi(t.waClicks, '214', '+6%', 'message-circle', 'green'),
+      kpi(t.callClicks, '88', '-4%', 'phone', 'teal'), kpi(t.custMsgs, '46', '+12%', 'messages-square', 'indigo'), kpi(t.rfqs, String(s.rfqs.length + 19), '+31%', 'file-text', 'amber'), kpi(t.visitBookings, String(s.bookings.length + 7), '+15%', 'calendar-check', 'coral')];
+    const mx = Math.max(...P.VIEWS);
+    v.bars = P.VIEWS.map((n, k) => ({ h: Math.round(n / mx * 100) + '%', n, lbl: String(24 + k > 31 ? k - 7 : 24 + k), bg: k === P.VIEWS.length - 1 ? 'var(--brand)' : 'var(--violet-200)' }));
+    v.miniStats = [[t.pubServices, s.services.filter(x => x.pub).length, 'briefcase'], [t.pubAlbums, s.albums.filter(x => x.pub).length, 'images'], [t.activeAds, s.ads.filter(a => a.st === 'active').length, 'megaphone'], [t.openTickets, s.tickets.filter(x => x.st !== 'resolved').length, 'life-buoy']].map(([l, n, i]) => ({ l, n: String(n), i }));
+    const RST = { new: ['جديد', 'New', 'brand'], info: ['بانتظار العميل', 'Awaiting customer', 'warning'], sent: ['تم إرسال العرض', 'Quotation sent', 'success'], declined: ['معتذر عنه', 'Declined', 'neutral'], archived: ['مؤرشف', 'Archived', 'neutral'] };
+    const BST = { pending: ['بانتظار التأكيد', 'Pending', 'warning'], confirmed: ['مؤكد', 'Confirmed', 'success'], reschedule: ['موعد مقترح', 'Reschedule proposed', 'info'], rejected: ['مرفوض', 'Rejected', 'danger'] };
+    const DAYS = [['الأحد', 'Sun', 15], ['الإثنين', 'Mon', 16], ['الثلاثاء', 'Tue', 17], ['الأربعاء', 'Wed', 18], ['الخميس', 'Thu', 19], ['الجمعة', 'Fri', 20], ['السبت', 'Sat', 21]];
+    const rfqV = r => { const sv = s.services.find(x => x.id === r.svc); return { id: r.id, cust: L(r.cust), title: L(r.t), svc: sv ? L([sv.ar, sv.en]) : '', date: r.date, loc: L(r.loc), b: { label: L(RST[r.st]), tone: RST[r.st][2] }, on: s.rfqSel === r.id, bg: s.rfqSel === r.id ? 'var(--brand-tint)' : 'var(--surface-card)', ring: s.rfqSel === r.id ? 'inset 0 0 0 2px var(--brand)' : 'var(--shadow-sm)', go: () => this.setState({ rfqSel: r.id, page: 'quotations', builder: null }) }; };
+    v.dashRfqs = s.rfqs.filter(r => r.st === 'new').map(rfqV);
+    const bkV = b => ({ id: b.id, cust: L(b.cust), p: L(b.p), when: L([DAYS[b.day][0], DAYS[b.day][1]]) + ' ' + DAYS[b.day][2] + ' · ' + String(b.h).padStart(2, '0') + ':00', loc: L(b.loc), b: { label: L(BST[b.st]), tone: BST[b.st][2] }, pending: b.st === 'pending',
+      accept: () => { this.setState(st => ({ bookings: st.bookings.map(x => x.id === b.id ? { ...x, st: 'confirmed' } : x) })); this.toast(t.bkAccT); },
+      reject: () => { this.setState(st => ({ bookings: st.bookings.map(x => x.id === b.id ? { ...x, st: 'rejected' } : x) })); this.toast(t.bkRejT, 'info'); },
+      propose: () => { this.setState(st => ({ bookings: st.bookings.map(x => x.id === b.id ? { ...x, st: 'reschedule', h: x.h + 2 } : x) })); this.toast(t.bkPropT, 'info'); } });
+    v.dashBks = s.bookings.filter(b => b.st !== 'rejected').slice(0, 4).map(bkV);
+    v.toQuotes = () => this.go('quotations'); v.toBookings = () => this.go('bookings'); v.toMembership = () => this.go('membership'); v.toLibrary = () => this.go('library');
+    // media library
+    const used = mid => this.usage(mid, L);
+    const totalMb = s.media.reduce((n, m) => n + m.mb, 0);
+    v.storage = { used: totalMb.toFixed(1) + ' MB', cap: '10 GB', pct: Math.max(2, totalMb / 10240 * 100).toFixed(1) + '%', imgs: s.media.filter(m => m.kind === 'img').length, vids: s.media.filter(m => m.kind === 'vid').length, rem: (10 - totalMb / 1024).toFixed(2) + ' GB' };
+    v.mtabOpts = [{ value: 'library', label: t.library }, { value: 'albums', label: t.albums }, { value: 'storage', label: t.storage }]; v.mtab = s.mtab; v.setMtab = x => this.setState({ mtab: x });
+    v.mLib = s.mtab === 'library'; v.mAlb = s.mtab === 'albums'; v.mSto = s.mtab === 'storage';
+    const mf = s.mf, setMf = (k, val) => this.setState(st => ({ mf: { ...st.mf, [k]: val } }));
+    v.mKinds = [['all', t.all], ['img', t.images], ['vid', t.videos], ['unused', t.unused]].map(([k, l]) => ({ label: l, on: mf.kind === k, go: () => setMf('kind', k) }));
+    v.mAlbChips = [{ label: t.all, on: !mf.album, go: () => setMf('album', '') }].concat(s.priv.map(a => ({ label: L([a[1], a[2]]), on: mf.album === a[0], go: () => setMf('album', a[0]) })));
+    v.mSortOpts = [{ value: 'new', label: t.newest }, { value: 'big', label: t.largest }, { value: 'used', label: t.mostUsed }]; v.mSort = mf.sort; v.setMSort = x => setMf('sort', x);
+    v.mq = mf.q; v.setMq = e => setMf('q', e.target.value);
+    let list = s.media.filter(m => (mf.kind === 'all' || (mf.kind === 'unused' ? !used(m.id).length : m.kind === mf.kind)) && (!mf.q || m.name.toLowerCase().includes(mf.q.toLowerCase())) && (!mf.album || (s.priv.find(a => a[0] === mf.album) || [0, 0, 0, []])[3].includes(m.id)));
+    if (mf.sort === 'big') list = list.slice().sort((a, b) => b.mb - a.mb); if (mf.sort === 'used') list = list.slice().sort((a, b) => used(b.id).length - used(a.id).length);
+    v.mItems = list.map(m => { const u = used(m.id).length, on = s.sel.includes(m.id); return { id: m.id, img: U(m.img, 360), name: m.name, meta: (m.kind === 'vid' ? 'MP4' : 'JPG') + ' · ' + m.mb.toFixed(1) + ' MB · ' + m.dims, date: m.date, isVid: m.kind === 'vid', dur: m.dur, usedLbl: u ? t.usedIn + ' ' + u : t.notUsed, usedTone: u ? 'brand' : 'neutral', on, ring: on ? 'inset 0 0 0 3px var(--brand)' : 'none', selMode: s.selMode || s.sel.length > 0,
+      click: () => { if (s.selMode || s.sel.length) this.setState(st => ({ sel: st.sel.includes(m.id) ? st.sel.filter(x => x !== m.id) : [...st.sel, m.id] })); else this.setState({ detail: m.id }); },
+      toggle: e => { e.stopPropagation(); this.setState(st => ({ sel: st.sel.includes(m.id) ? st.sel.filter(x => x !== m.id) : [...st.sel, m.id] })); } }; });
+    v.mEmpty = !list.length; v.mCount = list.length + ' ' + t.files;
+    v.hasSel = s.sel.length > 0; v.selCount = s.sel.length + ' ' + t.selected;
+    v.clearSel = () => this.setState({ sel: [], selMode: false }); v.toggleSelMode = () => this.setState(st => ({ selMode: !st.selMode, sel: [] }));
+    v.bulkAlbum = () => { const ids = s.sel; this.setState(st => ({ priv: st.priv.map((a, k) => k === 0 ? [a[0], a[1], a[2], Array.from(new Set([...a[3], ...ids]))] : a), sel: [], selMode: false })); this.toast(t.addedAlbumT); };
+    v.bulkDelete = () => { const blocked = s.sel.filter(id => used(id).length); if (blocked.length) this.setState({ dlg: { kind: 'blocked', ids: blocked } }); else this.setState({ dlg: { kind: 'confirm', ids: s.sel.slice() } }); };
+    v.upload = () => this.startUpload();
+    v.uploads = s.uploads.map(u => ({ name: u.name, size: u.mb.toFixed(1) + ' MB', w: Math.round(u.pct) + '%', bad: u.res === 'bad' && u.pct >= 100, ok: u.res === 'ok' && u.pct >= 100, busy: u.pct < 100, err: L(['الدقة ٨٠٠×٦٠٠ أقل من الحد الأدنى ١٢٠٠×٩٠٠', 'Resolution 800×600 is below the 1200×900 minimum']), bar: u.res === 'bad' && u.pct >= 100 ? 'var(--danger)' : u.pct >= 100 ? 'var(--success)' : 'var(--brand)' }));
+    v.hasUploads = s.uploads.length > 0; v.clearUploads = () => this.setState({ uploads: [] });
+    v.privAlbums = s.priv.map(a => ({ name: L([a[1], a[2]]), n: a[3].length + ' ' + t.files, covers: a[3].slice(0, 4).map(id => ({ img: U((mById(id) || {}).img || '', 200) })), go: () => this.setState({ mtab: 'library', mf: { ...s.mf, album: a[0] } }) }));
+    v.newPrivAlbum = () => { this.setState(st => ({ priv: [...st.priv, ['p' + (st.priv.length + 1), 'ألبوم جديد', 'New album', []]] })); this.toast(t.saved); };
+    v.stoRows = [[t.images, v.storage.imgs, s.media.filter(m => m.kind === 'img').reduce((n, m) => n + m.mb, 0)], [t.videos, v.storage.vids, s.media.filter(m => m.kind === 'vid').reduce((n, m) => n + m.mb, 0)]].map(([l, n, mb]) => ({ l, n: String(n), mb: mb.toFixed(1) + ' MB', w: Math.max(1, mb / totalMb * 100) + '%' }));
+    // detail drawer
+    if (s.detail) { const m = mById(s.detail); if (m) { const us = used(m.id); v.det = { img: U(m.img, 900), name: m.name, meta: m.dims + ' · ' + m.mb.toFixed(1) + ' MB · ' + m.date, isVid: m.kind === 'vid', dur: m.dur, usage: us.map(x => ({ x })), unused: !us.length };
+      v.detDelete = () => { if (us.length) this.setState({ dlg: { kind: 'blocked', ids: [m.id] } }); else this.setState({ dlg: { kind: 'confirm', ids: [m.id] } }); };
+      v.detCrop = () => this.openCrop(m.id, 'thumb'); } }
+    v.hasDetail = !!v.det; v.closeDetail = () => this.setState({ detail: null });
+    // dialogs
+    if (s.dlg) { v.dlg = { blocked: s.dlg.kind === 'blocked', confirm: s.dlg.kind === 'confirm', items: s.dlg.ids.map(id => { const m = mById(id); return { name: m.name, img: U(m.img, 120), uses: used(id).map(x => ({ x })) }; }) };
+      v.dlgDelete = () => { const ids = s.dlg.ids; this.setState(st => ({ media: st.media.filter(m => !ids.includes(m.id)), sel: [], selMode: false, dlg: null, detail: null })); this.toast(t.deletedT); }; }
+    v.hasDlg = !!s.dlg; v.closeDlg = () => this.setState({ dlg: null });
+    // picker
+    if (s.picker) { const p = s.picker, setP = (k, val) => this.setState(st => ({ picker: { ...st.picker, [k]: val } }));
+      const plist = s.media.filter(m => (p.kind === 'all' || m.kind === p.kind) && (!p.q || m.name.toLowerCase().includes(p.q.toLowerCase())) && (!p.album || s.priv.find(a => a[0] === p.album)[3].includes(m.id)));
+      v.pk = { multi: p.multi, q: p.q, count: p.sel.length + ' ' + t.selected, none: !p.sel.length, empty: !plist.length, title: t.pickerTitle + ' · ' + ({ service: t.pl_service, gallery: t.pl_gallery, cover: t.pl_cover, album: t.newAlbum, ad: t.pl_ad }[p.target] || '') };
+      v.pkSetQ = e => setP('q', e.target.value);
+      v.pkKinds = [['all', t.all], ['img', t.images], ['vid', t.videos]].map(([k, l]) => ({ label: l, on: p.kind === k, go: () => setP('kind', k) }));
+      v.pkAlbums = [{ label: t.all, on: !p.album, go: () => setP('album', '') }].concat(s.priv.map(a => ({ label: L([a[1], a[2]]), on: p.album === a[0], go: () => setP('album', a[0]) })));
+      v.pkItems = plist.map(m => { const i = p.sel.indexOf(m.id), on = i >= 0; return { img: U(m.img, 300), name: m.name, isVid: m.kind === 'vid', dur: m.dur, on, n: on ? String(i + 1) : '', ring: on ? 'inset 0 0 0 3px var(--brand)' : 'inset 0 0 0 1px var(--border-subtle)', go: () => setP('sel', p.multi ? (on ? p.sel.filter(x => x !== m.id) : [...p.sel, m.id]) : [m.id]) }; });
+      v.pkConfirm = () => this.confirmPicker(); v.pkGoMedia = () => this.setState({ picker: null, page: 'library' }); }
+    v.hasPicker = !!s.picker; v.closePicker = () => this.setState({ picker: null });
+    // crop editor
+    if (s.crop) { const c = s.crop, m = mById(c.mid), [rw, rh] = RATIO[c.pl], rf = rw / rh, ri = (c.r % 180 ? m.h / m.w : m.w / m.h);
+      const base = ri > rf ? ri / rf * 100 : 100;
+      const fw = rf >= 1.5 ? 560 : rf > 1 ? 480 : 380;
+      v.cr = { img: U(m.img, 1200), ratio: rw + ':' + rh, ar: rw + '/' + rh, fw: fw + 'px', w: base + '%', tf: 'translate(-50%,-50%) translate(' + c.x + 'px,' + c.y + 'px) scale(' + c.z + ') rotate(' + c.r + 'deg)', zoom: Math.round(c.z * 100) + '%', pl: t['pl_' + c.pl], name: m.name, z: c.z };
+      v.crPrevTf = 'translate(-50%,-50%) translate(' + (c.x * 160 / fw) + 'px,' + (c.y * 160 / fw) + 'px) scale(' + c.z + ') rotate(' + c.r + 'deg)';
+      v.crOthers = Object.keys(RATIO).filter(k => k !== c.pl && ['cover', 'service', 'thumb', 'album'].includes(k)).map(k => ({ l: t['pl_' + k], ratio: RATIO[k][0] + ':' + RATIO[k][1], ar: RATIO[k][0] + '/' + RATIO[k][1], custom: !!s.crops[k + ':' + c.mid], st: s.crops[k + ':' + c.mid] ? L(['قص مخصص', 'Custom crop']) : L(['افتراضي', 'Default']) }));
+      v.crDown = e => { e.preventDefault(); this._drag = { cx: e.clientX, cy: e.clientY, x: c.x, y: c.y }; };
+      v.crZoom = e => { const z = parseFloat(e.target.value); this.setState(st => ({ crop: { ...st.crop, z } })); };
+      v.crRotate = () => this.setState(st => ({ crop: { ...st.crop, r: (st.crop.r + 90) % 360 } }));
+      v.crReset = () => this.setState(st => ({ crop: { ...st.crop, z: 1, x: 0, y: 0, r: 0 } }));
+      v.crApply = () => { const { mid, pl, z, x, y, r } = s.crop; this.setState(st => ({ crops: { ...st.crops, [pl + ':' + mid]: { z, x, y, r } }, crop: null })); this.toast(t.cropSaved); if (this._cropDone) { const f = this._cropDone; this._cropDone = null; setTimeout(f, 2500); } }; }
+    v.hasCrop = !!s.crop; v.closeCrop = () => this.setState({ crop: null });
+    // services
+    v.svcRows = s.services.map(x => { const th = thumb(x.cover, 'service', 240); return { ...th, title: L([x.ar, x.en]), cat: L([MJ.CATS[x.cat].ar, MJ.CATS[x.cat].en]), n: x.gallery.length + ' ' + t.files, views: x.views.toLocaleString('en-US') + ' ' + t.views, pub: x.pub, pubLbl: x.pub ? t.published : t.draft, pubTone: x.pub ? 'success' : 'neutral',
+      toggle: val => this.setState(st => ({ services: st.services.map(y => y.id === x.id ? { ...y, pub: val } : y) })), edit: () => this.setState({ editSvc: clone(x) }) }; });
+    v.newSvc = () => this.setState({ editSvc: { id: 's' + Date.now(), ar: '', en: '', cat: 6, cover: '', gallery: [], pub: false, views: 0, dar: '', den: '', isNew: true } });
+    v.listSvc = !s.editSvc; v.editingSvc = !!s.editSvc;
+    if (s.editSvc) { const e = s.editSvc, set = (k, val) => this.setState(st => ({ editSvc: { ...st.editSvc, [k]: val } }));
+      v.es = e; v.esOn = { ar: ev => set('ar', ev.target.value), en: ev => set('en', ev.target.value), dar: ev => set('dar', ev.target.value), den: ev => set('den', ev.target.value) };
+      v.esCats = [6, 5].map(i => ({ label: L([MJ.CATS[i].ar, MJ.CATS[i].en]), on: e.cat === i, go: () => set('cat', i) }));
+      v.esHasCover = !!e.cover; v.esNoCover = !e.cover; v.esCover = e.cover ? thumb(e.cover, 'service', 800) : {};
+      v.esGallery = e.gallery.map((id, k) => ({ ...thumb(id, 'gallery', 300), first: k === 0, del: () => set('gallery', e.gallery.filter(x => x !== id)), up: () => { if (!k) return; const g = e.gallery.slice(); [g[k - 1], g[k]] = [g[k], g[k - 1]]; set('gallery', g); }, crop: () => this.openCrop(id, 'gallery') }));
+      v.esPickCover = () => this.openPicker('service', false); v.esCrop = () => e.cover && this.openCrop(e.cover, 'service'); v.esPickGallery = () => this.openPicker('gallery', true);
+      v.esPub = e.pub; v.esSetPub = val => set('pub', val);
+      v.esSave = () => { this.setState(st => ({ services: st.services.some(y => y.id === e.id) ? st.services.map(y => y.id === e.id ? { ...e } : y) : [...st.services, { ...e, ar: e.ar || 'خدمة جديدة', en: e.en || 'New service' }], editSvc: null })); this.toast(t.saved); };
+      v.esCancel = () => this.setState({ editSvc: null }); v.esPreview = () => this.toast(t.previewT, 'info'); }
+    // quotations
+    v.qtabOpts = [{ value: 'new', label: t.newReq + ' (' + newRfq + ')' }, { value: 'all', label: t.allReq }, { value: 'sent', label: t.sentQ }, { value: 'archived', label: t.archived }]; v.qtab = s.qtab; v.setQtab = x => this.setState({ qtab: x });
+    v.rfqList = s.rfqs.filter(r => s.qtab === 'all' ? r.st !== 'archived' : s.qtab === 'new' ? r.st === 'new' || r.st === 'info' : s.qtab === 'sent' ? r.st === 'sent' : r.st === 'archived' || r.st === 'declined').map(rfqV);
+    v.rfqEmpty = !v.rfqList.length;
+    const r = s.rfqs.find(x => x.id === s.rfqSel);
+    if (r) { v.rq = { ...rfqV(r), desc: L(r.d), budget: L(r.budget), start: L(r.start), files: r.files.map(f => ({ f, icon: /pdf$/.test(f) ? 'file-text' : 'image' })), hasFiles: r.files.length > 0, open: r.st === 'new' || r.st === 'info', sent: r.st === 'sent', total: r.total ? L([fmt(r.total) + ' ر.ع.', 'OMR ' + fmt(r.total)]) : '' };
+      const setSt = st => this.setState(x => ({ rfqs: x.rfqs.map(y => y.id === r.id ? { ...y, st } : y) }));
+      v.rqInfo = () => { setSt('info'); this.toast(t.infoT); }; v.rqDecline = () => { setSt('declined'); this.toast(t.declinedT, 'info'); };
+      v.rqReply = () => this.setState({ page: 'messages', convSel: (s.convos.find(c => c.ref === r.id) || s.convos[0]).id });
+      v.rqBuild = () => this.setState({ builder: { rfq: r.id, lines: [[L(['توريد وتركيب الخزائن', 'Cabinet supply & installation']), 1, 1850], [L(['سطح كوارتز (م.ط)', 'Quartz countertop (lin. m)']), 6.5, 95], [L(['تركيب المغسلة والخلاط', 'Sink & mixer installation']), 1, 120]], disc: 100, vat: true, valid: 30, terms: t.termsDefault, notes: '' } });
+      v.rqPdf = () => { setSt('sent'); this.toast(t.pdfT); }; }
+    v.hasRq = !!r; v.qList = !s.builder; v.qBuild = !!s.builder;
+    if (s.builder) { const b = s.builder, setB = (k, val) => this.setState(st => ({ builder: { ...st.builder, [k]: val } }));
+      const sub = b.lines.reduce((n, l) => n + (+l[1] || 0) * (+l[2] || 0), 0), net = Math.max(0, sub - (+b.disc || 0)), vat = b.vat ? net * 0.05 : 0, tot = net + vat, money = n => L([fmt(n) + ' ر.ع.', 'OMR ' + fmt(n)]);
+      v.bd = { no: 'QT-QMK-0' + s.seq.q, rfq: b.rfq, cust: L(r.cust), sub: money(sub), vat: money(vat), total: money(tot), disc: String(b.disc), vatOn: b.vat, terms: b.terms, notes: b.notes, date: '7 Nov 2026' };
+      v.bdLines = b.lines.map((l, k) => { const sl = (i, val) => setB('lines', b.lines.map((x, j) => j === k ? x.map((y, z) => z === i ? val : y) : x)); return { name: l[0], qty: String(l[1]), price: String(l[2]), amt: money((+l[1] || 0) * (+l[2] || 0)), setName: e => sl(0, e.target.value), setQty: e => sl(1, e.target.value), setPrice: e => sl(2, e.target.value), del: () => setB('lines', b.lines.filter((_, j) => j !== k)) }; });
+      v.bdAdd = () => setB('lines', [...b.lines, ['', 1, 0]]); v.bdDisc = e => setB('disc', e.target.value); v.bdVat = val => setB('vat', val); v.bdTerms = e => setB('terms', e.target.value); v.bdNotes = e => setB('notes', e.target.value);
+      v.bdValid = [7, 14, 30].map(n => ({ label: n + ' ' + t.days, on: b.valid === n, go: () => setB('valid', n) }));
+      v.bdBack = () => this.setState({ builder: null }); v.bdDraft = () => this.toast(t.draftT, 'info');
+      v.bdSend = () => { this.setState(st => ({ rfqs: st.rfqs.map(y => y.id === b.rfq ? { ...y, st: 'sent', total: tot } : y), builder: null, seq: { ...st.seq, q: st.seq.q + 1 } })); this.toast(t.sentT); }; }
+    // bookings
+    v.acceptBk = s.acceptBk; v.setAcceptBk = val => this.setState({ acceptBk: val });
+    v.btabOpts = [{ value: 'calendar', label: t.calendar }, { value: 'requests', label: t.requests + ' (' + pendBk + ')' }, { value: 'availability', label: t.availability }]; v.btab = s.btab; v.setBtab = x => this.setState({ btab: x });
+    v.bCal = s.btab === 'calendar'; v.bReq = s.btab === 'requests'; v.bAv = s.btab === 'availability';
+    v.hours = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18].map(h => ({ h: String(h).padStart(2, '0') + ':00' }));
+    v.calDays = DAYS.map((d, k) => ({ d: L([d[0], d[1]]), n: String(d[2]), off: k === 5, bg: k === 5 ? 'var(--surface-sunken)' : 'var(--surface-card)', evs: s.bookings.filter(b => b.day === k && b.st !== 'rejected').map(b => ({ ...bkV(b), top: ((b.h - 8) * 52 + 2) + 'px', bg: b.st === 'confirmed' ? 'var(--brand-tint-strong)' : b.st === 'pending' ? 'var(--warning-tint)' : 'var(--info-tint)', fg: b.st === 'confirmed' ? 'var(--brand-ink)' : b.st === 'pending' ? 'oklch(0.48 0.11 65)' : 'var(--info)', t: String(b.h).padStart(2, '0') + ':00' })) }));
+    v.bkPending = s.bookings.filter(b => b.st === 'pending' || b.st === 'reschedule').map(bkV); v.bkNone = !v.bkPending.length;
+    v.availRows = DAYS.map((d, k) => ({ d: L([d[0], d[1]]), on: !!s.avail[k][0], txt: s.avail[k][0] ? s.avail[k][1] : t.closed, set: val => this.setState(st => ({ avail: st.avail.map((a, j) => j === k ? [val ? 1 : 0, a[1] || '08:00 – 13:00'] : a) })) }));
+    const chipSet = (key, vals, unit) => vals.map(n => ({ label: n + ' ' + unit, on: s[key] === n, go: () => this.setState({ [key]: n }) }));
+    v.durChips = chipSet('dur', [30, 60, 90], t.min); v.bufChips = chipSet('buf', [0, 15, 30], t.min); v.noticeChips = chipSet('notice', [2, 24, 48], t.hrs); v.capChips = [1, 2, 3].map(n => ({ label: String(n), on: s.cap === n, go: () => this.setState({ cap: n }) }));
+    v.bkModeOpts = [{ value: 'manual', label: t.manual }, { value: 'instant', label: t.instant }]; v.bkMode = s.bkMode; v.setBkMode = x => this.setState({ bkMode: x });
+    // messages
+    v.convList = s.convos.map(c => { const last = c.msgs[c.msgs.length - 1]; return { name: L(c.cust), ref: c.ref, last: (last[0] ? '' : L(['أنت: ', 'You: '])) + L([last[1], last[2]]), time: last[3], unread: c.unread ? String(c.unread) : '', has: !!c.unread, bg: s.convSel === c.id ? 'var(--brand-tint)' : 'transparent', go: () => this.setState(st => ({ convSel: c.id, convos: st.convos.map(x => x.id === c.id ? { ...x, unread: 0 } : x) })) }; });
+    const cv = s.convos.find(c => c.id === s.convSel);
+    if (cv) { v.cv = { name: L(cv.cust), ref: cv.ref }; v.cvMsgs = cv.msgs.map(m => ({ mine: !m[0], text: L([m[1], m[2]]), time: m[3] })); }
+    v.draft = s.draft; v.setDraft = e => this.setState({ draft: e.target.value });
+    v.sendMsg = () => { const d = s.draft.trim(); if (!d) return; this.setState(st => ({ draft: '', convos: st.convos.map(c => c.id === st.convSel ? { ...c, msgs: [...c.msgs, [0, d, d, '09:41']] } : c) })); };
+    v.msgKey = e => { if (e.key === 'Enter') v.sendMsg(); };
+    // portfolio
+    v.pubAlbums = s.albums.map((a, k) => ({ ...thumb(a.cover, 'album', 500), title: L([a.ar, a.en]), place: L(a.place), n: a.media.length + ' ' + t.files, views: a.views.toLocaleString('en-US') + ' ' + t.views, pub: a.pub, pubLbl: a.pub ? t.published : t.draft, pubTone: a.pub ? 'success' : 'neutral',
+      toggle: val => this.setState(st => ({ albums: st.albums.map(y => y.id === a.id ? { ...y, pub: val } : y) })), crop: () => this.openCrop(a.cover, 'album'),
+      up: () => { if (!k) return; this.setState(st => { const g = st.albums.slice(); [g[k - 1], g[k]] = [g[k], g[k - 1]]; return { albums: g }; }); } }));
+    v.newPubAlbum = () => this.openPicker('album', true);
+    // membership
+    v.plans = P.PLANS.map(([id, nm, vals]) => ({ name: L(nm), cur: id === 'platinum', ring: id === 'platinum' ? 'inset 0 0 0 2px var(--brand)' : 'var(--shadow-sm)', rows: P.PLAN_ROWS.map((rw, k) => { let x = vals[k]; if (x === '∞') x = t.unlimited; else if (x === 'yes') x = t.yes; else if (x === 'no') x = t.no; else if (x.includes('|')) x = L(x.split('|')); return { l: L(rw), v: x }; }), go: () => this.toast(L(['اختيار الخطة يتم عبر الدفع التجريبي', 'Plan change uses simulated payment']), 'info') }));
+    v.meters = [[L(['الفئات', 'Categories']), '2', t.unlimited, '4%'], [L(['الفروع', 'Branches']), '2', t.unlimited, '4%'], [L(['الألبومات المنشورة', 'Published albums']), String(s.albums.filter(a => a.pub).length), t.unlimited, '6%'], [t.storageUsed, v.storage.used, '10 GB', v.storage.pct]].map(([l, a, b, w]) => ({ l, a, b, w }));
+    // advertising
+    const AST = { active: ['نشط', 'Active', 'success'], pending: ['بانتظار الموافقة', 'Pending approval', 'warning'], draft: ['مسودة', 'Draft', 'neutral'] };
+    v.adRows = s.ads.map(a => ({ ...thumb(a.media, 'ad', 400), id: a.id, title: L(a.t), pl: L(a.pl), when: L(a.when), imp: a.imp.toLocaleString('en-US'), clk: a.clk.toLocaleString('en-US'), ctr: a.imp ? (a.clk / a.imp * 100).toFixed(1) + '%' : '—', b: { label: L(AST[a.st]), tone: AST[a.st][2] } }));
+    const timp = s.ads.reduce((n, a) => n + a.imp, 0), tclk = s.ads.reduce((n, a) => n + a.clk, 0);
+    v.adKpis = [[t.impressions, timp.toLocaleString('en-US'), 'eye', 'violet'], [t.clicks, tclk.toLocaleString('en-US'), 'mouse-pointer-click', 'sky'], [t.ctr, (tclk / timp * 100).toFixed(1) + '%', 'percent', 'green'], [t.activeAds, String(s.ads.filter(a => a.st === 'active').length), 'megaphone', 'amber']].map(([label, val, icon, c]) => ({ label, val, icon, bg: 'var(--cat-' + c + '-100)', fg: 'var(--cat-' + c + '-600)' }));
+    v.createAd = () => this.openPicker('ad', false);
+    // support
+    const TST = { open: ['مفتوحة', 'Open', 'brand'], progress: ['قيد المعالجة', 'In progress', 'info'], waiting: ['بانتظارك', 'Waiting for you', 'warning'], resolved: ['تم الحل', 'Resolved', 'success'], closed: ['مغلقة', 'Closed', 'neutral'] };
+    const TC = [['الحساب والملف', 'Account & Profile'], ['العضوية والاشتراك', 'Membership & Subscription'], ['المدفوعات والفوترة', 'Payments & Billing'], ['الإعلانات', 'Advertising'], ['الخدمات والوسائط', 'Services & Media'], ['الرسائل والإشعارات', 'Messaging & Notifications'], ['مشكلات تقنية', 'Technical issues'], ['أخرى', 'Other']];
+    v.tickets = s.tickets.map(x => ({ id: x.id, s: L(x.s), c: L(x.c), date: x.date, pr: t[x.pr], b: { label: L(TST[x.st]), tone: TST[x.st][2] } }));
+    v.showTk = s.showTk; v.toggleTk = () => this.setState(st => ({ showTk: !st.showTk }));
+    const setTk = (k, val) => this.setState(st => ({ tk: { ...st.tk, [k]: val } }));
+    v.tk = s.tk; v.tkS = e => setTk('s', e.target.value); v.tkD = e => setTk('d', e.target.value);
+    v.tkCats = TC.map((c, k) => ({ label: L(c), on: s.tk.c === k, go: () => setTk('c', k) }));
+    v.tkPrOpts = [{ value: 'low', label: t.low }, { value: 'medium', label: t.medium }, { value: 'high', label: t.high }]; v.tkPr = s.tk.pr; v.setTkPr = x => setTk('pr', x);
+    v.tkDisabled = !s.tk.s.trim() || !s.tk.d.trim();
+    v.tkSubmit = () => { if (v.tkDisabled) return; const id = 'MJB-000' + s.seq.tk; this.setState(st => ({ tickets: [{ id, s: [st.tk.s, st.tk.s], c: TC[st.tk.c], pr: st.tk.pr, st: 'open', date: '7 Nov 2026' }, ...st.tickets], tk: { s: '', c: 4, pr: 'medium', d: '' }, showTk: false, seq: { ...st.seq, tk: st.seq.tk + 1 } })); this.toast(t.ticketT + ' · ' + id); };
+    v.faqs = [['كيف أرفع فيديو؟', 'How do I upload a video?'], ['لماذا لا أستطيع حذف صورة؟', 'Why can’t I delete a photo?'], ['كيف أغيّر خطة العضوية؟', 'How do I change my plan?']].map(q => ({ q: L(q) }));
+    // profile
+    const pf = s.profile, setPf = (k, val) => this.setState(st => ({ profile: { ...st.profile, [k]: val } }));
+    v.pf = pf; v.pfOn = ['nameAr', 'nameEn', 'phone', 'wa', 'email', 'web'].reduce((o, k) => (o[k] = e => setPf(k, e.target.value), o), {});
+    v.pfCover = thumb(pf.cover, 'cover', 1000); v.pfPickCover = () => this.openPicker('cover', false); v.pfCrop = () => this.openCrop(pf.cover, 'cover');
+    v.pfCats = [6, 5].map(i => ({ label: L([MJ.CATS[i].ar, MJ.CATS[i].en]), color: MJ.CATS[i].color }));
+    v.pfHours = [[L(['السبت – الخميس', 'Sat – Thu']), '08:00 – 18:00'], [L(['الجمعة', 'Friday']), t.closed]].map(([d, h]) => ({ d, h }));
+    v.pfSave = () => this.toast(t.saved); v.pfPreview = () => this.toast(t.previewT, 'info');
+    // branches
+    v.branchRows = [[L(['القرم، مسقط', 'Qurum, Muscat']), L(['شارع ١٨ نوفمبر · المعرض والإدارة', '18th November St · showroom & office']), true], [L(['نزوى', 'Nizwa']), L(['المنطقة الصناعية · الورشة', 'Industrial area · workshop']), false]].map(([n, a, p], k) => ({ n, a, p, on: s.br[k], set: val => this.setState(st => ({ br: st.br.map((x, j) => j === k ? val : x) })) }));
+    v.covAll = s.cov.all; v.setCovAll = val => this.setState(st => ({ cov: { ...st.cov, all: val } }));
+    v.covChips = ['muscat', 'batinah', 'dakhiliyah', 'dhofar', 'sharqiyah'].map(g => ({ label: L(MJ.GOV[g]), on: s.cov.all || s.cov[g], go: () => this.setState(st => ({ cov: { ...st.cov, all: false, [g]: !st.cov[g] } })) }));
+    v.addBranch = () => this.toast(L(['الفروع: ٢ من غير محدود في بلاتيني', 'Branches: 2 of unlimited on Platinum']), 'info');
+    // settings & notifications
+    v.rfqOn = s.rfqOn; v.setRfqOn = val => this.setState({ rfqOn: val });
+    v.npRows = [['msg', t.npMsg], ['rfq', t.npRfq], ['bk', t.npBk], ['bill', t.npBill]].map(([k, l]) => ({ l, on: s.np[k], set: val => this.setState(st => ({ np: { ...st.np, [k]: val } })) }));
+    v.notifs = [['file-text', 'amber', ['طلب عرض سعر جديد من سالم الحارثي', 'New quotation request from Salim Al Harthy'], 'MJB-RFQ-000128', ['منذ ٢٠ دقيقة', '20 min ago']], ['calendar-clock', 'coral', ['طلب حجز زيارة من عائشة الهنائية', 'Site visit request from Aisha Al Hinai'], 'MJB-BK-000055', ['منذ ساعة', '1 hr ago']], ['message-circle', 'violet', ['رسالتان جديدتان من مريم البلوشية', '2 new messages from Maryam Al Balushi'], 'MJB-RFQ-000126', ['منذ ساعتين', '2 hrs ago']], ['life-buoy', 'sky', ['رد جديد على تذكرتك', 'New reply on your ticket'], 'MJB-000214', ['أمس', 'Yesterday']], ['gem', 'pink', ['تنتهي تجربة بلاتيني خلال ١٨ يومًا', 'Platinum trial ends in 18 days'], '', ['أمس', 'Yesterday']]].map(([icon, color, title, ref, when]) => ({ icon, color, title: L(title), sub: L(when) + (ref ? ' · ' + ref : '') }));
+    // analytics
+    v.contactMix = [[t.waClicks, 214, 'green'], [t.custMsgs, 46, 'violet'], [t.callClicks, 88, 'sky'], [t.rfqs, s.rfqs.length + 19, 'amber'], [t.visitBookings, s.bookings.length + 7, 'coral']].map(([l, n, c]) => ({ l, n: String(n), w: (n / 214 * 100) + '%', bg: 'var(--cat-' + c + '-500)' }));
+    v.topSvcs = s.services.concat().sort((a, b) => b.views - a.views).map(x => ({ ...thumb(x.cover, 'service', 160), title: L([x.ar, x.en]), views: x.views.toLocaleString('en-US') })).concat(s.albums.filter(a => a.pub).map(a => ({ ...thumb(a.cover, 'album', 160), title: L([a.ar, a.en]), views: a.views.toLocaleString('en-US') })));
+    return v;
+  }
+}
+</script>
+</body>
+</html>

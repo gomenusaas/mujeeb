@@ -1,0 +1,4 @@
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; font: var(--type-body); color: var(--text-primary); background: var(--bg-app); -webkit-font-smoothing: antialiased; }
+a { color: var(--text-link); text-decoration: none; font-weight: 600; }
+a:hover { color: var(--brand-pressed); }

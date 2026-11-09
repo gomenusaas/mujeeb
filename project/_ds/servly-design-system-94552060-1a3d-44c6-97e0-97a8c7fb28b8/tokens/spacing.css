@@ -1,0 +1,13 @@
+:root {
+  --space-0: 0px; --space-0-5: 2px; --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+  --space-5: 20px; --space-6: 24px; --space-8: 32px; --space-10: 40px; --space-12: 48px; --space-16: 64px;
+  --screen-gutter: 20px;
+  --tabbar-height: 72px;
+  --appbar-height: 56px;
+  --hit-min: 44px;
+
+  --radius-xs: 6px; --radius-sm: 10px; --radius-md: 14px; --radius-lg: 20px; --radius-xl: 28px; --radius-pill: 999px;
+  --radius-card: var(--radius-lg);
+  --radius-tile: var(--radius-md);
+  --radius-sheet: var(--radius-xl);
+}

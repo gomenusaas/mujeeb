@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/servly-design-system-94552060-1a3d-44c6-97e0-97a8c7fb28b8/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/servly-design-system-94552060-1a3d-44c6-97e0-97a8c7fb28b8/tokens/colors.css">
+<link rel="stylesheet" href="_ds/servly-design-system-94552060-1a3d-44c6-97e0-97a8c7fb28b8/tokens/typography.css">
+<link rel="stylesheet" href="_ds/servly-design-system-94552060-1a3d-44c6-97e0-97a8c7fb28b8/tokens/spacing.css">
+<link rel="stylesheet" href="_ds/servly-design-system-94552060-1a3d-44c6-97e0-97a8c7fb28b8/tokens/effects.css">
+<link rel="stylesheet" href="_ds/servly-design-system-94552060-1a3d-44c6-97e0-97a8c7fb28b8/tokens/base.css">
+<link rel="stylesheet" href="_ds/servly-design-system-94552060-1a3d-44c6-97e0-97a8c7fb28b8/styles.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
+<script src="_ds/servly-design-system-94552060-1a3d-44c6-97e0-97a8c7fb28b8/_ds_bundle.js"></script>
+<style>
+:root{--font-sans:'Plus Jakarta Sans','IBM Plex Sans Arabic',ui-sans-serif,system-ui,sans-serif}
+body{margin:0;background:#efedf3;font-family:var(--font-sans);color:var(--text-primary)}
+a{color:var(--brand);text-decoration:none}a:hover{color:var(--brand-pressed)}
+[dir=rtl],[dir=rtl] *{letter-spacing:0 !important}
+.mj-scroll::-webkit-scrollbar{display:none}
+</style>
+</helmet>
+<section id="t2" style="padding:40px 44px 40px;scroll-margin-top:16px;border-bottom:1px solid rgba(0,0,0,.08)">
+  <div style="display:flex;align-items:baseline;gap:10px;margin:0 0 8px">
+    <a href="#t2" style="font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#1a1a1a;color:#fff;border-radius:4px">2</a>
+    <span style="font:700 15px/1.2 var(--font-sans);color:#1a1a1a"><a href="#1a" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px">1a</a> rebuilt on Servly components</span>
+  </div>
+  <p style="margin:0 0 24px;max-width:760px;font:400 13px/1.55 var(--font-sans);color:rgba(0,0,0,.6);text-wrap:pretty">Category cards are now the system's CategoryCard with Fluent 3D art (hero 2×2 + feature carousel of all 20). Sponsored slots use PromoBanner, recommendations use ProviderCard, photo cards drop the gradient overlays. Arabic text falls back to IBM Plex Sans Arabic since Plus Jakarta Sans has no Arabic glyphs.</p>
+  <div style="display:flex;flex-wrap:wrap;gap:36px;align-items:flex-start">
+    <div id="2a" style="flex:none;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px">
+      <div style="display:flex;align-items:baseline;gap:8px;font:400 12px/1.3 var(--font-sans);color:rgba(0,0,0,.55)"><a href="#2a" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px">2a</a>Violet hero · CategoryCard hero + feature carousel</div>
+      <div dir="{{ dir }}" style="position:relative;width:390px;height:844px;border-radius:44px;overflow:hidden;background:var(--bg-app);box-shadow:0 0 0 10px #17151c,0 30px 60px rgba(30,20,60,.25)">
+        <div class="mj-scroll" style="position:absolute;inset:0;overflow-y:auto;scrollbar-width:none;padding-bottom:96px;display:flex;flex-direction:column;gap:26px">
+          <div style="flex:none">
+            <div style="position:relative;overflow:hidden;background:var(--brand);color:#fff;padding:0 20px 52px;border-radius:0 0 32px 32px">
+              <span style="position:absolute;inset-inline-end:-60px;top:-40px;width:200px;height:200px;border-radius:50%;background:oklch(1 0 0 / .08)"></span>
+              <span style="position:absolute;inset-inline-end:40px;bottom:-70px;width:140px;height:140px;border-radius:50%;background:oklch(1 0 0 / .06)"></span>
+              <div style="position:relative;display:flex;justify-content:space-between;align-items:center;height:50px;padding:0 10px;font:600 15px var(--font-sans)"><span>9:41</span><span style="display:flex;gap:6px"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="signal" size="{{ 16 }}" hint-size="16px,16px"></x-import><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="wifi" size="{{ 16 }}" hint-size="16px,16px"></x-import><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="battery-full" size="{{ 18 }}" hint-size="18px,16px"></x-import></span></div>
+              <div style="position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:4px">
+                <span style="font:800 20px/24px var(--font-sans);letter-spacing:-.02em">{{ t.brand }}<span style="opacity:.6">.</span></span>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <button type="button" onClick="{{ toggleLang }}" style="height:40px;padding:0 14px;border:none;border-radius:999px;background:oklch(1 0 0 / .16);color:#fff;font:700 13px var(--font-sans);cursor:pointer">{{ t.otherLang }}</button>
+                  <x-import component-from-global-scope="ServlyDesignSystem_945520.IconButton" icon="bell" variant="glass" dot="{{ true }}" style="background:oklch(1 0 0 / .16);color:#fff" hint-size="44px,44px"></x-import>
+                </div>
+              </div>
+              <div style="position:relative;display:flex;flex-direction:column;gap:2px;margin-top:14px">
+                <span style="font:var(--type-caption);opacity:.8">{{ serviceAddress }}</span>
+                <span style="display:flex;align-items:center;gap:4px;font:var(--type-title)"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="map-pin" size="{{ 16 }}" hint-size="16px,16px"></x-import>{{ t.location }}<x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="chevron-down" size="{{ 16 }}" hint-size="16px,16px"></x-import></span>
+              </div>
+              <div style="position:relative;font:var(--type-h1);margin-top:18px;text-wrap:balance">{{ t.greeting }}</div>
+            </div>
+            <div style="position:relative;z-index:1;padding:0 20px;margin-top:-26px">
+              <div style="display:flex;align-items:center;gap:10px;height:52px;padding-inline:18px 6px;border-radius:var(--radius-pill);background:var(--surface-card);box-shadow:var(--shadow-md)">
+                <x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="search" size="{{ 20 }}" color="var(--text-tertiary)" hint-size="20px,20px"></x-import>
+                <span style="flex:1;min-width:0;font:var(--type-body);font-weight:500;color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.search }}</span>
+                <span style="width:40px;height:40px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="sliders-horizontal" size="{{ 18 }}" hint-size="18px,18px"></x-import></span>
+              </div>
+            </div>
+          </div>
+          <div style="flex:none">
+            <div class="mj-scroll" style="display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 20px;padding:4px 20px 12px;margin:-4px 0 -12px;scrollbar-width:none">
+              <sc-for list="{{ promos }}" as="pr" hint-placeholder-count="2">
+                <div style="flex:none;width:350px;scroll-snap-align:start"><x-import component-from-global-scope="ServlyDesignSystem_945520.PromoBanner" eyebrow="{{ pr.eyebrow }}" title="{{ pr.title }}" cta="{{ pr.cta }}" color="{{ pr.color }}" image-label="{{ pr.image }}" hint-size="350px,156px"></x-import></div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="flex:none;padding:0 20px;display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px"><span style="font:var(--type-h3)">{{ t.categories }}</span><span style="display:inline-flex;align-items:center;gap:2px;font:var(--type-body-sm);font-weight:700;color:var(--brand)">{{ t.viewAll20 }}<x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="{{ chev }}" size="{{ 16 }}" hint-size="16px,16px"></x-import></span></div>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
+              <sc-for list="{{ heroCats }}" as="c" hint-placeholder-count="4">
+                <x-import component-from-global-scope="ServlyDesignSystem_945520.CategoryCard" variant="hero" label="{{ c.label }}" subtitle="{{ c.sub }}" art="{{ c.art }}" color="{{ c.color }}" hint-size="100%,156px"></x-import>
+              </sc-for>
+            </div>
+          </div>
+          <div style="flex:none;display:flex;flex-direction:column;gap:14px">
+            <div style="padding:0 20px"><span style="font:var(--type-h3)">{{ browseAll }}</span></div>
+            <div class="mj-scroll" style="display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 20px;padding:4px 20px 12px;margin:-4px 0 -12px;scrollbar-width:none">
+              <sc-for list="{{ featCats }}" as="c" hint-placeholder-count="3">
+                <div style="flex:none;width:150px;scroll-snap-align:start"><x-import component-from-global-scope="ServlyDesignSystem_945520.CategoryCard" variant="feature" label="{{ c.label }}" art="{{ c.art }}" icon="{{ c.icon }}" color="{{ c.color }}" hint-size="150px,168px"></x-import></div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="flex:none;display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding:0 20px"><span style="font:var(--type-h3)">{{ t.featuredCompanies }}</span><span style="display:inline-flex;align-items:center;gap:2px;font:var(--type-body-sm);font-weight:700;color:var(--brand)">{{ t.seeAll }}<x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="{{ chev }}" size="{{ 16 }}" hint-size="16px,16px"></x-import></span></div>
+            <div class="mj-scroll" style="display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 20px;padding:4px 20px 12px;margin:-4px 0 -12px;scrollbar-width:none">
+              <sc-for list="{{ companies }}" as="co" hint-placeholder-count="2">
+                <div style="flex:none;width:260px;scroll-snap-align:start;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm);overflow:hidden">
+                  <div style="position:relative;aspect-ratio:16/9;background:{{ co.c100 }}">
+                    <img src="{{ co.cover }}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block">
+                    <span style="position:absolute;top:8px;inset-inline-end:8px"><x-import component-from-global-scope="ServlyDesignSystem_945520.IconButton" icon="heart" variant="glass" size="{{ 34 }}" active="{{ co.fav }}" onClick="{{ co.onFav }}" hint-size="34px,34px"></x-import></span>
+                  </div>
+                  <div style="padding:12px 14px 14px;display:flex;gap:12px;align-items:flex-start">
+                    <x-import component-from-global-scope="ServlyDesignSystem_945520.Avatar" name="{{ co.name }}" size="{{ 44 }}" verified="{{ true }}" hint-size="44px,44px"></x-import>
+                    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px">
+                      <span style="font:var(--type-title);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ co.name }}</span>
+                      <span style="font:var(--type-body-sm);color:var(--text-secondary)">{{ co.cat }}</span>
+                      <span style="display:flex;align-items:center;gap:3px;font:var(--type-caption);color:var(--text-tertiary)"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="map-pin" size="{{ 13 }}" hint-size="13px,13px"></x-import>{{ co.city }} · {{ co.covers }}</span>
+                    </div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="flex:none;display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding:0 20px"><span style="font:var(--type-h3)">{{ t.featuredProjects }}</span><span style="display:inline-flex;align-items:center;gap:2px;font:var(--type-body-sm);font-weight:700;color:var(--brand)">{{ t.seeAll }}<x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="{{ chev }}" size="{{ 16 }}" hint-size="16px,16px"></x-import></span></div>
+            <div class="mj-scroll" style="display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 20px;padding:4px 20px 12px;margin:-4px 0 -12px;scrollbar-width:none">
+              <sc-for list="{{ projects }}" as="p" hint-placeholder-count="2">
+                <div style="flex:none;width:232px;scroll-snap-align:start;border-radius:var(--radius-card);background:var(--surface-card);box-shadow:var(--shadow-sm);overflow:hidden">
+                  <div style="position:relative;aspect-ratio:4/3;background:{{ p.c100 }}">
+                    <img src="{{ p.img }}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block">
+                    <span style="position:absolute;top:10px;inset-inline-start:10px"><x-import component-from-global-scope="ServlyDesignSystem_945520.Badge" tone="dark" size="sm" icon="images" hint-size="auto,22px">{{ p.count }}</x-import></span>
+                  </div>
+                  <div style="padding:12px 14px 14px;display:flex;flex-direction:column;gap:4px">
+                    <span style="font:var(--type-body-sm);color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.company }} · {{ p.place }}</span>
+                    <span style="font:var(--type-title);text-wrap:pretty">{{ p.title }}</span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="flex:none;padding:0 20px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;flex-direction:column;gap:2px"><span style="font:var(--type-h3)">{{ recTitle }}</span><span style="font:var(--type-body-sm);color:var(--text-secondary)">{{ recSub }}</span></div>
+            <sc-for list="{{ recommended }}" as="r" hint-placeholder-count="3">
+              <x-import component-from-global-scope="ServlyDesignSystem_945520.ProviderCard" name="{{ r.name }}" role="{{ r.role }}" distance="{{ r.distance }}" verified="{{ true }}" hint-size="100%,88px"></x-import>
+            </sc-for>
+          </div>
+        </div>
+        <div style="position:absolute;inset-inline:0;bottom:0;z-index:2">
+          <x-import component-from-global-scope="ServlyDesignSystem_945520.TabBar" items="{{ tabs }}" active="{{ tabA }}" onChange="{{ setTabA }}" hint-size="100%,72px"></x-import>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p style="margin:26px 0 0;font:12px/1.5 var(--font-sans);color:rgba(0,0,0,.5)">Try next: "approve <a href="#2a" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:2px 6px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px">2a</a>, build the remaining screens" · "use real photos in the promo banners" · "swap which 4 categories are heroes"</p>
+</section>
+<section id="t1" style="padding:40px 44px 40px;scroll-margin-top:16px">
+  <div style="display:flex;align-items:baseline;gap:10px;margin:0 0 8px">
+    <a href="#t1" style="font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#1a1a1a;color:#fff;border-radius:4px">1</a>
+    <span style="font:700 15px/1.2 var(--font-sans);color:#1a1a1a">MUJEEB customer homepage: three layout directions</span>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;align-items:center;gap:16px;margin:0 0 24px;max-width:1240px">
+    <p style="margin:0;flex:1 1 520px;font:400 13px/1.55 var(--font-sans);color:rgba(0,0,0,.6);text-wrap:pretty">Servly tokens and components, violet primary, Arabic RTL by default. Each category keeps one hue from the 8-hue palette across all three. Companies and projects are fictional demo data; photos are Unsplash. Pick one (or mix) and I'll build it out with category listing, company profile, service details, RFQ, booking and messaging.</p>
+    <div style="display:flex;gap:4px;padding:4px;border-radius:999px;background:#fff;box-shadow:var(--shadow-xs)">
+      <button type="button" onClick="{{ setAr }}" style="border:none;cursor:pointer;height:34px;padding:0 16px;border-radius:999px;font:600 13px var(--font-sans);background:{{ arBg }};color:{{ arFg }}">العربية</button>
+      <button type="button" onClick="{{ setEn }}" style="border:none;cursor:pointer;height:34px;padding:0 16px;border-radius:999px;font:600 13px var(--font-sans);background:{{ enBg }};color:{{ enFg }}">English</button>
+    </div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:36px;align-items:flex-start">
+
+    <!-- 1a -->
+    <div id="1a" style="flex:none;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px">
+      <div style="display:flex;align-items:baseline;gap:8px;font:400 12px/1.3 var(--font-sans);color:rgba(0,0,0,.55)"><a href="#1a" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px">1a</a>Violet hero · photo category carousel (2 rows)</div>
+      <div dir="{{ dir }}" style="position:relative;width:390px;height:844px;border-radius:44px;overflow:hidden;background:var(--bg-app);box-shadow:0 0 0 10px #17151c,0 30px 60px rgba(30,20,60,.25)">
+        <div class="mj-scroll" style="position:absolute;inset:0;overflow-y:auto;scrollbar-width:none;padding-bottom:96px">
+          <div style="position:relative;overflow:hidden;background:var(--brand);color:#fff;padding:0 20px 60px;border-radius:0 0 32px 32px">
+            <span style="position:absolute;inset-inline-end:-60px;top:-40px;width:200px;height:200px;border-radius:50%;background:oklch(1 0 0 / .08)"></span>
+            <span style="position:absolute;inset-inline-end:60px;bottom:-80px;width:150px;height:150px;border-radius:50%;background:oklch(1 0 0 / .06)"></span>
+            <div style="position:relative;display:flex;justify-content:space-between;align-items:center;height:50px;padding:0 10px;font:600 15px var(--font-sans)"><span>9:41</span><span style="display:flex;gap:6px"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="signal" size="{{ 16 }}" hint-size="16px,16px"></x-import><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="wifi" size="{{ 16 }}" hint-size="16px,16px"></x-import><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="battery-full" size="{{ 18 }}" hint-size="18px,16px"></x-import></span></div>
+            <div style="position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:4px">
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <span style="font:800 22px/26px var(--font-sans);letter-spacing:-.02em">{{ t.brand }}<span style="color:var(--cat-amber-500)">.</span></span>
+                <button type="button" style="display:flex;align-items:center;gap:4px;border:none;background:none;color:#fff;padding:0;cursor:pointer;font:600 13px var(--font-sans);opacity:.9"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="map-pin" size="{{ 14 }}" hint-size="14px,14px"></x-import>{{ t.location }}<x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="chevron-down" size="{{ 14 }}" hint-size="14px,14px"></x-import></button>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <button type="button" onClick="{{ toggleLang }}" style="height:36px;padding:0 12px;border:none;border-radius:999px;background:oklch(1 0 0 / .16);color:#fff;font:700 13px var(--font-sans);cursor:pointer">{{ t.otherLang }}</button>
+                <x-import component-from-global-scope="ServlyDesignSystem_945520.IconButton" icon="bell" variant="glass" size="{{ 40 }}" dot="{{ true }}" style="background:oklch(1 0 0 / .16);color:#fff" hint-size="40px,40px"></x-import>
+                <x-import component-from-global-scope="ServlyDesignSystem_945520.Avatar" name="{{ t.userName }}" size="{{ 40 }}" hint-size="40px,40px"></x-import>
+              </div>
+            </div>
+            <div style="position:relative;margin-top:22px;font:800 26px/34px var(--font-sans);text-wrap:balance">{{ t.greeting }}</div>
+          </div>
+          <div style="position:relative;z-index:1;padding:0 20px;margin-top:-28px">
+            <div style="display:flex;align-items:center;gap:10px;height:56px;padding-inline:18px 6px;border-radius:999px;background:var(--surface-card);box-shadow:var(--shadow-md)">
+              <x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="search" size="{{ 20 }}" color="var(--text-tertiary)" hint-size="20px,20px"></x-import>
+              <span style="flex:1;font:500 15px var(--font-sans);color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.search }}</span>
+              <span style="width:44px;height:44px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="sliders-horizontal" size="{{ 18 }}" hint-size="18px,18px"></x-import></span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px;margin-top:26px">
+            <div style="display:flex;align-items:flex-end;justify-content:space-between;padding:0 20px">
+              <span style="font:var(--type-h3)">{{ t.categories }}</span>
+              <span style="display:flex;align-items:center;gap:2px;font:700 13px var(--font-sans);color:var(--brand)">{{ t.viewAll20 }}<x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="{{ chev }}" size="{{ 16 }}" hint-size="16px,16px"></x-import></span>
+            </div>
+            <div class="mj-scroll" style="display:grid;grid-template-rows:repeat(2,auto);grid-auto-flow:column;grid-auto-columns:124px;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 20px;padding:2px 20px 8px;scrollbar-width:none">
+              <sc-for list="{{ cats }}" as="c" hint-placeholder-count="8">
+                <button type="button" style="scroll-snap-align:start;display:flex;flex-direction:column;gap:8px;padding:0;border:none;background:none;cursor:pointer;text-align:start;font-family:var(--font-sans)" style-active="transform:scale(.95)">
+                  <span style="position:relative;display:block;width:124px;aspect-ratio:4/3;border-radius:16px;overflow:hidden;background:{{ c.c100 }}">
+                    <img src="{{ c.img }}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block">
+                    <span style="position:absolute;bottom:6px;inset-inline-start:6px;width:28px;height:28px;border-radius:9px;background:{{ c.c600 }};color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.2)"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="{{ c.icon }}" size="{{ 16 }}" hint-size="16px,16px"></x-import></span>
+                  </span>
+                  <span style="font:700 12.5px/16px var(--font-sans);color:var(--text-primary);min-height:32px;text-wrap:balance">{{ c.name }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+          <div style="padding:0 20px;margin-top:22px">
+            <div style="position:relative;aspect-ratio:16/9;border-radius:20px;overflow:hidden;background:var(--cat-sky-100)">
+              <img src="{{ ad.img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">
+              <span style="position:absolute;inset:0;background:linear-gradient(to top,oklch(0.2 0.02 285 / .75),transparent 60%)"></span>
+              <span style="position:absolute;top:12px;inset-inline-start:12px;padding:4px 10px;border-radius:999px;background:oklch(1 0 0 / .9);font:700 11px var(--font-sans);color:var(--text-primary)">{{ t.sponsored }}</span>
+              <div style="position:absolute;bottom:14px;inset-inline:16px;color:#fff;display:flex;align-items:flex-end;justify-content:space-between;gap:10px">
+                <div style="display:flex;flex-direction:column;gap:2px"><span style="font:600 12px var(--font-sans);opacity:.85">{{ ad.company }}</span><span style="font:800 18px/23px var(--font-sans)">{{ ad.title }}</span></div>
+                <span style="flex:none;height:36px;padding:0 14px;border-radius:999px;background:#fff;color:var(--text-primary);display:flex;align-items:center;font:700 13px var(--font-sans)">{{ t.viewOffer }}</span>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px;margin-top:26px">
+            <div style="display:flex;align-items:flex-end;justify-content:space-between;padding:0 20px"><span style="font:var(--type-h3)">{{ t.featuredCompanies }}</span><span style="font:700 13px var(--font-sans);color:var(--brand)">{{ t.seeAll }}</span></div>
+            <div class="mj-scroll" style="display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 20px;padding:2px 20px 14px;scrollbar-width:none">
+              <sc-for list="{{ companies }}" as="co" hint-placeholder-count="3">
+                <div style="flex:none;width:272px;scroll-snap-align:start;border-radius:20px;background:var(--surface-card);box-shadow:var(--shadow-sm);overflow:hidden">
+                  <div style="position:relative;aspect-ratio:16/9;background:{{ co.c100 }}">
+                    <img src="{{ co.cover }}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block">
+                    <span style="position:absolute;top:10px;inset-inline-end:10px"><x-import component-from-global-scope="ServlyDesignSystem_945520.IconButton" icon="heart" variant="glass" size="{{ 36 }}" active="{{ co.fav }}" onClick="{{ co.onFav }}" hint-size="36px,36px"></x-import></span>
+                    <span style="position:absolute;bottom:-22px;inset-inline-start:14px;width:48px;height:48px;border-radius:14px;background:{{ co.c600 }};color:#fff;display:flex;align-items:center;justify-content:center;font:800 20px var(--font-sans);box-shadow:0 0 0 3px #fff">{{ co.initial }}</span>
+                  </div>
+                  <div style="padding:28px 14px 14px;display:flex;flex-direction:column;gap:6px">
+                    <span style="display:flex;align-items:center;gap:6px;font:var(--type-title)">{{ co.name }}<x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="badge-check" size="{{ 18 }}" color="var(--brand)" hint-size="18px,18px"></x-import></span>
+                    <span style="font:500 13px var(--font-sans);color:var(--text-secondary)">{{ co.cat }}</span>
+                    <span style="display:flex;align-items:center;gap:4px;font:500 12px var(--font-sans);color:var(--text-tertiary)"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="map-pin" size="{{ 14 }}" hint-size="14px,14px"></x-import>{{ co.city }} · {{ co.covers }}</span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px;margin-top:14px">
+            <div style="display:flex;align-items:flex-end;justify-content:space-between;padding:0 20px"><span style="font:var(--type-h3)">{{ t.featuredProjects }}</span><span style="font:700 13px var(--font-sans);color:var(--brand)">{{ t.seeAll }}</span></div>
+            <div class="mj-scroll" style="display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 20px;padding:2px 20px 8px;scrollbar-width:none">
+              <sc-for list="{{ projects }}" as="p" hint-placeholder-count="3">
+                <div style="flex:none;width:220px;scroll-snap-align:start;display:flex;flex-direction:column;gap:8px">
+                  <div style="position:relative;aspect-ratio:4/3;border-radius:18px;overflow:hidden;background:{{ p.c100 }}">
+                    <img src="{{ p.img }}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block">
+                    <span style="position:absolute;bottom:8px;inset-inline-start:8px;display:flex;align-items:center;gap:4px;height:24px;padding:0 8px;border-radius:999px;background:oklch(0.2 0.02 285 / .6);color:#fff;font:600 11px var(--font-sans)"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="images" size="{{ 12 }}" hint-size="12px,12px"></x-import>{{ p.count }}</span>
+                  </div>
+                  <span style="font:700 14px/18px var(--font-sans)">{{ p.title }}</span>
+                  <span style="font:500 12px var(--font-sans);color:var(--text-secondary);margin-top:-4px">{{ p.company }} · {{ p.place }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+        <div style="position:absolute;inset-inline:0;bottom:0;z-index:2">
+          <x-import component-from-global-scope="ServlyDesignSystem_945520.TabBar" items="{{ tabs }}" active="{{ tabA }}" onChange="{{ setTabA }}" hint-size="100%,72px"></x-import>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1b -->
+    <div id="1b" style="flex:none;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px">
+      <div style="display:flex;align-items:baseline;gap:8px;font:400 12px/1.3 var(--font-sans);color:rgba(0,0,0,.55)"><a href="#1b" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px">1b</a>Photo-led · category chips filter a project feed</div>
+      <div dir="{{ dir }}" style="position:relative;width:390px;height:844px;border-radius:44px;overflow:hidden;background:var(--surface-card);box-shadow:0 0 0 10px #17151c,0 30px 60px rgba(30,20,60,.25)">
+        <div class="mj-scroll" style="position:absolute;inset:0;overflow-y:auto;scrollbar-width:none;padding-bottom:96px">
+          <div style="display:flex;justify-content:space-between;align-items:center;height:50px;padding:0 30px;font:600 15px var(--font-sans)"><span>9:41</span><span style="display:flex;gap:6px"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="signal" size="{{ 16 }}" hint-size="16px,16px"></x-import><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="wifi" size="{{ 16 }}" hint-size="16px,16px"></x-import><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="battery-full" size="{{ 18 }}" hint-size="18px,16px"></x-import></span></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 20px 0">
+            <div style="display:flex;flex-direction:column;gap:2px">
+              <span style="font:600 12px var(--font-sans);color:var(--text-tertiary)">{{ t.serviceIn }}</span>
+              <span style="display:flex;align-items:center;gap:4px;font:var(--type-title)"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="map-pin" size="{{ 16 }}" color="var(--brand)" hint-size="16px,16px"></x-import>{{ t.location }}<x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="chevron-down" size="{{ 16 }}" hint-size="16px,16px"></x-import></span>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <button type="button" onClick="{{ toggleLang }}" style="height:40px;padding:0 14px;border:none;border-radius:999px;background:var(--surface-sunken);color:var(--text-primary);font:700 13px var(--font-sans);cursor:pointer">{{ t.otherLang }}</button>
+              <x-import component-from-global-scope="ServlyDesignSystem_945520.IconButton" icon="bell" variant="outline" size="{{ 40 }}" dot="{{ true }}" hint-size="40px,40px"></x-import>
+            </div>
+          </div>
+          <div style="padding:16px 20px 0">
+            <div style="display:flex;align-items:center;gap:10px;height:52px;padding-inline:16px;border-radius:999px;background:var(--surface-sunken)">
+              <x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="search" size="{{ 20 }}" color="var(--text-secondary)" hint-size="20px,20px"></x-import>
+              <span style="flex:1;font:500 15px var(--font-sans);color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.search }}</span>
+              <x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="map" size="{{ 20 }}" color="var(--text-secondary)" hint-size="20px,20px"></x-import>
+            </div>
+          </div>
+          <div class="mj-scroll" style="display:flex;gap:16px;overflow-x:auto;padding:18px 20px 6px;scrollbar-width:none">
+            <sc-for list="{{ catsB }}" as="c" hint-placeholder-count="6">
+              <button type="button" onClick="{{ c.onPick }}" style="flex:none;width:68px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:0;border:none;background:none;cursor:pointer;font-family:var(--font-sans)">
+                <span style="width:60px;height:60px;border-radius:50%;padding:3px;box-shadow:inset 0 0 0 2px {{ c.ring }};display:flex">
+                  <span style="flex:1;border-radius:50%;overflow:hidden;background:{{ c.c100 }};display:flex;align-items:center;justify-content:center;color:{{ c.c600 }}"><img src="{{ c.thumb }}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block"></span>
+                </span>
+                <span style="font:{{ c.weight }} 11px/14px var(--font-sans);color:var(--text-primary);text-align:center;text-wrap:balance">{{ c.short }}</span>
+              </button>
+            </sc-for>
+          </div>
+          <div style="padding:12px 20px 0">
+            <div style="position:relative;aspect-ratio:4/5;border-radius:24px;overflow:hidden;background:var(--cat-teal-100)">
+              <img src="{{ heroB.img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">
+              <span style="position:absolute;inset:0;background:linear-gradient(to top,oklch(0.2 0.02 285 / .8),transparent 55%)"></span>
+              <span style="position:absolute;top:14px;inset-inline-start:14px;display:flex;gap:6px"><span style="padding:5px 10px;border-radius:999px;background:var(--brand);color:#fff;font:700 11px var(--font-sans)">{{ t.featuredProject }}</span></span>
+              <span style="position:absolute;top:10px;inset-inline-end:10px"><x-import component-from-global-scope="ServlyDesignSystem_945520.IconButton" icon="heart" variant="glass" size="{{ 40 }}" hint-size="40px,40px"></x-import></span>
+              <div style="position:absolute;bottom:18px;inset-inline:18px;color:#fff;display:flex;flex-direction:column;gap:10px">
+                <span style="font:800 24px/30px var(--font-sans);text-wrap:balance">{{ heroB.title }}</span>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <span style="width:36px;height:36px;border-radius:11px;background:{{ heroB.c600 }};display:flex;align-items:center;justify-content:center;font:800 15px var(--font-sans);box-shadow:0 0 0 2px #fff">{{ heroB.initial }}</span>
+                  <div style="flex:1;display:flex;flex-direction:column"><span style="display:flex;align-items:center;gap:4px;font:700 14px var(--font-sans)">{{ heroB.company }}<x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="badge-check" size="{{ 16 }}" hint-size="16px,16px"></x-import></span><span style="font:500 12px var(--font-sans);opacity:.85">{{ heroB.place }} · {{ heroB.count }}</span></div>
+                  <span style="height:38px;padding:0 14px;border-radius:999px;background:#fff;color:var(--text-primary);display:flex;align-items:center;font:700 13px var(--font-sans)">{{ t.viewAlbum }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:flex-end;justify-content:space-between;padding:26px 20px 12px"><div style="display:flex;flex-direction:column;gap:2px"><span style="font:var(--type-h3)">{{ feedTitle }}</span><span style="font:500 13px var(--font-sans);color:var(--text-secondary)">{{ t.feedSub }}</span></div></div>
+          <div style="padding:0 20px;columns:2;column-gap:12px">
+            <sc-for list="{{ feed }}" as="p" hint-placeholder-count="4">
+              <div style="break-inside:avoid;margin-bottom:14px;display:flex;flex-direction:column;gap:6px">
+                <div style="position:relative;aspect-ratio:{{ p.ratio }};border-radius:16px;overflow:hidden;background:{{ p.c100 }}"><img src="{{ p.img }}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block"></div>
+                <span style="font:700 13px/17px var(--font-sans)">{{ p.title }}</span>
+                <span style="font:500 11.5px var(--font-sans);color:var(--text-secondary);margin-top:-3px">{{ p.company }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="padding:6px 20px 0">
+            <div style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:20px;background:var(--cat-sky-50)">
+              <span style="flex:none;width:96px;aspect-ratio:4/3;border-radius:14px;overflow:hidden;background:var(--cat-sky-100)"><img src="{{ ad.img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></span>
+              <div style="flex:1;display:flex;flex-direction:column;gap:3px"><span style="font:700 10.5px var(--font-sans);color:var(--cat-sky-800)">{{ t.sponsored }}</span><span style="font:700 14px/18px var(--font-sans)">{{ ad.title }}</span><span style="font:500 12px var(--font-sans);color:var(--text-secondary)">{{ ad.company }}</span></div>
+            </div>
+          </div>
+        </div>
+        <div style="position:absolute;inset-inline:0;bottom:0;z-index:2">
+          <x-import component-from-global-scope="ServlyDesignSystem_945520.TabBar" items="{{ tabs }}" active="{{ tabB }}" onChange="{{ setTabB }}" hint-size="100%,72px"></x-import>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1c -->
+    <div id="1c" style="flex:none;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px">
+      <div style="display:flex;align-items:baseline;gap:8px;font:400 12px/1.3 var(--font-sans);color:rgba(0,0,0,.55)"><a href="#1c" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px">1c</a>Colour mosaic · all 20 categories visible at once</div>
+      <div dir="{{ dir }}" style="position:relative;width:390px;height:844px;border-radius:44px;overflow:hidden;background:var(--bg-app);box-shadow:0 0 0 10px #17151c,0 30px 60px rgba(30,20,60,.25)">
+        <div class="mj-scroll" style="position:absolute;inset:0;overflow-y:auto;scrollbar-width:none;padding-bottom:96px">
+          <div style="display:flex;justify-content:space-between;align-items:center;height:50px;padding:0 30px;font:600 15px var(--font-sans)"><span>9:41</span><span style="display:flex;gap:6px"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="signal" size="{{ 16 }}" hint-size="16px,16px"></x-import><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="wifi" size="{{ 16 }}" hint-size="16px,16px"></x-import><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="battery-full" size="{{ 18 }}" hint-size="18px,16px"></x-import></span></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:2px 20px 0">
+            <span style="font:800 24px/28px var(--font-sans);letter-spacing:-.02em">{{ t.brand }}<span style="color:var(--brand)">.</span></span>
+            <div style="display:flex;gap:8px;align-items:center">
+              <button type="button" onClick="{{ toggleLang }}" style="height:40px;padding:0 14px;border:none;border-radius:999px;background:var(--surface-card);box-shadow:var(--shadow-sm);color:var(--text-primary);font:700 13px var(--font-sans);cursor:pointer">{{ t.otherLang }}</button>
+              <x-import component-from-global-scope="ServlyDesignSystem_945520.IconButton" icon="bell" size="{{ 40 }}" dot="{{ true }}" hint-size="40px,40px"></x-import>
+            </div>
+          </div>
+          <div style="padding:18px 20px 0;display:flex;flex-direction:column;gap:12px">
+            <span style="font:800 28px/36px var(--font-sans);text-wrap:balance">{{ t.headline }}</span>
+            <div style="display:flex;align-items:center;gap:10px;height:56px;padding-inline:18px 6px;border-radius:999px;background:var(--surface-card);box-shadow:var(--shadow-md)">
+              <x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="search" size="{{ 20 }}" color="var(--text-tertiary)" hint-size="20px,20px"></x-import>
+              <span style="flex:1;font:500 15px var(--font-sans);color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.search }}</span>
+              <span style="height:44px;padding:0 12px;border-radius:999px;background:var(--brand-tint-strong);color:var(--brand-ink);display:flex;align-items:center;gap:4px;font:700 12px var(--font-sans)"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="map-pin" size="{{ 14 }}" hint-size="14px,14px"></x-import>{{ t.location }}</span>
+            </div>
+          </div>
+          <div style="padding:22px 20px 0;display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;align-items:flex-end;justify-content:space-between"><span style="font:var(--type-h3)">{{ t.allCategories }}</span><span style="font:600 12px var(--font-sans);color:var(--text-tertiary)">20</span></div>
+            <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px 8px">
+              <sc-for list="{{ cats }}" as="c" hint-placeholder-count="20">
+                <button type="button" style="display:flex;flex-direction:column;align-items:center;gap:7px;padding:0;border:none;background:none;cursor:pointer;font-family:var(--font-sans)" style-active="transform:scale(.95)">
+                  <span style="width:64px;height:64px;border-radius:20px;background:{{ c.c100 }};color:{{ c.c600 }};display:flex;align-items:center;justify-content:center;box-shadow:inset 0 1px 0 oklch(1 0 0 / .7)"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="{{ c.icon }}" size="{{ 28 }}" hint-size="28px,28px"></x-import></span>
+                  <span style="font:600 11px/14px var(--font-sans);color:var(--text-primary);text-align:center;text-wrap:balance">{{ c.short }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px;margin-top:28px">
+            <div style="display:flex;align-items:flex-end;justify-content:space-between;padding:0 20px"><span style="font:var(--type-h3)">{{ t.featuredCompanies }}</span><span style="font:700 13px var(--font-sans);color:var(--brand)">{{ t.seeAll }}</span></div>
+            <div class="mj-scroll" style="display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 20px;padding:2px 20px 14px;scrollbar-width:none">
+              <sc-for list="{{ companies }}" as="co" hint-placeholder-count="3">
+                <div style="flex:none;width:180px;scroll-snap-align:start;border-radius:20px;background:{{ co.c600 }};color:#fff;overflow:hidden;position:relative">
+                  <span style="position:absolute;inset-inline-end:-30px;top:-30px;width:110px;height:110px;border-radius:50%;background:oklch(1 0 0 / .12)"></span>
+                  <div style="position:relative;padding:14px;display:flex;flex-direction:column;gap:10px">
+                    <span style="width:44px;height:44px;border-radius:13px;background:#fff;color:{{ co.c600 }};display:flex;align-items:center;justify-content:center;font:800 19px var(--font-sans)">{{ co.initial }}</span>
+                    <div style="display:flex;flex-direction:column;gap:3px"><span style="display:flex;align-items:center;gap:4px;font:700 14px/18px var(--font-sans)">{{ co.name }}</span><span style="font:500 12px var(--font-sans);opacity:.9">{{ co.cat }}</span></div>
+                    <span style="display:flex;align-items:center;gap:4px;font:600 11px var(--font-sans);opacity:.9"><x-import component-from-global-scope="ServlyDesignSystem_945520.Icon" name="badge-check" size="{{ 14 }}" hint-size="14px,14px"></x-import>{{ t.verified }} · {{ co.city }}</span>
+                  </div>
+                  <div style="position:relative;aspect-ratio:4/3;margin:0 8px 8px;border-radius:14px;overflow:hidden;background:oklch(1 0 0 / .15)"><img src="{{ co.cover }}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block"></div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="padding:14px 20px 0">
+            <div style="position:relative;overflow:hidden;border-radius:20px;background:var(--cat-amber-100);padding:16px;display:flex;gap:12px;align-items:center">
+              <div style="flex:1;display:flex;flex-direction:column;gap:4px"><span style="font:700 10.5px var(--font-sans);color:var(--cat-amber-800)">{{ t.sponsored }}</span><span style="font:800 16px/21px var(--font-sans);color:var(--cat-amber-800)">{{ ad.title }}</span><span style="font:500 12px var(--font-sans);color:var(--cat-amber-800)">{{ ad.company }}</span></div>
+              <span style="flex:none;width:112px;aspect-ratio:4/3;border-radius:14px;overflow:hidden"><img src="{{ ad.img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px;margin-top:26px">
+            <div style="display:flex;align-items:flex-end;justify-content:space-between;padding:0 20px"><span style="font:var(--type-h3)">{{ t.recentProjects }}</span><span style="font:700 13px var(--font-sans);color:var(--brand)">{{ t.seeAll }}</span></div>
+            <div class="mj-scroll" style="display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 20px;padding:2px 20px 8px;scrollbar-width:none">
+              <sc-for list="{{ projects }}" as="p" hint-placeholder-count="3">
+                <div style="flex:none;width:300px;scroll-snap-align:start;position:relative;aspect-ratio:4/3;border-radius:20px;overflow:hidden;background:{{ p.c100 }}">
+                  <img src="{{ p.img }}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block">
+                  <span style="position:absolute;inset:0;background:linear-gradient(to top,oklch(0.2 0.02 285 / .75),transparent 55%)"></span>
+                  <div style="position:absolute;bottom:14px;inset-inline:14px;color:#fff;display:flex;flex-direction:column;gap:2px"><span style="font:800 16px/21px var(--font-sans)">{{ p.title }}</span><span style="font:500 12px var(--font-sans);opacity:.85">{{ p.company }} · {{ p.place }}</span></div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+        <div style="position:absolute;inset-inline:0;bottom:0;z-index:2">
+          <x-import component-from-global-scope="ServlyDesignSystem_945520.TabBar" items="{{ tabs }}" active="{{ tabC }}" onChange="{{ setTabC }}" hint-size="100%,72px"></x-import>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p style="margin:26px 0 0;font:12px/1.5 var(--font-sans);color:rgba(0,0,0,.5)">Try next: "build out <a href="#1a" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:2px 6px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px">1a</a>" · "<a href="#1c" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:2px 6px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px">1c</a> category grid with the <a href="#1b" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:2px 6px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px">1b</a> project feed" · "different hero for <a href="#1b" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:2px 6px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px">1b</a>"</p>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;lang&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;ar&quot;,&quot;en&quot;],&quot;default&quot;:&quot;ar&quot;,&quot;tsType&quot;:&quot;'ar' | 'en'&quot;}}">
+const U = (id, w) => 'https://images.unsplash.com/photo-' + id + '?w=' + w + '&q=70&auto=format&fit=crop';
+const HUES = ['amber', 'pink', 'indigo', 'amber', 'sky', 'coral', 'violet', 'teal', 'green', 'coral', 'coral', 'indigo', 'sky', 'teal', 'sky', 'violet', 'indigo', 'teal', 'coral', 'violet'];
+const ART = ['Building construction', 'Couch and lamp', 'Window', 'Light bulb', 'Shower', 'Carpentry saw', 'Cooking', 'Rock', 'Potted plant', 'Chair', 'Fire', 'Sparkles', 'Automobile', 'Delivery truck', 'Snowflake', 'House', 'Triangular ruler', 'Office building', 'Fire extinguisher', 'Video camera'].map(n => 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/' + encodeURIComponent(n) + '/3D/' + n.toLowerCase().replace(/ /g, '_') + '_3d.png');
+const HERO = [[0, 'فلل ومبانٍ', 'Villas & buildings'], [1, 'مجالس وصالات', 'Majlis & living'], [4, 'تسربات وشبكات', 'Leaks & networks'], [8, 'حدائق ومسطحات', 'Gardens & lawns']];
+const CATS = [
+  ['مقاولات البناء', 'Building Contracting', 'مقاولات', 'Contracting', 'building-2', '1504307651254-35680f356dfd'],
+  ['التصميم الداخلي والديكور', 'Interior Design & Decoration', 'تصميم داخلي', 'Interiors', 'lamp', '1618221195710-dd6b41faaea6'],
+  ['الحدادة والألمنيوم والزجاج', 'Metal, Aluminum & Glass Works', 'حدادة وألمنيوم', 'Metal & glass', 'frame', '1504328345606-18bbc8c9d7d1'],
+  ['أعمال الكهرباء', 'Electrical Works', 'كهرباء', 'Electrical', 'zap', '1621905251189-08b45d6a269e'],
+  ['السباكة وشبكات المياه', 'Plumbing & Water Systems', 'سباكة', 'Plumbing', 'droplets', '1542013936693-884638332954'],
+  ['الأعمال الخشبية', 'Carpentry & Woodworks', 'نجارة', 'Carpentry', 'hammer', '1622372738946-62e02505feb3'],
+  ['المطابخ والخزانات', 'Kitchens & Cabinets', 'مطابخ', 'Kitchens', 'chef-hat', '1484154218962-a197022b5858'],
+  ['تركيب الحجر الطبيعي والأرضيات', 'Natural Stone & Flooring Installation', 'حجر وأرضيات', 'Stone & floors', 'layout-grid', '1497366216548-37526070297c'],
+  ['تصميم وتنفيذ الحدائق', 'Landscaping & Garden Design', 'حدائق', 'Landscaping', 'trees', '1558904541-efa843a96f01'],
+  ['فك وتركيب الأثاث', 'Furniture Assembly & Installation', 'تركيب أثاث', 'Furniture', 'sofa', '1555041469-a586c61ea9bc'],
+  ['تمديد أنابيب الغاز', 'Gas Pipe Installation', 'أنابيب الغاز', 'Gas pipes', 'flame', '1530124566582-a618bc2615dc'],
+  ['تلميع الرخام', 'Marble Polishing', 'تلميع الرخام', 'Marble polish', 'sparkles', '1584622650111-993a426fbf0a'],
+  ['خدمات السيارات', 'Automotive Services', 'سيارات', 'Automotive', 'car', '1486262715619-67b85e0b08d3'],
+  ['خدمات النقل', 'Transportation Services', 'نقل', 'Transport', 'truck', '1601584115197-04ecc0da31d7'],
+  ['أعمال التكييف والتبريد', 'Air Conditioning & Refrigeration', 'تكييف وتبريد', 'AC & cooling', 'snowflake', '1545259741-2ea3ebf61fa3'],
+  ['البيوت الذكية', 'Smart Home Systems', 'بيوت ذكية', 'Smart home', 'wifi', '1558002038-1055907df827'],
+  ['استشارات هندسية', 'Engineering Consultancy', 'استشارات هندسية', 'Engineering', 'drafting-compass', '1503387762-592deb58ef4e'],
+  ['التطوير العقاري', 'Real Estate Development', 'تطوير عقاري', 'Real estate', 'building', '1580587771525-78b9dba3b914'],
+  ['أنظمة مكافحة الحريق', 'Fire Protection Systems', 'مكافحة الحريق', 'Fire safety', 'fire-extinguisher', '1607472586893-edb57bdc0e39'],
+  ['أنظمة الأمن والمراقبة CCTV', 'Security & CCTV Systems', 'أمن ومراقبة', 'Security & CCTV', 'cctv', '1557597774-9d273605dfa9'],
+];
+const COMPANIES = [
+  { id: 'c1', ar: 'النور للمقاولات', en: 'Al Noor Contracting', cat: 0, cityAr: 'مسقط', cityEn: 'Muscat', covAr: 'كل عُمان', covEn: 'All Oman', img: '1600585154340-be6161a56a0c' },
+  { id: 'c2', ar: 'ساحل للديكور', en: 'Sahil Interiors', cat: 1, cityAr: 'بوشر', cityEn: 'Bawshar', covAr: 'مسقط والباطنة', covEn: 'Muscat & Batinah', img: '1600210492486-724fe5c67fb0' },
+  { id: 'c3', ar: 'برق للكهرباء', en: 'Barq Electric', cat: 3, cityAr: 'صحار', cityEn: 'Sohar', covAr: 'شمال الباطنة', covEn: 'North Batinah', img: '1621905252507-b35492cc74b4' },
+  { id: 'c4', ar: 'قمة المطابخ', en: 'Qimmah Kitchens', cat: 6, cityAr: 'القرم', cityEn: 'Qurum', covAr: 'كل عُمان', covEn: 'All Oman', img: '1588854337236-6889d631faa8' },
+  { id: 'c5', ar: 'حدائق الوادي', en: 'Wadi Gardens', cat: 8, cityAr: 'نزوى', cityEn: 'Nizwa', covAr: 'الداخلية ومسقط', covEn: 'Dakhiliyah & Muscat', img: '1564013799919-ab600027ffc6' },
+  { id: 'c6', ar: 'سراج للبيوت الذكية', en: 'Siraj Smart Homes', cat: 15, cityAr: 'صلالة', cityEn: 'Salalah', covAr: 'ظفار', covEn: 'Dhofar', img: '1558002038-1055907df827' },
+];
+const PROJECTS = [
+  { ar: 'فيلا سكنية بطابقين', en: 'Two-storey family villa', co: 0, pAr: 'الموج', pEn: 'Al Mouj', n: 24, img: '1600585154340-be6161a56a0c', r: '3/4' },
+  { ar: 'مطبخ رخامي مفتوح', en: 'Open marble kitchen', co: 3, pAr: 'القرم', pEn: 'Qurum', n: 18, img: '1588854337236-6889d631faa8', r: '1/1' },
+  { ar: 'تصميم مجلس عصري', en: 'Modern majlis design', co: 1, pAr: 'بوشر', pEn: 'Bawshar', n: 15, img: '1615874959474-d609969a20ed', r: '4/5' },
+  { ar: 'مسبح وحديقة خارجية', en: 'Pool and garden landscape', co: 4, pAr: 'السيب', pEn: 'Seeb', n: 21, img: '1564013799919-ab600027ffc6', r: '1/1' },
+  { ar: 'صالة معيشة مفتوحة', en: 'Open-plan living room', co: 1, pAr: 'الخوير', pEn: 'Al Khuwair', n: 12, img: '1600607687939-ce8a6c25118c', r: '3/4' },
+  { ar: 'جناح نوم رئيسي', en: 'Master bedroom suite', co: 1, pAr: 'المعبيلة', pEn: 'Al Maabilah', n: 9, img: '1617104678098-de229db51175', r: '4/5' },
+  { ar: 'لوحة كهرباء لمبنى تجاري', en: 'Commercial panel upgrade', co: 2, pAr: 'صحار', pEn: 'Sohar', n: 8, img: '1621905251189-08b45d6a269e', r: '1/1' },
+  { ar: 'مطبخ بخزائن داكنة', en: 'Dark cabinet kitchen', co: 3, pAr: 'العذيبة', pEn: 'Al Azaiba', n: 14, img: '1600566753190-17f0baa2a6c3', r: '3/4' },
+];
+const T = {
+  ar: { brand: 'مجيب', location: 'مسقط، بوشر', otherLang: 'EN', userName: 'أحمد', greeting: 'مرحبًا أحمد، كيف نساعدك اليوم؟', search: 'ما الخدمة التي تبحث عنها؟', categories: 'الفئات', viewAll20: 'عرض الكل (20)', sponsored: 'إعلان ممول', viewOffer: 'عرض', featuredCompanies: 'شركات مميزة', seeAll: 'عرض الكل', featuredProjects: 'مشاريع مميزة', recentProjects: 'أحدث المشاريع', serviceIn: 'الخدمة في', featuredProject: 'مشروع مميز', viewAlbum: 'الألبوم', feedSub: 'من ملفات الأعمال المنشورة حديثًا', allProjects: 'أعمال حديثة', headline: 'كل الخدمات لبيتك ومشروعك في مكان واحد', allCategories: 'جميع الفئات', verified: 'موثّقة', photos: 'صورة', all: 'الكل', adTitle: 'واجهات زجاجية بلا إطارات', adCo: 'ساحل للألمنيوم والزجاج', tabs: ['الرئيسية', 'الفئات', 'استكشف', 'الرسائل', 'حسابي'] },
+  en: { brand: 'MUJEEB', location: 'Muscat, Bawshar', otherLang: 'عربي', userName: 'Ahmed', greeting: 'Hi Ahmed, how can we help today?', search: 'What service are you looking for?', categories: 'Categories', viewAll20: 'View all (20)', sponsored: 'Sponsored', viewOffer: 'View', featuredCompanies: 'Featured companies', seeAll: 'See all', featuredProjects: 'Featured projects', recentProjects: 'Recent projects', serviceIn: 'Service in', featuredProject: 'Featured project', viewAlbum: 'Album', feedSub: 'Recently published portfolios', allProjects: 'Recent work', headline: 'Every service for your home and project, in one place', allCategories: 'All categories', verified: 'Verified', photos: 'photos', all: 'All', adTitle: 'Frameless glass facades', adCo: 'Sahil Aluminium & Glass', tabs: ['Home', 'Categories', 'Explore', 'Messages', 'Profile'] },
+};
+class Component extends DCLogic {
+  state = { lang: this.props.lang ?? 'ar', fav: { c2: true }, tabA: 'home', tabB: 'home', tabC: 'home', pick: -1 };
+  componentDidUpdate(pp) { if (pp.lang !== this.props.lang && this.props.lang) this.setState({ lang: this.props.lang }); }
+  renderVals() {
+    const { lang, fav, pick } = this.state;
+    const ar = lang === 'ar', t = T[lang];
+    const hue = i => HUES[i % HUES.length];
+    const cv = (i, n) => 'var(--cat-' + hue(i) + '-' + n + ')';
+    const cats = CATS.map((c, i) => ({ name: ar ? c[0] : c[1], short: ar ? c[2] : c[3], icon: c[4], img: U(c[5], 280), thumb: U(c[5], 140), c100: cv(i, 100), c600: cv(i, 600) }));
+    const companies = COMPANIES.map(co => ({ name: ar ? co.ar : co.en, initial: (ar ? co.ar.replace(/^ال/, '') : co.en.replace(/^Al /, ''))[0], cat: cats[co.cat].name, city: ar ? co.cityAr : co.cityEn, covers: (ar ? 'يغطي ' : 'Covers ') + (ar ? co.covAr : co.covEn), cover: U(co.img, 600), c100: cv(co.cat, 100), c600: cv(co.cat, 600), fav: !!fav[co.id], onFav: () => this.setState(s => ({ fav: { ...s.fav, [co.id]: !s.fav[co.id] } })) }));
+    const projects = PROJECTS.map(p => { const co = COMPANIES[p.co]; return { title: ar ? p.ar : p.en, company: ar ? co.ar : co.en, place: ar ? p.pAr : p.pEn, count: p.n + ' ' + t.photos, img: U(p.img, 600), ratio: p.r, cat: co.cat, c100: cv(co.cat, 100), c600: cv(co.cat, 600), initial: companies[p.co].initial }; });
+    const allChip = { short: t.all, thumb: U('1600585154340-be6161a56a0c', 140), c100: 'var(--brand-tint)', c600: 'var(--brand)' };
+    const catsB = [allChip, ...cats].map((c, k) => { const idx = k - 1, on = idx === pick; return { ...c, ring: on ? 'var(--neutral-900)' : 'transparent', weight: on ? 800 : 600, onPick: () => this.setState({ pick: idx }) }; });
+    const filtered = pick < 0 ? projects : projects.filter(p => p.cat === pick);
+    const feed = (filtered.length ? filtered : projects).slice(0, 6);
+    const tabs = ['home', 'categories', 'explore', 'messages', 'profile'].map((id, k) => ({ id, icon: ['house', 'layout-grid', 'compass', 'message-circle', 'user-round'][k], label: t.tabs[k], badge: id === 'messages' ? '2' : undefined }));
+    const heroCats = HERO.map(([i, sa, se]) => ({ label: cats[i].short, sub: ar ? sa : se, art: ART[i], color: hue(i) }));
+    const featCats = cats.map((c, i) => ({ label: c.short, art: ART[i], icon: c.icon, color: hue(i) }));
+    const recommended = COMPANIES.slice(2, 5).map(co => ({ name: ar ? co.ar : co.en, role: cats[co.cat].name, distance: (ar ? co.cityAr : co.cityEn) + ' · ' + (ar ? co.covAr : co.covEn) }));
+    const promos = [
+      { eyebrow: t.sponsored, title: t.adTitle, cta: t.viewOffer, color: 'indigo', image: 'glass facade' },
+      { eyebrow: t.sponsored, title: ar ? 'صيانة المكيفات قبل الصيف' : 'AC service before summer', cta: t.viewOffer, color: 'sky', image: 'AC technician' },
+      { eyebrow: t.sponsored, title: ar ? 'مطابخ بتصميم عُماني معاصر' : 'Kitchens with a modern Omani touch', cta: t.viewOffer, color: 'violet', image: 'kitchen' },
+    ];
+    return {
+      heroCats, featCats, recommended, promos, serviceAddress: ar ? 'موقع الخدمة' : 'Service location', browseAll: ar ? 'تصفح جميع الفئات (20)' : 'Browse all 20 categories', recTitle: ar ? 'مقترحة لك في مسقط' : 'Recommended in Muscat', recSub: ar ? 'حسب موقعك ونطاق الخدمة' : 'Based on your location and service coverage',
+      t, dir: ar ? 'rtl' : 'ltr', chev: ar ? 'chevron-left' : 'chevron-right',
+      cats, catsB, companies, projects, feed, tabs,
+      feedTitle: pick < 0 || !filtered.length ? t.allProjects : cats[pick].name,
+      heroB: projects[0],
+      ad: { img: U('1600573472550-8090b5e0745e', 700), title: t.adTitle, company: t.adCo },
+      tabA: this.state.tabA, tabB: this.state.tabB, tabC: this.state.tabC,
+      setTabA: v => this.setState({ tabA: v }), setTabB: v => this.setState({ tabB: v }), setTabC: v => this.setState({ tabC: v }),
+      toggleLang: () => this.setState(s => ({ lang: s.lang === 'ar' ? 'en' : 'ar' })),
+      setAr: () => this.setState({ lang: 'ar' }), setEn: () => this.setState({ lang: 'en' }),
+      arBg: ar ? 'var(--neutral-900)' : 'transparent', arFg: ar ? '#fff' : 'var(--text-primary)',
+      enBg: !ar ? 'var(--neutral-900)' : 'transparent', enFg: !ar ? '#fff' : 'var(--text-primary)',
+    };
+  }
+}
+</script>
+</body>
+</html>

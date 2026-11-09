@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="MUJEEB">
+<meta name="theme-color" content="#f8f7fb">
+<title>MUJEEB</title>
+<script src="mujeeb-logos.js"></script>
+<style>
+html,body{margin:0;height:100%;overflow:hidden;background:#f8f7fb;overscroll-behavior:none;-webkit-text-size-adjust:100%}
+a{color:#5b3fd6}a:hover{color:#3f27a8}
+#dc-root [data-mj-root]{min-height:0 !important;height:calc(100dvh + 44px) !important;padding:0 !important;gap:0 !important;display:block !important}
+#dc-root [data-mj-frame]{width:100vw !important;height:calc(100dvh + 44px) !important;border-radius:0 !important;box-shadow:none !important}
+#dc-root [data-mj-frame] > div:first-child{display:none !important}
+#dc-root [data-mj-frame] [data-mj-scroll]{-webkit-overflow-scrolling:touch}
+</style>
+</helmet>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#6d3fe0"></rect><text x="50" y="64" font-family="Helvetica, Arial, sans-serif" font-size="44" font-weight="800" fill="#fff" text-anchor="middle">M.</text></svg></template>
+<div style="position:fixed;inset:0;overflow:hidden;background:#f8f7fb">
+  <div style="position:absolute;top:-44px;left:0;right:0;bottom:0">
+    <dc-import name="MUJEEB App" bare="{{ true }}" hint-size="100%,100%"></dc-import>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>
