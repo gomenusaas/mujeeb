@@ -25,7 +25,8 @@ Without them, it uses the bundled demo data in `src/data/demo.json`, which match
 
 Set up a Supabase project:
 
-1. Run `supabase/migrations/20261109000000_customer_app.sql`, then `supabase/seed.sql`
+1. Run the files in `supabase/migrations/` in order (`20261109000000_customer_app.sql`, then
+   `20261110000000_album_created_at.sql`), then `supabase/seed.sql`
    (SQL editor, or `supabase db push` + `psql -f supabase/seed.sql`).
 2. In **Authentication → Providers**, turn on **Anonymous sign-ins**. The app signs the customer in
    anonymously, so row-level security can scope their records to them until real login exists.

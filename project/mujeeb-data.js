@@ -143,6 +143,11 @@
     .map(co => ({ ...co, cats: Array.from(new Set(co.cats.map(mc).filter(x => x != null))) }));
   const keep = new Set(COS.map(c => c.id));
   const SVCS = SERVICES.filter(s => keep.has(s.co) && mc(s.cat) != null).map(s => ({ ...s, cat: mc(s.cat) }));
-  const ALBS = ALBUMS.filter(a => keep.has(a.co) && mc(a.cat) != null).map(a => ({ ...a, cat: mc(a.cat) }));
+  // Date each album was added to the platform (newest first on Home). The hand-made
+  // albums with their own photos are the most recent; generated ones go back a day each.
+  const ADDED = { a3: '2026-11-09', a4: '2026-11-08', a2: '2026-11-07', a1: '2026-11-06', a6: '2026-11-05', a7: '2026-11-03', a8: '2026-11-01', a5: '2026-10-30', a10: '2026-10-28' };
+  const dayBefore = n => new Date(Date.UTC(2026, 9, 26 - n)).toISOString().slice(0, 10);
+  let older = 0;
+  const ALBS = ALBUMS.filter(a => keep.has(a.co) && mc(a.cat) != null).map(a => ({ ...a, cat: mc(a.cat), added: ADDED[a.id] || dayBefore(older++) }));
   window.MJ = { U, CATS: CATS10, GOV, HOURS, COMPANIES: COS, SERVICES: SVCS, ALBUMS: ALBS, QUOTES, BOOKINGS, CHATS };
 })();

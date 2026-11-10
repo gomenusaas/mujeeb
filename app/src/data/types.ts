@@ -19,7 +19,11 @@ export interface Company {
 
 export interface Service { id: string; co: string; cat: number; ar: string; en: string; imgs: string[]; dar: string; den: string }
 
-export interface Album { id: string; co: string; cat: number; ar: string; en: string; pAr: string; pEn: string; n: number; img: string; imgs: string[] }
+export interface Album {
+  id: string; co: string; cat: number; ar: string; en: string; pAr: string; pEn: string; n: number; img: string; imgs: string[];
+  /** When the album was added to the platform (ISO date or timestamp). */
+  added: string;
+}
 
 /** Quotation line: [nameAr, nameEn, qty, unitPrice]. */
 export type QuoteLine = [string, string, number, number];

@@ -2,8 +2,26 @@ import { Avatar, Badge, CategoryCard, Chip, Icon, IconButton, PromoBanner, Secti
 import { useApp } from '../app/store';
 import { HScroll, Img, MetaLine, card, helpers, stop } from '../app/view';
 import { logoUrl, photo } from '../data/api';
+import { StoryRow } from './Stories';
 
 const ROOT_PAD = { padding: 'calc(var(--top-inset) + 8px) 20px 100px' };
+
+/** Cover photos of the nine projects most recently added to the platform: 3 × 3, edge to edge. Tap opens the project. */
+function LatestProjects() {
+  const a = useApp();
+  const latest = [...a.catalog.albums].sort((x, y) => (y.added || '').localeCompare(x.added || '')).slice(0, 9);
+  if (!latest.length) return null;
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 2 }}>
+      {latest.map(al => (
+        <button key={al.id} type="button" className="mj-press-sm" onClick={() => a.go('album', { id: al.id })} aria-label={a.ar ? al.ar : al.en}
+          style={{ aspectRatio: '1', border: 'none', padding: 0, overflow: 'hidden', background: 'var(--neutral-200)', cursor: 'pointer' }}>
+          <Img src={photo(al.img, 400)} />
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export function Home() {
   const a = useApp();
@@ -63,6 +81,10 @@ export function Home() {
           ))}
         </div>
       </div>
+
+      <StoryRow />
+
+      <LatestProjects />
 
       <HScroll>
         {promos.map(([tar, ten, color, image, id]) => (

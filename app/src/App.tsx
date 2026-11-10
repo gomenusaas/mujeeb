@@ -8,6 +8,8 @@ import { useDragScroll } from './app/useDragScroll';
 import { Categories, Explore, Home } from './screens/Discover';
 import { AlbumPage, CompanyPage, CompanySheet, Listing, ServicePage } from './screens/Provider';
 import { BookingPage, DonePage, RfqPage } from './screens/Flows';
+import { StoryViewer } from './screens/Stories';
+import { STORIES } from './data/stories';
 import { Bookings, ChatPage, Favorites, Messages, Notifications, Profile, QuotePage, Quotes } from './screens/Account';
 
 const TABS: { id: RootTab; icon: string }[] = [
@@ -49,8 +51,11 @@ function Phone() {
   const scrollRef = useRef<HTMLDivElement>(null);
   useDragScroll();
 
+  // A story opens over the screen it was tapped on, which stays put underneath.
+  const base = top.s === 'story' ? stack[stack.length - 2] ?? { s: 'home' } : top;
+
   // Every new screen (or wizard step) opens at the top.
-  const key = top.s + '|' + (top.id || '') + '|' + (top.cat ?? '') + '|' + tab + '|' + (a.rfq?.step ?? '') + '|' + (a.bk?.step ?? '');
+  const key = base.s + '|' + (base.id || '') + '|' + (base.cat ?? '') + '|' + tab + '|' + (a.rfq?.step ?? '') + '|' + (a.bk?.step ?? '');
   useLayoutEffect(() => { scrollRef.current?.scrollTo({ top: 0 }); }, [key]);
 
   const unread = Object.values(chats).reduce((n, c) => n + (c.unread || 0), 0);
@@ -60,13 +65,14 @@ function Phone() {
   return (
     <div className="mj-root">
       <div className="mj-frame" dir={ar ? 'rtl' : 'ltr'} lang={lang}>
-        <div className="mj-status" dir="ltr" style={{ color: top.s === 'home' ? '#fff' : 'var(--text-primary)' }}>
+        <div className="mj-status" dir="ltr" style={{ color: top.s === 'home' || top.s === 'story' ? '#fff' : 'var(--text-primary)' }}>
           <span>9:41</span>
           <span style={{ display: 'flex', gap: 6 }}><Icon name="signal" size={16} /><Icon name="wifi" size={16} /><Icon name="battery-full" size={18} /></span>
         </div>
         <div className="mj-s mj-scroll" ref={scrollRef}>
-          <ScreenSwitch route={top} scrollRef={scrollRef} />
+          <ScreenSwitch route={base} scrollRef={scrollRef} />
         </div>
+        {top.s === 'story' && <StoryViewer key={top.id} />}
         {showTabs && (
           <div style={{ position: 'absolute', insetInline: 0, bottom: 0, zIndex: 10 }}>
             <TabBar items={TABS.map(x => ({ ...x, label: t[x.id], badge: x.id === 'messages' && unread ? String(unread) : undefined }))} active={tab} onChange={a.setTab} />
@@ -105,6 +111,7 @@ function ScreenSwitch({ route, scrollRef }: { route: Route; scrollRef: React.Ref
     case 'bookings': return <Bookings />;
     case 'favs': return <Favorites />;
     case 'notifs': return <Notifications />;
+    case 'story': return null;
   }
 }
 
@@ -121,7 +128,7 @@ function DemoPanel() {
     ['Messages', jump([{ s: 'messages' }], 'messages')], ['Chat', jump([{ s: 'messages' }, { s: 'chat', id: 'c4' }], 'messages')],
     ['My quotations', jump([{ s: 'profile' }, { s: 'quotes' }], 'profile')], ['Received quotation', jump([{ s: 'profile' }, { s: 'quotes' }, { s: 'quote', id: 'MJB-RFQ-000121' }], 'profile')],
     ['My bookings', jump([{ s: 'profile' }, { s: 'bookings' }], 'profile')], ['Explore', jump([{ s: 'explore' }], 'explore')],
-    ['Profile', jump([{ s: 'profile' }], 'profile')], ['Notifications', jump([H, { s: 'notifs' }])],
+    ['Profile', jump([{ s: 'profile' }], 'profile')], ['Notifications', jump([H, { s: 'notifs' }])], ['Stories', jump([H, { s: 'story', id: STORIES[0].id }])],
   ];
   return (
     <aside className="mj-panel">

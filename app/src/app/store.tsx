@@ -5,7 +5,7 @@ import { strings, STR, type T } from '../i18n/strings';
 import { bookingDays, nowHHMM, todayLabel, type BookingDay } from './dates';
 
 export type Screen = 'home' | 'categories' | 'explore' | 'messages' | 'profile' | 'listing' | 'company' | 'service' | 'album'
-  | 'rfq' | 'rfqDone' | 'booking' | 'bkDone' | 'chat' | 'quotes' | 'quote' | 'bookings' | 'favs' | 'notifs';
+  | 'rfq' | 'rfqDone' | 'booking' | 'bkDone' | 'chat' | 'quotes' | 'quote' | 'bookings' | 'favs' | 'notifs' | 'story';
 export type RootTab = 'home' | 'categories' | 'explore' | 'messages' | 'profile';
 export interface Route { s: Screen; id?: string; cat?: number; co?: string }
 export interface Filters { gov: 'all' | GovId; verified: boolean; sort: 'rel' | 'near' | 'recent'; view: 'list' | 'map'; q: string }
@@ -20,7 +20,7 @@ export interface BookingDraft { co: string; purpose: string; city: string; gov: 
 const DEFAULT_F: Filters = { gov: 'all', verified: false, sort: 'rel', view: 'list', q: '' };
 const LS = 'mujeeb.v1';
 
-interface Persisted { lang: Lang; fav: Record<string, boolean>; quotes: QuoteRequest[]; bookings: Booking[]; chats: Record<string, Chat>; seq: { rfq: number; bk: number } }
+interface Persisted { lang: Lang; fav: Record<string, boolean>; quotes: QuoteRequest[]; bookings: Booking[]; chats: Record<string, Chat>; seq: { rfq: number; bk: number }; seen: Record<string, boolean> }
 
 function readPersisted(): Partial<Persisted> {
   try { return JSON.parse(localStorage.getItem(LS) || '{}'); } catch { return {}; }
@@ -41,6 +41,9 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
   const [bookings, setBookings] = useState<Booking[]>(saved.bookings || seed.bookings);
   const [chats, setChats] = useState<Record<string, Chat>>(saved.chats || seed.chats);
   const [seq, setSeq] = useState(saved.seq || { rfq: 128, bk: 57 });
+  /** Story ids the customer has opened. */
+  const [seen, setSeen] = useState<Record<string, boolean>>(saved.seen || {});
+  const markSeen = useCallback((id: string) => setSeen(x => (x[id] ? x : { ...x, [id]: true })), []);
   const [draft, setDraft] = useState('');
   const [rfq, setRfq] = useState<RfqDraft | null>(null);
   const [bk, setBk] = useState<BookingDraft | null>(null);
@@ -51,8 +54,8 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
   const top = stack[stack.length - 1];
 
   useEffect(() => {
-    try { localStorage.setItem(LS, JSON.stringify({ lang, fav, quotes, bookings, chats, seq } satisfies Persisted)); } catch { /* storage unavailable */ }
-  }, [lang, fav, quotes, bookings, chats, seq]);
+    try { localStorage.setItem(LS, JSON.stringify({ lang, fav, quotes, bookings, chats, seq, seen } satisfies Persisted)); } catch { /* storage unavailable */ }
+  }, [lang, fav, quotes, bookings, chats, seq, seen]);
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -189,7 +192,7 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
     catalog, idx, coById, lang, setLang, ar, t, stack, top, tab, setTab, go, back, replace, reset, toast, showToast,
     fav, toggleFav, f, setF, ctab, setCtab, sheet, setSheet, exCat, setExCat,
     quotes, setQuotes, bookings, setBookings, chats, openChat, draft, setDraft, send,
-    rfq, setRfq, startRfq, submitRfq, bk, setBk, startBk, submitBooking, days,
+    rfq, setRfq, startRfq, submitRfq, bk, setBk, startBk, submitBooking, days, seen, markSeen,
   };
 }
 

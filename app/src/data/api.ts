@@ -60,7 +60,7 @@ export async function loadCatalog(): Promise<Catalog> {
   })).sort((a, b) => sortKey(a.id) - sortKey(b.id));
   const categories: Category[] = cats.map(c => ({ i: c.id, ar: c.name_ar, en: c.name_en, sar: c.short_ar, sen: c.short_en, icon: c.icon, color: c.color, art: c.art_url }));
   const services: Service[] = svcs.map(s => ({ id: s.id, co: s.company_id, cat: s.category_id, ar: s.title_ar, en: s.title_en, imgs: s.photos, dar: s.description_ar, den: s.description_en }));
-  const albums: Album[] = albs.map(a => ({ id: a.id, co: a.company_id, cat: a.category_id, ar: a.title_ar, en: a.title_en, pAr: a.place_ar, pEn: a.place_en, n: a.photo_count, img: a.cover_photo, imgs: a.photos }));
+  const albums: Album[] = albs.map(a => ({ id: a.id, co: a.company_id, cat: a.category_id, ar: a.title_ar, en: a.title_en, pAr: a.place_ar, pEn: a.place_en, n: a.photo_count, img: a.cover_photo, imgs: a.photos, added: a.created_at }));
   return { cats: categories, gov, hours: hours.map(h => [h.days_ar, h.days_en, h.hours]), companies, services, albums };
 }
 
