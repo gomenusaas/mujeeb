@@ -1,10 +1,9 @@
-import { Avatar, Badge, BottomSheet, Button, Chip, EmptyState, Icon, IconButton, ImageSlot, ListItem, SearchBar, SectionHeader, SegmentedControl } from '../ds';
+import { Avatar, Badge, BottomSheet, Button, EmptyState, Icon, IconButton, ImageSlot, ListItem, SearchBar, SectionHeader, SegmentedControl } from '../ds';
 import { useApp, type Filters, type ListView, type SheetKey } from '../app/store';
 import { ContactGrid, HScroll, Img, MetaLine, QuoteCta, TopBar, callPhone, card, helpers, openWhatsApp, stop } from '../app/view';
 import { logoUrl, photo } from '../data/api';
 import type { Company } from '../data/types';
 
-const GOVS = ['all', 'muscat', 'batinah', 'dakhiliyah', 'dhofar', 'sharqiyah'] as const;
 const VIEWS: { v: ListView; icon: string; label: 'viewLarge' | 'viewGrid' | 'viewRows' }[] = [
   { v: 'large', icon: 'gallery-vertical', label: 'viewLarge' }, { v: 'grid', icon: 'grid-2x2', label: 'viewGrid' }, { v: 'rows', icon: 'layout-list', label: 'viewRows' },
 ];
@@ -92,12 +91,8 @@ export function Listing() {
             <span style={{ font: 'var(--type-body-sm)', fontWeight: 600, opacity: 0.9 }}>{res.length} {t.results}</span>
           </div>
         </div>
-        <div style={{ position: 'relative', padding: '0 20px 12px' }}>
+        <div style={{ position: 'relative', padding: '0 20px 20px' }}>
           <SearchBar placeholder={t.search} value={f.q} onChange={e => set({ q: e.target.value })} onFilter={null} elevated />
-        </div>
-        <div className="mj-s" style={{ position: 'relative', display: 'flex', gap: 8, overflowX: 'auto', padding: '0 20px 14px', scrollbarWidth: 'none' }}>
-          <Chip size="sm" icon="badge-check" selected={f.verified} onClick={() => set({ verified: !f.verified })}>{t.verifiedOnly}</Chip>
-          {GOVS.map(g => <Chip key={g} size="sm" selected={f.gov === g} onClick={() => set({ gov: g })}>{h.gname(g)}</Chip>)}
         </div>
       </div>
       <div style={{ padding: '8px 20px 0', display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -281,13 +276,17 @@ export function ServicePage() {
         </div>
         <span style={{ position: 'absolute', bottom: 40, insetInlineEnd: 16 }}><Badge tone="dark" icon="images">{s.imgs.length + ' ' + t.photos}</Badge></span>
       </div>
-      <div style={{ position: 'relative', marginTop: -28, borderRadius: '28px 28px 0 0', background: 'var(--bg-app)', padding: '22px 20px 28px', display: 'flex', flexDirection: 'column', gap: 20, flex: 1 }}>
+      <div style={{ position: 'relative', marginTop: -28, borderRadius: '28px 28px 0 0', background: 'var(--bg-app)', padding: '0 20px 28px', display: 'flex', flexDirection: 'column', gap: 20, flex: 1 }}>
+        {/* Company logo overlapping the photo, as on the company page. */}
+        <button type="button" onClick={() => a.go('company', { id: co.id })} aria-label={h.coName(co)}
+          style={{ alignSelf: 'flex-start', marginTop: -36, marginBottom: -6, padding: 0, border: 'none', background: 'none', borderRadius: '50%', cursor: 'pointer' }}>
+          <Avatar name={h.coName(co)} src={logoUrl(co.id)} size={84} verified={co.verified} style={{ borderRadius: '50%', boxShadow: '0 0 0 4px var(--bg-app)' }} />
+        </button>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <CatTag color={color} h={26} pad={10}>{h.cname(s.cat)}</CatTag>
           <span style={{ font: 'var(--type-h1)' }}>{ar ? s.ar : s.en}</span>
           <span style={{ font: 'var(--type-body)', color: 'var(--text-secondary)', textWrap: 'pretty' }}>{ar ? s.dar : s.den}</span>
         </div>
-        <CompanyStrip id={co.id} size={48} padded />
         <ContactGrid a={a} co={co} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <span style={{ font: 'var(--type-h3)' }}>{t.video}</span>
@@ -321,22 +320,6 @@ export function ServicePage() {
   );
 }
 
-/** Logo + name + city row linking to the company. */
-function CompanyStrip({ id, size, padded }: { id: string; size: number; padded?: boolean }) {
-  const a = useApp();
-  const h = helpers(a);
-  const co = a.idx.co.get(id)!;
-  return (
-    <div onClick={() => a.go('company', { id })} style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', ...(padded ? { padding: 14, ...card } : {}) }}>
-      <Avatar name={h.coName(co)} src={logoUrl(id)} size={size} verified={co.verified} />
-      <span style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <span style={{ font: 'var(--type-title)' }}>{h.coName(co)}</span>
-        <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }}>{h.city(co)}</span>
-      </span>
-      <Icon name="chevron-right" size={18} color="var(--text-tertiary)" />
-    </div>
-  );
-}
 
 const ALB_RATIOS = ['4/5', '1/1', '3/4', '1/1', '4/5', '3/4'];
 export function AlbumPage() {
