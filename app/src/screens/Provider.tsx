@@ -1,15 +1,65 @@
 import { Avatar, Badge, BottomSheet, Button, Chip, EmptyState, Icon, IconButton, ImageSlot, ListItem, SearchBar, SectionHeader, SegmentedControl } from '../ds';
-import { useApp, type Filters, type SheetKey } from '../app/store';
+import { useApp, type Filters, type ListView, type SheetKey } from '../app/store';
 import { ContactGrid, HScroll, Img, MetaLine, QuoteCta, TopBar, callPhone, card, helpers, openWhatsApp, stop } from '../app/view';
 import { logoUrl, photo } from '../data/api';
 import type { Company } from '../data/types';
 
 const GOVS = ['all', 'muscat', 'batinah', 'dakhiliyah', 'dhofar', 'sharqiyah'] as const;
-const PIN_X = [18, 62, 40, 72, 28, 54], PIN_Y = [22, 30, 50, 64, 72, 40];
+const VIEWS: { v: ListView; icon: string; label: 'viewLarge' | 'viewGrid' | 'viewRows' }[] = [
+  { v: 'large', icon: 'gallery-vertical', label: 'viewLarge' }, { v: 'grid', icon: 'grid-2x2', label: 'viewGrid' }, { v: 'rows', icon: 'layout-list', label: 'viewRows' },
+];
+
+/** Three-icon switch for the company list layout; sits beside the sort control and matches its height. */
+function ViewSwitch() {
+  const a = useApp();
+  return (
+    <div role="radiogroup" aria-label={a.t.viewAs} style={{ flex: 'none', display: 'flex', gap: 4, padding: 4, borderRadius: 'var(--radius-pill)', background: 'var(--neutral-100)' }}>
+      {VIEWS.map(x => {
+        const on = a.listView === x.v;
+        return (
+          <button key={x.v} type="button" role="radio" aria-checked={on} aria-label={a.t[x.label]} title={a.t[x.label]} onClick={() => a.setListView(x.v)}
+            style={{ width: 38, height: 38, border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: on ? 'var(--brand)' : 'transparent', color: on ? '#fff' : 'var(--text-secondary)', transition: 'all var(--dur-base) var(--ease-out)' }}>
+            <Icon name={x.icon} size={18} />
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+type Sort = Filters['sort'];
+const SORTS: { v: Sort; icon: string }[] = [{ v: 'rel', icon: 'star' }, { v: 'near', icon: 'map-pin' }, { v: 'recent', icon: 'clock' }];
+const sortLabel = (t: ReturnType<typeof useApp>['t'], v: Sort) => (v === 'near' ? t.nearest : v === 'recent' ? t.recent : t.relevance);
+
+/** Bottom sheet listing the sort options for the company list (opened from the sort button). */
+export function SortSheet() {
+  const a = useApp();
+  const { t, f, setF, sheet, setSheet } = a;
+  return (
+    <BottomSheet open={sheet === 'sort'} onClose={() => setSheet(null)} title={t.sortBy}>
+      {SORTS.map(s => {
+        const on = f.sort === s.v;
+        return (
+          <ListItem key={s.v} icon={s.icon} color={on ? 'violet' : undefined} title={sortLabel(t, s.v)} chevron={false}
+            trailing={on ? <Icon name="check" size={20} color="var(--brand)" /> : null}
+            onClick={() => { setF(x => ({ ...x, sort: s.v })); setSheet(null); }} />
+        );
+      })}
+    </BottomSheet>
+  );
+}
+
+/** Company name with a small verified tick, for the compact list layouts. */
+const CoName = ({ name, verified, size }: { name: string; verified: boolean; size: number }) => (
+  <span style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
+    <span style={{ font: '700 ' + size + 'px/' + (size + 4) + 'px var(--font-sans)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>
+    {verified && <Icon name="badge-check" size={size} color="var(--brand)" style={{ flex: 'none' }} />}
+  </span>
+);
 
 export function Listing() {
   const a = useApp();
-  const { t, ar, catalog, f, setF, top } = a;
+  const { t, catalog, f, setF, top } = a;
   const h = helpers(a);
   const c = top.cat;
   const q = f.q.trim().toLowerCase();
@@ -48,11 +98,12 @@ export function Listing() {
           {GOVS.map(g => <Chip key={g} size="sm" selected={f.gov === g} onClick={() => set({ gov: g })}>{h.gname(g)}</Chip>)}
         </div>
       </div>
-      <div style={{ padding: '8px 20px 0' }}>
-        <SegmentedControl options={[{ value: 'rel', label: t.relevance }, { value: 'near', label: t.nearest }, { value: 'recent', label: t.recent }]} value={f.sort} onChange={v => set({ sort: v })} />
-      </div>
-      <div style={{ padding: '10px 20px 0' }}>
-        <SegmentedControl options={[{ value: 'list', label: t.list }, { value: 'map', label: t.map }]} value={f.view} onChange={v => set({ view: v })} />
+      <div style={{ padding: '8px 20px 0', display: 'flex', gap: 8, alignItems: 'center' }}>
+        <ViewSwitch />
+        <button type="button" aria-haspopup="dialog" aria-label={t.sortBy + ': ' + sortLabel(t, f.sort)} onClick={() => a.setSheet('sort')}
+          style={{ marginInlineStart: 'auto', height: 46, display: 'flex', alignItems: 'center', gap: 8, padding: '0 16px', border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--neutral-100)', color: 'var(--text-primary)', font: 'var(--type-body-sm)', fontWeight: 700, fontFamily: 'var(--font-sans)', cursor: 'pointer' }}>
+          <Icon name="arrow-down-up" size={16} />{sortLabel(t, f.sort)}<Icon name="chevron-down" size={16} color="var(--text-secondary)" />
+        </button>
       </div>
       {!res.length && (
         <>
@@ -60,21 +111,7 @@ export function Listing() {
           <div style={{ display: 'flex', justifyContent: 'center' }}><Button variant="secondary" onClick={() => set({ gov: 'all', verified: false, q: '' })}>{t.clear}</Button></div>
         </>
       )}
-      {f.view === 'map' && (
-        <div style={{ padding: '14px 20px 0' }}>
-          <div style={{ position: 'relative', height: 440, borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
-            <ImageSlot label="map view · Oman" tone="sky" />
-            {res.slice(0, 6).map((co, k) => (
-              <button key={co.id} type="button" onClick={() => a.go('company', { id: co.id })}
-                style={{ position: 'absolute', insetInlineStart: PIN_X[k] + '%', top: PIN_Y[k] + '%', display: 'flex', alignItems: 'center', gap: 6, height: 32, paddingInline: '4px 12px', border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)', cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
-                <span style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--brand)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="map-pin" size={14} /></span>
-                {ar ? co.ar : co.en}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-      {f.view === 'list' && (
+      {a.listView === 'large' && (
         <div style={{ padding: '14px 20px 0', display: 'flex', flexDirection: 'column', gap: 14 }}>
           {results.map(co => (
             <div key={co.id} onClick={co.open} style={{ ...card, overflow: 'hidden', cursor: 'pointer' }}>
@@ -90,6 +127,39 @@ export function Listing() {
                   <MetaLine icon="map-pin">{co.city}</MetaLine>
                   <MetaLine icon="route">{co.covers}</MetaLine>
                 </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {a.listView === 'grid' && (
+        <div style={{ padding: '14px 20px 0', display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+          {results.map(co => (
+            <div key={co.id} onClick={co.open} style={{ ...card, overflow: 'hidden', cursor: 'pointer' }}>
+              <div style={{ aspectRatio: '1', background: co.c100 }}><Img src={co.cover} /></div>
+              <div style={{ padding: '10px 10px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Avatar name={co.name} src={co.logo} size={24} />
+                  <CoName name={co.name} verified={co.verified} size={13} />
+                </span>
+                <MetaLine icon="map-pin" size={12}>{co.city}</MetaLine>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {a.listView === 'rows' && (
+        <div style={{ padding: '14px 20px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {results.map(co => (
+            <div key={co.id} onClick={co.open} style={{ ...card, overflow: 'hidden', cursor: 'pointer', display: 'flex', minHeight: 96 }}>
+              <div style={{ position: 'relative', flex: 'none', width: '36%', background: co.c100 }}><Img src={co.cover} style={{ position: 'absolute', inset: 0 }} /></div>
+              <div style={{ flex: 1, minWidth: 0, padding: '10px 12px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 5 }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Avatar name={co.name} src={co.logo} size={24} />
+                  <CoName name={co.name} verified={co.verified} size={14} />
+                </span>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{co.cat}</span>
+                <MetaLine icon="map-pin" size={12}>{co.city}</MetaLine>
               </div>
             </div>
           ))}

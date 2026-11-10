@@ -4,7 +4,7 @@ const NAMES = `signal wifi battery-full bell map-pin chevron-down search sliders
 chevron-right chevron-left calendar-off file-text play image-plus file-plus image x user-round phone shield-check arrow-right send circle-check
 calendar-check scan-search ruler messages-square wrench calendar clock calendar-clock message-circle link paperclip log-out hourglass download info
 check house layout-grid compass search-x building-2 globe at-sign mail instagram twitter facebook linkedin languages settings life-buoy circle-alert star
-lamp frame zap droplets chef-hat trees snowflake cctv fire-extinguisher drafting-compass`.split(/\s+/).filter(Boolean);
+lamp frame zap droplets chef-hat trees snowflake cctv fire-extinguisher drafting-compass gallery-vertical grid-2x2 layout-list arrow-down-up`.split(/\s+/).filter(Boolean);
 const dir = new URL('../node_modules/lucide-static/icons/', import.meta.url);
 const map = {};
 for (const n of NAMES) {

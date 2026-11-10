@@ -8,8 +8,10 @@ export type Screen = 'home' | 'categories' | 'explore' | 'messages' | 'profile' 
   | 'rfq' | 'rfqDone' | 'booking' | 'bkDone' | 'chat' | 'quotes' | 'quote' | 'bookings' | 'favs' | 'notifs' | 'story';
 export type RootTab = 'home' | 'categories' | 'explore' | 'messages' | 'profile';
 export interface Route { s: Screen; id?: string; cat?: number; co?: string }
-export interface Filters { gov: 'all' | GovId; verified: boolean; sort: 'rel' | 'near' | 'recent'; view: 'list' | 'map'; q: string }
-export type SheetKey = null | 'menu' | 'about' | 'branches' | 'address' | 'coverage' | 'contact' | 'website' | 'social';
+export interface Filters { gov: 'all' | GovId; verified: boolean; sort: 'rel' | 'near' | 'recent'; q: string }
+/** How the company list is laid out: big cards, two per row, or thin rows. */
+export type ListView = 'large' | 'grid' | 'rows';
+export type SheetKey = null | 'menu' | 'about' | 'branches' | 'address' | 'coverage' | 'contact' | 'website' | 'social' | 'sort';
 export interface RfqFile { kind: 'img' | 'doc'; name: string; size: string }
 export interface RfqDraft {
   co: string; svc?: string; title: string; desc: string; gov: GovId; city: string; address: string;
@@ -17,10 +19,10 @@ export interface RfqDraft {
 }
 export interface BookingDraft { co: string; purpose: string; city: string; gov: GovId; day: number; time: string; notes: string; step: number }
 
-const DEFAULT_F: Filters = { gov: 'all', verified: false, sort: 'rel', view: 'list', q: '' };
+const DEFAULT_F: Filters = { gov: 'all', verified: false, sort: 'rel', q: '' };
 const LS = 'mujeeb.v1';
 
-interface Persisted { lang: Lang; fav: Record<string, boolean>; quotes: QuoteRequest[]; bookings: Booking[]; chats: Record<string, Chat>; seq: { rfq: number; bk: number }; seen: Record<string, boolean> }
+interface Persisted { lang: Lang; fav: Record<string, boolean>; quotes: QuoteRequest[]; bookings: Booking[]; chats: Record<string, Chat>; seq: { rfq: number; bk: number }; seen: Record<string, boolean>; listView: ListView }
 
 function readPersisted(): Partial<Persisted> {
   try { return JSON.parse(localStorage.getItem(LS) || '{}'); } catch { return {}; }
@@ -43,6 +45,7 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
   const [seq, setSeq] = useState(saved.seq || { rfq: 128, bk: 57 });
   /** Story ids the customer has opened. */
   const [seen, setSeen] = useState<Record<string, boolean>>(saved.seen || {});
+  const [listView, setListView] = useState<ListView>(saved.listView || 'large');
   const markSeen = useCallback((id: string) => setSeen(x => (x[id] ? x : { ...x, [id]: true })), []);
   const [draft, setDraft] = useState('');
   const [rfq, setRfq] = useState<RfqDraft | null>(null);
@@ -54,8 +57,8 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
   const top = stack[stack.length - 1];
 
   useEffect(() => {
-    try { localStorage.setItem(LS, JSON.stringify({ lang, fav, quotes, bookings, chats, seq, seen } satisfies Persisted)); } catch { /* storage unavailable */ }
-  }, [lang, fav, quotes, bookings, chats, seq, seen]);
+    try { localStorage.setItem(LS, JSON.stringify({ lang, fav, quotes, bookings, chats, seq, seen, listView } satisfies Persisted)); } catch { /* storage unavailable */ }
+  }, [lang, fav, quotes, bookings, chats, seq, seen, listView]);
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -192,7 +195,7 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
     catalog, idx, coById, lang, setLang, ar, t, stack, top, tab, setTab, go, back, replace, reset, toast, showToast,
     fav, toggleFav, f, setF, ctab, setCtab, sheet, setSheet, exCat, setExCat,
     quotes, setQuotes, bookings, setBookings, chats, openChat, draft, setDraft, send,
-    rfq, setRfq, startRfq, submitRfq, bk, setBk, startBk, submitBooking, days, seen, markSeen,
+    rfq, setRfq, startRfq, submitRfq, bk, setBk, startBk, submitBooking, days, seen, markSeen, listView, setListView,
   };
 }
 

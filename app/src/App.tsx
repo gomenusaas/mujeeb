@@ -6,7 +6,7 @@ import type { Catalog, CustomerSeed } from './data/types';
 import { STR } from './i18n/strings';
 import { useDragScroll } from './app/useDragScroll';
 import { Categories, Explore, Home } from './screens/Discover';
-import { AlbumPage, CompanyPage, CompanySheet, Listing, ServicePage } from './screens/Provider';
+import { AlbumPage, CompanyPage, CompanySheet, Listing, ServicePage, SortSheet } from './screens/Provider';
 import { BookingPage, DonePage, RfqPage } from './screens/Flows';
 import { StoryViewer } from './screens/Stories';
 import { STORIES } from './data/stories';
@@ -79,6 +79,7 @@ function Phone() {
           </div>
         )}
         {company && <CompanySheet co={company} />}
+        {top.s === 'listing' && <SortSheet />}
         {toast && (
           <div style={{ position: 'absolute', insetInline: 16, bottom: showTabs ? 'calc(88px + var(--safe-bottom))' : 'calc(104px + var(--safe-bottom))', zIndex: 60 }}>
             <Toast message={toast.msg} tone={toast.tone} />
