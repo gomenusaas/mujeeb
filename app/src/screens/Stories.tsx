@@ -33,7 +33,7 @@ export function StoryRow() {
   if (!list.length) return null;
   return (
     <section aria-label={a.t.stories} className="mj-s"
-      style={{ display: 'grid', gridAutoFlow: 'column', gridAutoColumns: 'calc((100% - 20px) / 3 - 8px)', gap: 10, overflowX: 'auto', scrollSnapType: 'x mandatory', scrollPaddingInline: 20, padding: '18px 20px', background: 'var(--brand-tint-strong)', scrollbarWidth: 'none' }}>
+      style={{ display: 'grid', gridAutoFlow: 'column', gridAutoColumns: 'calc((100% - 20px) / 3 - 8px)', gap: 10, overflowX: 'auto', scrollSnapType: 'x mandatory', scrollPaddingInline: 20, padding: '18px 20px 4px', scrollbarWidth: 'none' }}>
       {list.map((s, i) => {
         const co = a.idx.co.get(s.co)!;
         const name = h.coName(co);
