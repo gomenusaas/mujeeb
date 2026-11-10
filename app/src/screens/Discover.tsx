@@ -1,4 +1,4 @@
-import { Avatar, Badge, CategoryCard, Chip, Icon, IconButton, PromoBanner, SectionHeader } from '../ds';
+import { Avatar, Badge, CategoryCard, Chip, Icon, IconButton, SectionHeader } from '../ds';
 import { useApp } from '../app/store';
 import { HScroll, Img, MetaLine, card, helpers, stop } from '../app/view';
 import { logoUrl, photo } from '../data/api';
@@ -12,14 +12,17 @@ function LatestProjects() {
   const latest = [...a.catalog.albums].sort((x, y) => (y.added || '').localeCompare(x.added || '')).slice(0, 9);
   if (!latest.length) return null;
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 2 }}>
-      {latest.map(al => (
-        <button key={al.id} type="button" className="mj-press-sm" onClick={() => a.go('album', { id: al.id })} aria-label={a.ar ? al.ar : al.en}
-          style={{ aspectRatio: '1', border: 'none', padding: 0, overflow: 'hidden', background: 'var(--neutral-200)', cursor: 'pointer' }}>
-          <Img src={photo(al.img, 400)} />
-        </button>
-      ))}
-    </div>
+    <section style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ padding: '0 20px' }}><SectionHeader title={a.t.latestProjects} /></div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 2 }}>
+        {latest.map(al => (
+          <button key={al.id} type="button" className="mj-press-sm" onClick={() => a.go('album', { id: al.id })} aria-label={a.ar ? al.ar : al.en}
+            style={{ aspectRatio: '1', border: 'none', padding: 0, overflow: 'hidden', background: 'var(--neutral-200)', cursor: 'pointer' }}>
+            <Img src={photo(al.img, 400)} />
+          </button>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -27,11 +30,6 @@ export function Home() {
   const a = useApp();
   const { t, ar, catalog } = a;
   const h = helpers(a);
-  const promos: [string, string, string, string, string][] = [
-    ['واجهات زجاجية بلا إطارات', 'Frameless glass facades', 'indigo', 'glass facade', 'c1'],
-    ['صيانة المكيفات قبل الصيف', 'AC servicing before summer', 'sky', 'AC technician', 'c7'],
-    ['مطابخ بلمسة عُمانية معاصرة', 'Kitchens with a modern Omani touch', 'violet', 'kitchen showroom', 'c4'],
-  ];
   const featCats = catalog.cats.map(c => ({
     ...c, label: h.cname(c.i),
     img: photo((catalog.companies.find(co => co.cats[0] === c.i) || catalog.companies[0]).img, 600),
@@ -85,14 +83,6 @@ export function Home() {
       <StoryRow />
 
       <LatestProjects />
-
-      <HScroll>
-        {promos.map(([tar, ten, color, image, id]) => (
-          <div key={id} style={{ flex: 'none', width: 'min(350px, calc(100vw - 40px))', scrollSnapAlign: 'start' }}>
-            <PromoBanner eyebrow={t.sponsored} title={ar ? tar : ten} cta={t.viewOffer} color={color} imageLabel={image} onClick={() => a.go('company', { id })} />
-          </div>
-        ))}
-      </HScroll>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div style={{ padding: '0 20px' }}><SectionHeader title={t.featuredCo} action={t.seeAll} onAction={() => a.go('listing')} /></div>

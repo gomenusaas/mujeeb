@@ -44,7 +44,7 @@ export function StoryRow() {
             <img src={s.poster} alt="" loading="lazy" decoding="async" draggable={false} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
             <span style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, oklch(0 0 0 / .35), transparent 30%, transparent 55%, oklch(0 0 0 / .7))' }} />
             <span style={{ position: 'absolute', top: 8, insetInlineStart: 8 }}>
-              <StoryLogo src={logoUrl(co.id)} name={name} size={26} seen={!!a.seen[s.id]} />
+              <StoryLogo src={logoUrl(co.id)} name={name} size={38} seen={!!a.seen[s.id]} />
             </span>
             {s.kind === 'video' && (
               <span aria-hidden="true" style={{ position: 'absolute', top: 11, insetInlineEnd: 8, width: 22, height: 22, borderRadius: '50%', background: 'oklch(0 0 0 / .35)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}>
