@@ -36,7 +36,6 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
   const [toast, setToast] = useState<{ msg: string; tone: string } | null>(null);
   const [fav, setFav] = useState<Record<string, boolean>>(saved.fav || { c2: true, c4: true });
   const [f, setF] = useState<Filters>(DEFAULT_F);
-  const [ctab, setCtab] = useState<'services' | 'portfolio'>('services');
   const [sheet, setSheet] = useState<SheetKey>(null);
   const [exCat, setExCat] = useState(-1);
   const [quotes, setQuotes] = useState<QuoteRequest[]>(saved.quotes || seed.quotes);
@@ -99,7 +98,6 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
     setSheet(null);
     const { q, ...rest } = p;
     if (s === 'listing') setF({ ...DEFAULT_F, q: q || '' });
-    if (s === 'company') setCtab('services');
     setStack(st => [...st, { s, ...rest }]);
   }, []);
   const replace = useCallback((s: Screen, p: Omit<Route, 's'> = {}) => setStack(st => [...st.slice(0, -1), { s, ...p }]), []);
@@ -193,7 +191,7 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
 
   return {
     catalog, idx, coById, lang, setLang, ar, t, stack, top, tab, setTab, go, back, replace, reset, toast, showToast,
-    fav, toggleFav, f, setF, ctab, setCtab, sheet, setSheet, exCat, setExCat,
+    fav, toggleFav, f, setF, sheet, setSheet, exCat, setExCat,
     quotes, setQuotes, bookings, setBookings, chats, openChat, draft, setDraft, send,
     rfq, setRfq, startRfq, submitRfq, bk, setBk, startBk, submitBooking, days, seen, markSeen, listView, setListView,
   };

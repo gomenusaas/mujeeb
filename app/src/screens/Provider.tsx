@@ -1,4 +1,4 @@
-import { Avatar, Badge, BottomSheet, Button, EmptyState, Icon, IconButton, ImageSlot, ListItem, SearchBar, SectionHeader, SegmentedControl } from '../ds';
+import { Avatar, Badge, BottomSheet, Button, EmptyState, Icon, IconButton, ImageSlot, ListItem, SearchBar, SectionHeader } from '../ds';
 import { useApp, type Filters, type ListView, type SheetKey } from '../app/store';
 import { ContactGrid, HScroll, Img, MetaLine, QuoteCta, TopBar, callPhone, card, helpers, openWhatsApp, stop } from '../app/view';
 import { logoUrl, photo } from '../data/api';
@@ -168,12 +168,11 @@ export function Listing() {
 
 export function CompanyPage() {
   const a = useApp();
-  const { t, catalog, top, ctab, setCtab } = a;
+  const { t, catalog, top } = a;
   const h = helpers(a);
   const co = a.idx.co.get(top.id!)!;
   const cv = h.coV(co);
   const services = catalog.services.filter(s => s.co === co.id).map(h.svcV);
-  const albums = catalog.albums.filter(al => al.co === co.id).map(h.albV);
   return (
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ position: 'relative', height: 250, background: cv.c100 }}>
@@ -205,29 +204,10 @@ export function CompanyPage() {
             <Icon name="calendar-off" size={16} color="var(--text-tertiary)" />{t.bookOff}
           </span>
         )}
-        <SegmentedControl options={[{ value: 'services', label: t.services }, { value: 'portfolio', label: t.portfolio }]} value={ctab} onChange={setCtab} />
-        {ctab === 'services' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {services.map(s => <ServiceRow key={s.id} {...s} thumb={96} />)}
-          </div>
-        )}
-        {ctab === 'portfolio' && (
-          <>
-            {!albums.length && <EmptyState icon="images" title={t.portfolio} />}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 12 }}>
-              {albums.map(al => (
-                <div key={al.id} onClick={al.open} style={{ display: 'flex', flexDirection: 'column', gap: 6, cursor: 'pointer' }}>
-                  <div style={{ position: 'relative', aspectRatio: '4/3', borderRadius: 'var(--radius-md)', overflow: 'hidden', background: al.c100 }}>
-                    <Img src={al.img} />
-                    <span style={{ position: 'absolute', bottom: 8, insetInlineStart: 8 }}><Badge tone="dark" size="sm" icon="images">{al.count}</Badge></span>
-                  </div>
-                  <span style={{ font: 'var(--type-body-sm)', fontWeight: 700, color: 'var(--text-primary)' }}>{al.title}</span>
-                  <span style={{ font: 'var(--type-caption)', fontWeight: 500, color: 'var(--text-tertiary)', marginTop: -3 }}>{al.place}</span>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <SectionHeader title={t.services} />
+          {services.map(s => <ServiceRow key={s.id} {...s} thumb={96} />)}
+        </div>
       </div>
       <QuoteCta label={t.getQuote} onClick={() => a.startRfq(co.id)} />
     </div>
