@@ -28,8 +28,8 @@ function ViewSwitch() {
 }
 
 type Sort = Filters['sort'];
-const SORTS: { v: Sort; icon: string }[] = [{ v: 'rel', icon: 'star' }, { v: 'near', icon: 'map-pin' }, { v: 'recent', icon: 'clock' }];
-const sortLabel = (t: ReturnType<typeof useApp>['t'], v: Sort) => (v === 'near' ? t.nearest : v === 'recent' ? t.recent : t.relevance);
+const SORTS: { v: Sort; icon: string }[] = [{ v: 'rel', icon: 'star' }, { v: 'near', icon: 'map-pin' }, { v: 'recent', icon: 'clock' }, { v: 'verified', icon: 'badge-check' }];
+const sortLabel = (t: ReturnType<typeof useApp>['t'], v: Sort) => (v === 'near' ? t.nearest : v === 'recent' ? t.recent : v === 'verified' ? t.verifiedSort : t.relevance);
 
 /** Bottom sheet listing the sort options for the company list (opened from the sort button). */
 export function SortSheet() {
@@ -73,6 +73,8 @@ export function Listing() {
       ...catalog.services.filter(s => s.co === co.id).map(s => s.ar + ' ' + s.en)].join(' ').toLowerCase().includes(q)));
   if (f.sort === 'near') res = res.slice().sort((x, y) => Number(y.gov === 'muscat') - Number(x.gov === 'muscat'));
   if (f.sort === 'recent') res = res.slice().reverse();
+  // Verified companies first; the rest keep their relevance order.
+  if (f.sort === 'verified') res = res.slice().sort((x, y) => Number(y.verified) - Number(x.verified));
   const color = c == null ? 'violet' : catalog.cats[c].color;
   const results = res.map(h.coV);
 

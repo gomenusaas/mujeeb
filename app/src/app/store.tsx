@@ -8,7 +8,7 @@ export type Screen = 'home' | 'categories' | 'explore' | 'messages' | 'profile' 
   | 'rfq' | 'rfqDone' | 'booking' | 'bkDone' | 'chat' | 'quotes' | 'quote' | 'bookings' | 'favs' | 'notifs' | 'story';
 export type RootTab = 'home' | 'categories' | 'explore' | 'messages' | 'profile';
 export interface Route { s: Screen; id?: string; cat?: number; co?: string }
-export interface Filters { gov: 'all' | GovId; verified: boolean; sort: 'rel' | 'near' | 'recent'; q: string }
+export interface Filters { gov: 'all' | GovId; verified: boolean; sort: 'rel' | 'near' | 'recent' | 'verified'; q: string }
 /** How the company list is laid out: big cards, two per row, or thin rows. */
 export type ListView = 'large' | 'grid' | 'rows';
 export type SheetKey = null | 'menu' | 'about' | 'branches' | 'address' | 'coverage' | 'contact' | 'website' | 'social' | 'sort';
