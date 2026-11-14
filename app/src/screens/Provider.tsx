@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef, useState } from 'react';
 import { Avatar, Badge, BottomSheet, Button, EmptyState, Icon, IconButton, ImageSlot, ListItem, SearchBar, SectionHeader } from '../ds';
 import { useApp, type Filters, type ListView, type SheetKey } from '../app/store';
 import { ContactGrid, HScroll, Img, MetaLine, TopBar, callPhone, card, helpers, openWhatsApp, stop } from '../app/view';
@@ -193,7 +194,7 @@ export function CompanyPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <span style={{ font: 'var(--type-h1)' }}>{cv.name}</span>
           <span style={{ display: 'flex', alignItems: 'center', gap: 4, font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }}><Icon name="map-pin" size={14} />{cv.city} · {cv.covers}</span>
-          <span style={{ font: 'var(--type-body)', color: 'var(--text-secondary)', textWrap: 'pretty', marginTop: 4 }}>{a.ar ? co.dar : co.den}</span>
+          <ClampedAbout text={a.ar ? co.dar : co.den} />
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
           {co.cats.map(i => <CatTag key={i} color={catalog.cats[i].color}>{h.cname(i)}</CatTag>)}
@@ -205,6 +206,38 @@ export function CompanyPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * Company description cut to two lines, ending in "… Read more" that opens the About sheet
+ * (which also has the founding year and working hours, so the link shows even for short text).
+ */
+function ClampedAbout({ text }: { text: string }) {
+  const a = useApp();
+  const ref = useRef<HTMLSpanElement>(null);
+  const [cut, setCut] = useState(false);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (el) setCut(el.scrollHeight > el.clientHeight + 1);
+  }, [text]);
+  const more = (
+    <button type="button" onClick={() => a.setSheet('about')}
+      style={{ padding: 0, border: 'none', background: 'none', cursor: 'pointer', font: 'inherit', fontWeight: 700, color: 'var(--brand)' }}>
+      {a.t.readMore}
+    </button>
+  );
+  return (
+    <span style={{ position: 'relative', marginTop: 4, font: 'var(--type-body)', color: 'var(--text-secondary)' }}>
+      <span ref={ref} style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textWrap: 'pretty' }}>
+        {text}{!cut && <> {more}</>}
+      </span>
+      {cut && (
+        <span style={{ position: 'absolute', insetInlineEnd: 0, bottom: 0, paddingInlineStart: 28, background: 'linear-gradient(' + (a.ar ? 'to left' : 'to right') + ', transparent, var(--bg-app) 28px)' }}>
+          … {more}
+        </span>
+      )}
+    </span>
   );
 }
 
