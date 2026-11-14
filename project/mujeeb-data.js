@@ -124,11 +124,11 @@
       const second = j % 2 ? [(c + 7) % 20] : [];
       COMPANIES.push(C(id, ar, en, [c].concat(second), city[0], city[1], city[2], cov, pool[j % pool.length], {
         logo: 'assets/logos/' + id + '.png', since: 2004 + ((c + j * 3) % 19), verified: (c + j) % 4 !== 0, book: (c + j) % 5 !== 0,
-        dar: 'شركة عُمانية متخصصة في ' + CATS[c].ar + '، تخدم عملاءها في ' + city[0] + ' وما حولها مع زيارة معاينة وعرض سعر مفصل.',
-        den: 'Omani company specialising in ' + (/^[A-Z]+$/.test(CATS[c].en) ? CATS[c].en : CATS[c].en.toLowerCase()) + ', serving ' + city[1] + ' and nearby areas with a site visit and a detailed quotation.',
+        dar: 'شركة عُمانية متخصصة في ' + CATS[c].ar + '، تخدم عملاءها في ' + city[0] + ' وما حولها.',
+        den: 'Omani company specialising in ' + (/^[A-Z]+$/.test(CATS[c].en) ? CATS[c].en : CATS[c].en.toLowerCase()) + ', serving ' + city[1] + ' and nearby areas.',
         branches: [[city[0], city[1], true]],
       }));
-      SVC[c].forEach((s, k) => SERVICES.push(S('s' + id + '-' + k, id, c, s[0], s[1], [pool[(j + k) % pool.length], pool[(j + k + 1) % pool.length]], s[0] + ' من ' + ar + '. نبدأ بزيارة للموقع ثم نرسل لك عرض سعر واضح.', s[1] + ' by ' + en + '. We start with a site visit, then send you a clear quotation.')));
+      SVC[c].forEach((s, k) => SERVICES.push(S('s' + id + '-' + k, id, c, s[0], s[1], [pool[(j + k) % pool.length], pool[(j + k + 1) % pool.length]], s[0] + ' من ' + ar + '. تواصل معنا عبر واتساب أو الرسائل لمناقشة مشروعك.', s[1] + ' by ' + en + '. Get in touch on WhatsApp or by message to discuss your project.')));
       ALBUMS.push(A('a' + id, id, c, SVC[c][j % 2][0] + ' — ' + city[0], SVC[c][j % 2][1] + ' — ' + city[1], city[0], city[1], 6 + ((c * 7 + j * 5) % 20), pool[(j + 1) % pool.length], [pool[j % pool.length], pool[(j + 2) % pool.length]]));
     }
   }
