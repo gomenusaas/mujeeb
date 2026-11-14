@@ -93,14 +93,14 @@ export function ContactGrid({ a, co }: { a: App; co: Company }) {
     { icon: 'message-circle', label: t.whatsapp, tone: 'green', go: () => openWhatsApp(a, co) },
     { icon: 'messages-square', label: t.message, tone: 'violet', go: () => a.openChat(co.id) },
     { icon: 'phone', label: t.call, tone: 'sky', go: () => callPhone(a, co.phone) },
-    ...(co.book ? [{ icon: 'calendar-check', label: t.bookVisit, tone: 'amber', go: () => a.startBk(co.id) }] : []),
+    { icon: a.follows[co.id] ? 'user-check' : 'user-plus', label: a.follows[co.id] ? t.following : t.follow, tone: 'amber', on: !!a.follows[co.id], go: () => a.toggleFollow(co.id) },
   ];
   return (
     <div style={{ display: 'grid', gridAutoFlow: 'column', gridAutoColumns: 'minmax(0,1fr)', gap: 8 }}>
       {items.map(x => (
-        <button key={x.icon} type="button" className="mj-press" onClick={x.go}
+        <button key={x.label} type="button" className="mj-press" onClick={x.go} aria-pressed={'on' in x ? x.on : undefined}
           style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '12px 4px', border: 'none', borderRadius: 'var(--radius-md)', background: 'var(--surface-card)', boxShadow: 'var(--shadow-xs)', cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'center' }}>
-          <span style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--cat-' + x.tone + '-100)', color: 'var(--cat-' + x.tone + '-600)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name={x.icon} size={20} /></span>
+          <span style={{ width: 40, height: 40, borderRadius: 12, background: 'on' in x && x.on ? 'var(--brand)' : 'var(--cat-' + x.tone + '-100)', color: 'on' in x && x.on ? '#fff' : 'var(--cat-' + x.tone + '-600)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background var(--dur-base)' }}><Icon name={x.icon} size={20} /></span>
           <span style={{ font: 'var(--type-caption)', color: 'var(--text-primary)' }}>{x.label}</span>
         </button>
       ))}

@@ -22,7 +22,7 @@ export interface BookingDraft { co: string; purpose: string; city: string; gov: 
 const DEFAULT_F: Filters = { gov: 'all', verified: false, sort: 'rel', q: '' };
 const LS = 'mujeeb.v1';
 
-interface Persisted { lang: Lang; fav: Record<string, boolean>; quotes: QuoteRequest[]; bookings: Booking[]; chats: Record<string, Chat>; seq: { rfq: number; bk: number }; seen: Record<string, boolean>; listView: ListView }
+interface Persisted { lang: Lang; fav: Record<string, boolean>; quotes: QuoteRequest[]; bookings: Booking[]; chats: Record<string, Chat>; seq: { rfq: number; bk: number }; seen: Record<string, boolean>; listView: ListView; follows: Record<string, boolean> }
 
 function readPersisted(): Partial<Persisted> {
   try { return JSON.parse(localStorage.getItem(LS) || '{}'); } catch { return {}; }
@@ -45,6 +45,8 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
   /** Story ids the customer has opened. */
   const [seen, setSeen] = useState<Record<string, boolean>>(saved.seen || {});
   const [listView, setListView] = useState<ListView>(saved.listView || 'large');
+  /** Companies the customer follows (kept on this device for now). */
+  const [follows, setFollows] = useState<Record<string, boolean>>(saved.follows || {});
   const markSeen = useCallback((id: string) => setSeen(x => (x[id] ? x : { ...x, [id]: true })), []);
   const [draft, setDraft] = useState('');
   const [rfq, setRfq] = useState<RfqDraft | null>(null);
@@ -56,8 +58,8 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
   const top = stack[stack.length - 1];
 
   useEffect(() => {
-    try { localStorage.setItem(LS, JSON.stringify({ lang, fav, quotes, bookings, chats, seq, seen, listView } satisfies Persisted)); } catch { /* storage unavailable */ }
-  }, [lang, fav, quotes, bookings, chats, seq, seen, listView]);
+    try { localStorage.setItem(LS, JSON.stringify({ lang, fav, quotes, bookings, chats, seq, seen, listView, follows } satisfies Persisted)); } catch { /* storage unavailable */ }
+  }, [lang, fav, quotes, bookings, chats, seq, seen, listView, follows]);
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -127,6 +129,12 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
     remote.setFavorite(id, on).catch(() => {});
   }, [fav, ar, showToast]);
 
+  const toggleFollow = useCallback((id: string) => {
+    const on = !follows[id];
+    setFollows(x => ({ ...x, [id]: on }));
+    showToast(STR[on ? 'followedT' : 'unfollowedT'][ar ? 0 : 1]);
+  }, [follows, ar, showToast]);
+
   const openChat = useCallback((coId: string) => {
     setChats(c => ({ ...c, [coId]: c[coId] ? { ...c[coId], unread: 0 } : { unread: 0, ref: null, msgs: [] } }));
     go('chat', { id: coId });
@@ -193,7 +201,7 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
     catalog, idx, coById, lang, setLang, ar, t, stack, top, tab, setTab, go, back, replace, reset, toast, showToast,
     fav, toggleFav, f, setF, sheet, setSheet, exCat, setExCat,
     quotes, setQuotes, bookings, setBookings, chats, openChat, draft, setDraft, send,
-    rfq, setRfq, startRfq, submitRfq, bk, setBk, startBk, submitBooking, days, seen, markSeen, listView, setListView,
+    rfq, setRfq, startRfq, submitRfq, bk, setBk, startBk, submitBooking, days, seen, markSeen, listView, setListView, follows, toggleFollow,
   };
 }
 

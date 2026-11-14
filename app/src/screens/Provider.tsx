@@ -199,11 +199,6 @@ export function CompanyPage() {
           {co.cats.map(i => <CatTag key={i} color={catalog.cats[i].color}>{h.cname(i)}</CatTag>)}
         </div>
         <ContactGrid a={a} co={co} />
-        {!co.book && (
-          <span style={{ display: 'flex', gap: 8, alignItems: 'flex-start', font: 'var(--type-body-sm)', color: 'var(--text-secondary)', marginTop: -6 }}>
-            <Icon name="calendar-off" size={16} color="var(--text-tertiary)" />{t.bookOff}
-          </span>
-        )}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <SectionHeader title={t.services} />
           {services.map(s => <ServiceRow key={s.id} {...s} thumb={96} />)}
