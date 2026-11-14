@@ -1,14 +1,12 @@
 import { useEffect, useRef } from 'react';
 import { Avatar, Badge, Button, ChatBubble, EmptyState, Icon, IconButton, ListItem } from '../ds';
 import { useApp } from '../app/store';
-import { BottomBar, Img, TopBar, callPhone, card, helpers, stop } from '../app/view';
-import { BK_ST, NOTIFS, PURPOSES, Q_ST, RFQ_ST } from '../i18n/strings';
+import { Img, TopBar, callPhone, card, helpers, stop } from '../app/view';
+import { BK_ST, NOTIFS, PURPOSES } from '../i18n/strings';
 import { logoUrl, remote } from '../data/api';
-import { Note } from './Flows';
 
 const ROOT = { padding: 'calc(var(--top-inset) + 8px) 20px 100px', display: 'flex', flexDirection: 'column' } as const;
 const badge = (m: Record<string, readonly [string, string, string]>, k: string, ar: boolean) => ({ label: m[k][ar ? 0 : 1], tone: m[k][2] });
-const fmt3 = (n: number) => n.toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
 
 export function Messages() {
   const a = useApp();
@@ -91,10 +89,9 @@ export function ChatPage({ scrollEl }: { scrollEl: React.RefObject<HTMLDivElemen
 
 export function Profile() {
   const a = useApp();
-  const { t, ar, quotes, bookings, fav } = a;
+  const { t, ar, bookings, fav } = a;
   const soon = () => a.showToast(ar ? 'قريبًا' : 'Coming soon', 'info');
   const rows = [
-    { icon: 'file-text', color: 'violet', title: t.myQuotes, sub: quotes.length + t.requests, go: () => a.go('quotes') },
     { icon: 'calendar-check', color: 'amber', title: t.myBookings, sub: String(bookings.filter(b => ['pending', 'confirmed', 'reschedule'].includes(b.st)).length) + ' ' + t.active, go: () => a.go('bookings') },
     { icon: 'heart', color: 'pink', title: t.favorites, sub: Object.values(fav).filter(Boolean).length + t.companiesN, go: () => a.go('favs') },
     { icon: 'bell', color: 'sky', title: t.notifications, sub: NOTIFS.length + t.newN, go: () => a.go('notifs') },
@@ -118,122 +115,6 @@ export function Profile() {
       <div style={{ padding: '4px 12px', ...card }}>
         <ListItem icon="log-out" danger title={t.signOut} onClick={soon} />
       </div>
-    </div>
-  );
-}
-
-export function Quotes() {
-  const a = useApp();
-  const { t, ar, quotes } = a;
-  const h = helpers(a);
-  return (
-    <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
-      <TopBar title={t.myQuotes} onBack={a.back} />
-      <div style={{ padding: '8px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {quotes.map(q => {
-          const co = a.idx.co.get(q.co);
-          const b = badge(RFQ_ST, q.st, ar);
-          return (
-            <div key={q.id} onClick={() => a.go('quote', { id: q.id })} style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 16, ...card, cursor: 'pointer' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                <span style={{ flex: 'none', width: 48, height: 48, borderRadius: 'var(--radius-tile)', background: 'var(--brand-tint-strong)', color: 'var(--brand)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="file-text" size={22} /></span>
-                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <span style={{ font: 'var(--type-title)' }}>{ar ? q.tAr : q.tEn}</span>
-                  <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }}>{co ? h.coName(co) : ''}</span>
-                </div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '10px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)' }}>
-                <span style={{ font: 'var(--type-mono)', color: 'var(--text-secondary)' }}>{q.id}</span>
-                <Badge tone={b.tone} size="sm">{b.label}</Badge>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-export function QuotePage() {
-  const a = useApp();
-  const { t, ar, top, quotes, setQuotes } = a;
-  const h = helpers(a);
-  const q = quotes.find(x => x.id === top.id);
-  if (!q) return null;
-  const co = a.idx.co.get(q.co)!;
-  const rb = badge(RFQ_ST, q.st, ar);
-  const Q = q.quote;
-  const money = (n: number) => (ar ? fmt3(n) + ' ر.ع.' : 'OMR ' + fmt3(n));
-  const totals = Q && (() => {
-    const sub = Q.lines.reduce((n, l) => n + l[2] * l[3], 0), net = sub - Q.discount, vat = net * Q.vat;
-    return { sub, vat, total: net + vat };
-  })();
-  const respond = (accept: boolean) => {
-    if (!Q) return;
-    const st = accept ? 'accepted' : 'rejected';
-    setQuotes(qs => qs.map(x => (x.id === q.id && x.quote ? { ...x, quote: { ...x.quote, st }, st: accept ? 'closed' : x.st } : x)));
-    a.showToast(accept ? t.accepted : t.rejected, accept ? 'success' : 'info');
-    remote.respondQuotation(Q.no, accept).catch(() => {});
-  };
-  const open = Q && (Q.st === 'sent' || Q.st === 'viewed');
-  return (
-    <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
-      <TopBar title={ar ? q.tAr : q.tEn} subtitle={q.id} onBack={a.back} />
-      <div style={{ flex: 1, padding: '8px 20px 28px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Avatar name={h.coName(co)} src={logoUrl(co.id)} size={44} verified />
-          <span style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-            <span style={{ font: 'var(--type-body-strong)' }}>{h.coName(co)}</span>
-            <span style={{ font: 'var(--type-caption)', fontWeight: 500, color: 'var(--text-tertiary)' }}>{q.date}</span>
-          </span>
-          <Badge tone={rb.tone} size="sm">{rb.label}</Badge>
-        </div>
-        {q.askAr && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: 16, borderRadius: 'var(--radius-card)', background: 'var(--warning-tint)' }}>
-            <span style={{ font: 'var(--type-caption)', color: 'oklch(0.48 0.11 65)' }}>{t.providerAsks}</span>
-            <span style={{ font: 'var(--type-body)', color: 'var(--text-primary)' }}>{ar ? q.askAr : q.askEn}</span>
-            <Button variant="dark" size="sm" iconLeft="message-circle" onClick={() => a.openChat(q.co)} style={{ alignSelf: 'flex-start' }}>{t.replyMsg}</Button>
-          </div>
-        )}
-        {!Q && <EmptyState icon="hourglass" color="violet" title={t.quotation} body={t.waitingQuote} />}
-        {Q && totals && (
-          <>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: 16, ...card }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-                <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}><span style={{ font: 'var(--type-title)' }}>{t.quotation}</span><span style={{ font: 'var(--type-mono)', color: 'var(--text-tertiary)' }}>{Q.no}</span></span>
-                <Badge tone={Q_ST[Q.st][2]} size="sm">{Q_ST[Q.st][ar ? 0 : 1]}</Badge>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 12, borderTop: '1px solid var(--border-subtle)' }}>
-                {Q.lines.map((l, k) => (
-                  <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-                    <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      <span style={{ font: 'var(--type-body-sm)', fontWeight: 600 }}>{ar ? l[0] : l[1]}</span>
-                      <span style={{ alignSelf: 'flex-start', font: 'var(--type-caption)', fontWeight: 500, color: 'var(--text-tertiary)' }} dir="ltr">{l[2] + ' × ' + fmt3(l[3])}</span>
-                    </span>
-                    <span style={{ font: 'var(--type-body-sm)', fontWeight: 700, whiteSpace: 'nowrap' }}>{money(l[2] * l[3])}</span>
-                  </div>
-                ))}
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 12, borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>{t.subtotal}</span><span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{money(totals.sub)}</span></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>{t.discount}</span><span style={{ color: 'var(--success)', fontWeight: 600 }}>{'− ' + money(Q.discount)}</span></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>{t.vat}</span><span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{money(totals.vat)}</span></div>
-                <div style={{ height: 1, background: 'var(--border-default)', margin: '2px 0' }} />
-                <div style={{ display: 'flex', justifyContent: 'space-between', font: 'var(--type-title)', color: 'var(--text-primary)' }}><span>{t.total}</span><span style={{ fontWeight: 800 }}>{money(totals.total)}</span></div>
-              </div>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', fontWeight: 500, color: 'var(--text-tertiary)' }}><Icon name="clock" size={14} />{t.validUntil} {Q.valid}</span>
-              <Button variant="outline" iconLeft="download" fullWidth onClick={() => a.showToast(t.pdfToast)}>{t.downloadPdf}</Button>
-            </div>
-            <Note icon="info" color="var(--info)">{t.acceptNote}</Note>
-          </>
-        )}
-      </div>
-      {open && (
-        <BottomBar style={{ display: 'flex', gap: 10, marginTop: 0 }}>
-          <Button size="lg" variant="danger" onClick={() => respond(false)}>{t.reject}</Button>
-          <Button size="lg" iconLeft="check" onClick={() => respond(true)} style={{ flex: 1 }}>{t.accept}</Button>
-        </BottomBar>
-      )}
     </div>
   );
 }
@@ -328,7 +209,7 @@ export function Notifications() {
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
       <TopBar title={t.notifications} onBack={a.back} />
       <div style={{ margin: '8px 20px 40px', padding: '4px 12px', ...card }}>
-        {NOTIFS.map(n => <ListItem key={n[4]} icon={n[0]} color={n[1]} title={ar ? n[2] : n[3]} subtitle={(ar ? n[5] : n[6]) + ' · ' + n[4]} chevron={false} />)}
+        {NOTIFS.map((n, k) => <ListItem key={k} icon={n[0]} color={n[1]} title={ar ? n[2] : n[3]} subtitle={(ar ? n[5] : n[6]) + (n[4] ? ' · ' + n[4] : '')} chevron={false} />)}
       </div>
     </div>
   );

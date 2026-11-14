@@ -36,10 +36,8 @@ What goes to Supabase when it's configured:
 
 | Action | Table / function |
 |---|---|
-| Quotation request (server-generated `MJB-RFQ-…` reference) | `quotation_requests` |
 | Site-visit booking (`MJB-BK-…`, stored in UTC, entered in Asia/Muscat time) | `bookings` |
 | Cancel booking / accept proposed time | `bookings` update / `accept_booking_reschedule()` |
-| Accept / reject a quotation | `respond_to_quotation()` |
 | Favorites | `customer_favorites` |
 | Chat messages (one conversation per customer + company) | `conversations`, `messages` |
 
@@ -51,14 +49,13 @@ the catalog but can't write; customers only see their own rows; a customer can't
 
 ## What is still local or simulated
 
-- The UI keeps the customer's quotations, bookings, chats and favorites in `localStorage`, starting
-  from the demo history (3 requests, 3 bookings, 3 chats). Server writes are additional: the lists aren't read
+- The UI keeps the customer's bookings, chats, favorites and followed companies in `localStorage`, starting
+  from the demo history (3 bookings, 3 chats). Server writes are additional: the lists aren't read
   back from Supabase yet, because the demo history has no owner in the database.
 - The company "reply" in chat is a canned message after 1.4 s; there is no provider inbox yet.
 - **WhatsApp** opens `wa.me/<number>` and **Call** opens `tel:`. The demo numbers are fictional.
-  Email, website, social links, *Download PDF*, Settings, Help and Sign out show a notice only.
-- RFQ attachments use the device's file picker, but only the file names and sizes are kept; nothing is uploaded to storage yet.
-- Promo banners, the map view and the service video use the design system's striped placeholders, as in the design.
+  Email, website, social links, Settings, Help and Sign out show a notice only.
+- The service video uses the design system's striped placeholder, as in the design.
 - Booking dates are the next six days after today (Fridays skipped). Which slots are full is simulated.
 - Photos load from Unsplash and fonts from Google Fonts, so the app needs a connection.
 
@@ -71,7 +68,7 @@ src/i18n/        All UI strings, Arabic + English
 src/data/        Types, Supabase client and loaders, bundled demo data
 src/app/         App state and navigation, shared view pieces, booking dates, mouse drag-scroll
 src/screens/     Discover (home, categories, explore), Provider (listing, company, service, album),
-                 Flows (quotation request, booking), Account (messages, chat, profile, quotes, bookings…)
+                 Flows (booking), Account (messages, chat, profile, bookings…)
 supabase/        Migration and generated seed
 scripts/         export-data (design data → demo.json), build-seed (demo.json → seed.sql), build-icons
 ```

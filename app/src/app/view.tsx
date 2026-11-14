@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
-import { AppBar, Button, Icon } from '../ds';
+import { AppBar, Icon } from '../ds';
 import { logoUrl, photo } from '../data/api';
 import type { Album, Company, Service } from '../data/types';
 import type { App } from './store';
@@ -63,10 +63,6 @@ export function BottomBar({ children, style }: { children: ReactNode; style?: CS
     </div>
   );
 }
-
-export const QuoteCta = ({ label, onClick }: { label: string; onClick: () => void }) => (
-  <BottomBar><Button size="lg" fullWidth iconLeft="file-text" onClick={onClick}>{label}</Button></BottomBar>
-);
 
 export function StepBars({ step }: { step: number }) {
   return (

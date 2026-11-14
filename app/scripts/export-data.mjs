@@ -10,7 +10,7 @@ const out = {
   gov: MJ.GOV, hours: MJ.HOURS,
   companies: MJ.COMPANIES.map(({ logo, ...c }) => c),
   services: MJ.SERVICES, albums: MJ.ALBUMS,
-  quotes: MJ.QUOTES, bookings: MJ.BOOKINGS, chats: MJ.CHATS,
+  bookings: MJ.BOOKINGS, chats: MJ.CHATS,
 };
 fs.writeFileSync(new URL('../src/data/demo.json', import.meta.url), JSON.stringify(out));
 console.log(Object.fromEntries(Object.entries(out).map(([k, v]) => [k, Array.isArray(v) ? v.length : Object.keys(v).length])));

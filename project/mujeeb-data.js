@@ -85,8 +85,8 @@
   ];
   const M = (mine, ar, en, time) => ({ mine, ar, en, time });
   const CHATS = {
-    c4: { unread: 1, ref: 'MJB-RFQ-000121', msgs: [M(false, 'مرحبًا أحمد، أرسلنا لك عرض السعر للمطبخ.', 'Hi Ahmed, we have sent the quotation for your kitchen.', '10:12'), M(true, 'شكرًا، هل المفصلات الهادئة مشمولة؟', 'Thanks. Are soft-close hinges included?', '10:20'), M(false, 'نعم، مشمولة في سعر الخزائن. ويمكننا تعديل خامة السطح إذا رغبت.', 'Yes, they are included in the cabinet price. We can also change the countertop material if you like.', '10:24')] },
-    c2: { unread: 1, ref: 'MJB-RFQ-000118', msgs: [M(false, 'هل يمكنك مشاركة مقاسات المجلس وصورة للجدار الرئيسي؟', 'Could you share the majlis dimensions and a photo of the main wall?', 'أمس')] },
+    c4: { unread: 1, ref: null, msgs: [M(false, 'مرحبًا أحمد، أرسلنا لك تصاميم المطبخ التي ناقشناها.', 'Hi Ahmed, we have sent the kitchen designs we discussed.', '10:12'), M(true, 'شكرًا، هل المفصلات الهادئة مشمولة؟', 'Thanks. Are soft-close hinges included?', '10:20'), M(false, 'نعم، مشمولة في سعر الخزائن. ويمكننا تعديل خامة السطح إذا رغبت.', 'Yes, they are included in the cabinet price. We can also change the countertop material if you like.', '10:24')] },
+    c2: { unread: 1, ref: null, msgs: [M(false, 'هل يمكنك مشاركة مقاسات المجلس وصورة للجدار الرئيسي؟', 'Could you share the majlis dimensions and a photo of the main wall?', 'أمس')] },
     c7: { unread: 0, ref: 'MJB-BK-000049', msgs: [M(true, 'هل يناسبكم الثلاثاء بعد العصر؟', 'Does Tuesday afternoon work for you?', '09:02'), M(false, 'اقترحنا الأربعاء الساعة ٩ صباحًا بدلًا من ذلك.', 'We have proposed Wednesday at 9:00 instead.', '09:40')] },
   };
   // Generated demo companies: 6 per category (fictional)

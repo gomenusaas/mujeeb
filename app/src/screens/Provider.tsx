@@ -1,6 +1,6 @@
 import { Avatar, Badge, BottomSheet, Button, EmptyState, Icon, IconButton, ImageSlot, ListItem, SearchBar, SectionHeader } from '../ds';
 import { useApp, type Filters, type ListView, type SheetKey } from '../app/store';
-import { ContactGrid, HScroll, Img, MetaLine, QuoteCta, TopBar, callPhone, card, helpers, openWhatsApp, stop } from '../app/view';
+import { ContactGrid, HScroll, Img, MetaLine, TopBar, callPhone, card, helpers, openWhatsApp, stop } from '../app/view';
 import { logoUrl, photo } from '../data/api';
 import type { Company } from '../data/types';
 
@@ -204,7 +204,6 @@ export function CompanyPage() {
           {services.map(s => <ServiceRow key={s.id} {...s} thumb={96} />)}
         </div>
       </div>
-      <QuoteCta label={t.getQuote} onClick={() => a.startRfq(co.id)} />
     </div>
   );
 }
@@ -290,7 +289,6 @@ export function ServicePage() {
           </div>
         )}
       </div>
-      <QuoteCta label={t.getQuote} onClick={() => a.startRfq(co.id, s.id)} />
     </div>
   );
 }
@@ -322,7 +320,6 @@ export function AlbumPage() {
           ))}
         </div>
       </div>
-      <QuoteCta label={t.getQuote} onClick={() => a.startRfq(co.id)} />
     </div>
   );
 }

@@ -13,7 +13,7 @@ export interface Company {
   cityAr: string; cityEn: string; gov: GovId; cov: GovId[];
   /** Unsplash photo id for the cover. */
   img: string;
-  verified: boolean; book: boolean; rfq: boolean; phone: string;
+  verified: boolean; book: boolean; phone: string;
   since: number; dar: string; den: string; branches: Branch[];
 }
 
@@ -23,16 +23,6 @@ export interface Album {
   id: string; co: string; cat: number; ar: string; en: string; pAr: string; pEn: string; n: number; img: string; imgs: string[];
   /** When the album was added to the platform (ISO date or timestamp). */
   added: string;
-}
-
-/** Quotation line: [nameAr, nameEn, qty, unitPrice]. */
-export type QuoteLine = [string, string, number, number];
-export type QuoteStatus = 'sent' | 'viewed' | 'accepted' | 'rejected' | 'expired';
-export type RfqStatus = 'submitted' | 'review' | 'moreinfo' | 'received' | 'declined' | 'closed' | 'cancelled';
-export interface Quotation { no: string; st: QuoteStatus; valid: string; lines: QuoteLine[]; discount: number; vat: number }
-export interface QuoteRequest {
-  id: string; co: string; svc: string; tAr: string; tEn: string; st: RfqStatus; date: string;
-  askAr?: string; askEn?: string; quote?: Quotation | null;
 }
 
 export type BookingStatus = 'pending' | 'confirmed' | 'reschedule' | 'cancelled' | 'rejected' | 'completed' | 'noshow';
@@ -49,4 +39,4 @@ export interface Catalog {
   companies: Company[]; services: Service[]; albums: Album[];
 }
 
-export interface CustomerSeed { quotes: QuoteRequest[]; bookings: Booking[]; chats: Record<string, Chat> }
+export interface CustomerSeed { bookings: Booking[]; chats: Record<string, Chat> }

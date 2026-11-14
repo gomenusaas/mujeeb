@@ -16,10 +16,10 @@ async function demo() {
   return (await import('./demo.json')).default as unknown as Catalog & CustomerSeed;
 }
 
-/** Demo history for the signed-in customer (quotations, bookings, chats). */
+/** Demo history for the signed-in customer (bookings, chats). */
 export async function loadCustomerSeed(): Promise<CustomerSeed> {
   const d = await demo();
-  return { quotes: d.quotes, bookings: d.bookings, chats: d.chats };
+  return { bookings: d.bookings, chats: d.chats };
 }
 
 export async function loadCatalog(): Promise<Catalog> {
@@ -55,7 +55,7 @@ export async function loadCatalog(): Promise<Catalog> {
   const companies: Company[] = cos.map(c => ({
     id: c.id, ar: c.name_ar, en: c.name_en, cats: catsBy[c.id] || [], cityAr: c.city_ar, cityEn: c.city_en,
     gov: c.governorate, cov: covBy[c.id] || [], img: c.cover_photo, verified: c.is_verified, book: c.accepts_bookings,
-    rfq: c.accepts_quotations, phone: c.phone, since: c.founded_year, dar: c.description_ar, den: c.description_en,
+    phone: c.phone, since: c.founded_year, dar: c.description_ar, den: c.description_en,
     branches: brBy[c.id] || [],
   })).sort((a, b) => sortKey(a.id) - sortKey(b.id));
   const categories: Category[] = cats.map(c => ({ i: c.id, ar: c.name_ar, en: c.name_en, sar: c.short_ar, sen: c.short_en, icon: c.icon, color: c.color, art: c.art_url }));
@@ -102,17 +102,10 @@ export const remote = {
   setFavorite: (companyId: string, on: boolean) => run('favorite', sb => on
     ? sb.from('customer_favorites').upsert({ company_id: companyId })
     : sb.from('customer_favorites').delete().eq('company_id', companyId)),
-  /** Returns the server-generated reference (MJB-RFQ-…), or null offline. */
-  submitRfq: async (r: {
-    company_id: string; service_id?: string; title: string; description: string; governorate: string; city: string;
-    address?: string; budget_range?: number; preferred_start?: number; contact_name: string; contact_phone: string;
-    attachments: { name: string; kind: string; size: string }[];
-  }) => (await run('rfq', sb => sb.from('quotation_requests').insert(r).select('reference').single()))?.reference as string | null ?? null,
   submitBooking: async (b: { company_id: string; purpose: string; governorate: string; city: string; starts_at: string; notes?: string }) =>
     (await run('booking', sb => sb.from('bookings').insert(b).select('reference').single()))?.reference as string | null ?? null,
   cancelBooking: (reference: string) => run('cancel booking', sb => sb.from('bookings').update({ status: 'cancelled' }).eq('reference', reference)),
   acceptReschedule: (reference: string) => run('accept reschedule', sb => sb.rpc('accept_booking_reschedule', { booking_ref: reference })),
-  respondQuotation: (number: string, accept: boolean) => run('quotation reply', sb => sb.rpc('respond_to_quotation', { quotation_number: number, accept })),
   sendMessage: async (companyId: string, body: string) => {
     const conv = await run('conversation', sb => sb.from('conversations').upsert({ company_id: companyId }, { onConflict: 'customer_id,company_id' }).select('id').single());
     if (conv) await run('message', sb => sb.from('messages').insert({ conversation_id: conv.id, body }));

@@ -7,10 +7,10 @@ import { STR } from './i18n/strings';
 import { useDragScroll } from './app/useDragScroll';
 import { Categories, Explore, Home } from './screens/Discover';
 import { AlbumPage, CompanyPage, CompanySheet, Listing, ServicePage, SortSheet } from './screens/Provider';
-import { BookingPage, DonePage, RfqPage } from './screens/Flows';
+import { BookingPage, DonePage } from './screens/Flows';
 import { StoryViewer } from './screens/Stories';
 import { STORIES } from './data/stories';
-import { Bookings, ChatPage, Favorites, Messages, Notifications, Profile, QuotePage, Quotes } from './screens/Account';
+import { Bookings, ChatPage, Favorites, Messages, Notifications, Profile } from './screens/Account';
 
 const TABS: { id: RootTab; icon: string }[] = [
   { id: 'home', icon: 'house' }, { id: 'categories', icon: 'layout-grid' }, { id: 'explore', icon: 'compass' },
@@ -55,7 +55,7 @@ function Phone() {
   const base = top.s === 'story' ? stack[stack.length - 2] ?? { s: 'home' } : top;
 
   // Every new screen (or wizard step) opens at the top.
-  const key = base.s + '|' + (base.id || '') + '|' + (base.cat ?? '') + '|' + tab + '|' + (a.rfq?.step ?? '') + '|' + (a.bk?.step ?? '');
+  const key = base.s + '|' + (base.id || '') + '|' + (base.cat ?? '') + '|' + tab + '|' + (a.bk?.step ?? '');
   useLayoutEffect(() => { scrollRef.current?.scrollTo({ top: 0 }); }, [key]);
 
   const unread = Object.values(chats).reduce((n, c) => n + (c.unread || 0), 0);
@@ -102,13 +102,9 @@ function ScreenSwitch({ route, scrollRef }: { route: Route; scrollRef: React.Ref
     case 'company': return <CompanyPage />;
     case 'service': return <ServicePage />;
     case 'album': return <AlbumPage />;
-    case 'rfq': return <RfqPage />;
-    case 'rfqDone': return <DonePage kind="rfq" />;
     case 'booking': return <BookingPage />;
-    case 'bkDone': return <DonePage kind="bk" />;
+    case 'bkDone': return <DonePage />;
     case 'chat': return <ChatPage scrollEl={scrollRef} />;
-    case 'quotes': return <Quotes />;
-    case 'quote': return <QuotePage />;
     case 'bookings': return <Bookings />;
     case 'favs': return <Favorites />;
     case 'notifs': return <Notifications />;
@@ -124,10 +120,8 @@ function DemoPanel() {
   const jumps: [string, () => void][] = [
     ['Home', jump([H])], ['Categories', jump([{ s: 'categories' }], 'categories')], ['Listing · AC', jump([H, { s: 'listing', cat: 1 }])],
     ['Company profile', jump([H, { s: 'company', id: 'c4' }])], ['Service details', jump([H, { s: 'service', id: 's7' }])], ['Album', jump([H, { s: 'album', id: 'a3' }])],
-    ['Get quotation', () => { a.reset([H, { s: 'company', id: 'c4' }], 'home'); setTimeout(() => a.startRfq('c4', 's7'), 0); }],
     ['Book site visit', () => { a.reset([H, { s: 'company', id: 'c4' }], 'home'); setTimeout(() => a.startBk('c4'), 0); }],
     ['Messages', jump([{ s: 'messages' }], 'messages')], ['Chat', jump([{ s: 'messages' }, { s: 'chat', id: 'c4' }], 'messages')],
-    ['My quotations', jump([{ s: 'profile' }, { s: 'quotes' }], 'profile')], ['Received quotation', jump([{ s: 'profile' }, { s: 'quotes' }, { s: 'quote', id: 'MJB-RFQ-000121' }], 'profile')],
     ['My bookings', jump([{ s: 'profile' }, { s: 'bookings' }], 'profile')], ['Explore', jump([{ s: 'explore' }], 'explore')],
     ['Profile', jump([{ s: 'profile' }], 'profile')], ['Notifications', jump([H, { s: 'notifs' }])], ['Stories', jump([H, { s: 'story', id: STORIES[0].id }])],
   ];
