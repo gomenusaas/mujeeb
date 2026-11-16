@@ -1,12 +1,12 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import type { Booking, Catalog, Chat, Company, CustomerSeed, GovId, Lang } from '../data/types';
+import type { Booking, Catalog, Company, CustomerSeed, GovId, Lang } from '../data/types';
 import { remote } from '../data/api';
 import { strings, STR, type T } from '../i18n/strings';
-import { bookingDays, nowHHMM, type BookingDay } from './dates';
+import { bookingDays, type BookingDay } from './dates';
 
-export type Screen = 'home' | 'categories' | 'explore' | 'messages' | 'profile' | 'listing' | 'company' | 'service' | 'album'
-  | 'booking' | 'bkDone' | 'chat' | 'bookings' | 'favs' | 'notifs' | 'story';
-export type RootTab = 'home' | 'categories' | 'explore' | 'messages' | 'profile';
+export type Screen = 'home' | 'categories' | 'explore' | 'profile' | 'listing' | 'company' | 'service' | 'album'
+  | 'booking' | 'bkDone' | 'bookings' | 'favs' | 'notifs' | 'story';
+export type RootTab = 'home' | 'categories' | 'explore' | 'profile';
 export interface Route { s: Screen; id?: string; cat?: number; co?: string }
 export interface Filters { gov: 'all' | GovId; verified: boolean; sort: 'rel' | 'near' | 'recent' | 'verified'; q: string }
 /** How the company list is laid out: big cards, two per row, or thin rows. */
@@ -17,7 +17,7 @@ export interface BookingDraft { co: string; purpose: string; city: string; gov: 
 const DEFAULT_F: Filters = { gov: 'all', verified: false, sort: 'rel', q: '' };
 const LS = 'mujeeb.v1';
 
-interface Persisted { lang: Lang; fav: Record<string, boolean>; bookings: Booking[]; chats: Record<string, Chat>; seq: { bk: number }; seen: Record<string, boolean>; listView: ListView; follows: Record<string, boolean> }
+interface Persisted { lang: Lang; fav: Record<string, boolean>; bookings: Booking[]; seq: { bk: number }; seen: Record<string, boolean>; listView: ListView; follows: Record<string, boolean> }
 
 function readPersisted(): Partial<Persisted> {
   try { return JSON.parse(localStorage.getItem(LS) || '{}'); } catch { return {}; }
@@ -34,17 +34,13 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
   const [sheet, setSheet] = useState<SheetKey>(null);
   const [exCat, setExCat] = useState(-1);
   const [bookings, setBookings] = useState<Booking[]>(saved.bookings || seed.bookings);
-  // Chats saved before quotations were removed may still point at a quotation request; drop those references.
-  const [chats, setChats] = useState<Record<string, Chat>>(() => Object.fromEntries(Object.entries(saved.chats || seed.chats)
-    .map(([id, c]) => [id, c.ref?.startsWith('MJB-RFQ-') ? { ...c, ref: null } : c])));
   const [seq, setSeq] = useState({ bk: saved.seq?.bk ?? 57 });
   /** Story ids the customer has opened. */
   const [seen, setSeen] = useState<Record<string, boolean>>(saved.seen || {});
   const [listView, setListView] = useState<ListView>(saved.listView || 'large');
-  /** Companies the customer follows (kept on this device for now). */
+  /** Companies the customer follows (also sent to Supabase when it's configured). */
   const [follows, setFollows] = useState<Record<string, boolean>>(saved.follows || {});
   const markSeen = useCallback((id: string) => setSeen(x => (x[id] ? x : { ...x, [id]: true })), []);
-  const [draft, setDraft] = useState('');
   const [bk, setBk] = useState<BookingDraft | null>(null);
   const days = useMemo<BookingDay[]>(() => bookingDays(), []);
 
@@ -53,8 +49,8 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
   const top = stack[stack.length - 1];
 
   useEffect(() => {
-    try { localStorage.setItem(LS, JSON.stringify({ lang, fav, bookings, chats, seq, seen, listView, follows } satisfies Persisted)); } catch { /* storage unavailable */ }
-  }, [lang, fav, bookings, chats, seq, seen, listView, follows]);
+    try { localStorage.setItem(LS, JSON.stringify({ lang, fav, bookings, seq, seen, listView, follows } satisfies Persisted)); } catch { /* storage unavailable */ }
+  }, [lang, fav, bookings, seq, seen, listView, follows]);
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -128,27 +124,8 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
     const on = !follows[id];
     setFollows(x => ({ ...x, [id]: on }));
     showToast(STR[on ? 'followedT' : 'unfollowedT'][ar ? 0 : 1]);
+    remote.setFollow(id, on).catch(() => {});
   }, [follows, ar, showToast]);
-
-  const openChat = useCallback((coId: string) => {
-    setChats(c => ({ ...c, [coId]: c[coId] ? { ...c[coId], unread: 0 } : { unread: 0, ref: null, msgs: [] } }));
-    go('chat', { id: coId });
-  }, [go]);
-
-  const replyTimer = useRef(0);
-  const send = useCallback(() => {
-    const txt = draft.trim();
-    const id = top.id;
-    if (!txt || !id) return;
-    const tm = nowHHMM();
-    const add = (m: Chat['msgs'][number]) => setChats(c => ({ ...c, [id]: { ...c[id], msgs: [...(c[id]?.msgs || []), m] } }));
-    add({ mine: true, ar: txt, en: txt, time: tm });
-    setDraft('');
-    remote.sendMessage(id, txt).catch(() => {});
-    // Simulated company reply until the provider inbox is connected.
-    clearTimeout(replyTimer.current);
-    replyTimer.current = window.setTimeout(() => add({ mine: false, ar: STR.autoReply[0], en: STR.autoReply[1], time: tm }), 1400);
-  }, [draft, top.id]);
 
   const startBk = useCallback((coId: string) => {
     setBk({ co: coId, purpose: 'measure', city: t.loc, gov: 'muscat', day: 0, time: '09:00', notes: '', step: 0 });
@@ -173,7 +150,7 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
   return {
     catalog, idx, coById, lang, setLang, ar, t, stack, top, tab, setTab, go, back, replace, reset, toast, showToast,
     fav, toggleFav, f, setF, sheet, setSheet, exCat, setExCat,
-    bookings, setBookings, chats, openChat, draft, setDraft, send,
+    bookings, setBookings,
     bk, setBk, startBk, submitBooking, days, seen, markSeen, listView, setListView, follows, toggleFollow,
   };
 }

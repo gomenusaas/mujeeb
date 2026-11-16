@@ -1,8 +1,8 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Avatar, Badge, BottomSheet, Button, EmptyState, Icon, IconButton, ImageSlot, ListItem, SearchBar, SectionHeader } from '../ds';
 import { useApp, type Filters, type ListView, type SheetKey } from '../app/store';
 import { ContactGrid, HScroll, Img, MetaLine, TopBar, callPhone, card, helpers, openDirections, openWhatsApp, stop } from '../app/view';
-import { logoUrl, photo } from '../data/api';
+import { logoUrl, photo, remote } from '../data/api';
 import type { Company } from '../data/types';
 
 const VIEWS: { v: ListView; icon: string; label: 'viewLarge' | 'viewGrid' | 'viewRows' }[] = [
@@ -174,6 +174,7 @@ export function CompanyPage() {
   const co = a.idx.co.get(top.id!)!;
   const cv = h.coV(co);
   const services = catalog.services.filter(s => s.co === co.id).map(h.svcV);
+  useEffect(() => { remote.track(co.id, 'profile_view'); }, [co.id]);
   return (
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ position: 'relative', height: 250, background: cv.c100 }}>
@@ -182,7 +183,6 @@ export function CompanyPage() {
           <IconButton icon="arrow-left" variant="glass" size={40} onClick={a.back} label="Back" />
           <div style={{ display: 'flex', gap: 8 }}>
             <IconButton icon="share-2" variant="glass" size={40} onClick={() => share(cv.name)} label="Share" />
-            <IconButton icon="heart" variant="glass" size={40} active={cv.fav} onClick={cv.onFav} label={t.favorites} />
             <IconButton icon="menu" variant="glass" size={40} onClick={() => a.setSheet('menu')} label={t.menu} />
           </div>
         </div>
@@ -271,6 +271,7 @@ export function ServicePage() {
   const color = catalog.cats[s.cat].color;
   const albums = catalog.albums.filter(al => al.co === co.id).map(h.albV);
   const more = catalog.services.filter(x => x.co === co.id && x.id !== s.id).map(h.svcV);
+  useEffect(() => { remote.track(co.id, 'service_view', s.id); }, [co.id, s.id]);
   return (
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ position: 'relative' }}>
@@ -375,8 +376,7 @@ export function ReachSheets({ co }: { co: Company }) {
         {sheet === 'reach' && (
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <ListItem icon="message-circle" color="green" title={t.whatsapp} subtitle={co.phone} onClick={close(() => openWhatsApp(a, co))} />
-            <ListItem icon="messages-square" color="violet" title={t.message} onClick={() => a.openChat(co.id)} />
-            <ListItem icon="phone" color="sky" title={t.call} subtitle={co.phone} onClick={close(() => callPhone(a, co.phone))} />
+            <ListItem icon="phone" color="sky" title={t.call} subtitle={co.phone} onClick={close(() => callPhone(a, co.phone, co.id))} />
           </div>
         )}
         {sheet === 'directions' && (
@@ -404,7 +404,7 @@ export function CompanySheet({ co }: { co: Company }) {
     branches: co.branches.map(b => ({ icon: 'building-2', color: 'sky', title: ar ? b[0] : b[1], sub: b[2] ? t.primary : t.branch, chev: false, go: null })),
     address: [{ icon: 'map-pin', color: 'teal', title: h.city(co), sub: t.openMaps, chev: true, go: () => window.open('https://www.google.com/maps/search/' + encodeURIComponent(co.en + ' ' + co.cityEn + ' Oman'), '_blank', 'noopener') }],
     contact: [
-      { icon: 'phone', color: 'teal', title: t.call, sub: co.phone, chev: true, go: () => callPhone(a, co.phone) },
+      { icon: 'phone', color: 'teal', title: t.call, sub: co.phone, chev: true, go: () => callPhone(a, co.phone, co.id) },
       { icon: 'message-circle', color: 'green', title: t.whatsapp, sub: co.phone, chev: true, go: () => openWhatsApp(a, co) },
       // Placeholder address built from the demo company's name.
       { icon: 'mail', color: 'sky', title: t.email, sub: 'info@' + slug + '.om', chev: true, go: ok(t.email) },

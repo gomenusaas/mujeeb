@@ -1,4 +1,7 @@
 import { photo } from './api';
+import type { Story } from './types';
+
+export type { Story };
 
 /**
  * Company stories (Instagram-style), shown on Home under the categories.
@@ -7,21 +10,6 @@ import { photo } from './api';
  * existing service/album images (Unsplash), and videos are free Mixkit stock clips
  * (https://mixkit.co/license/#videoFree).
  */
-export interface Story {
-  id: string;
-  /** Company id. */
-  co: string;
-  kind: 'image' | 'video';
-  /** Full-size image, or the video file. */
-  src: string;
-  /** Still image for the thumbnail (and the video's poster while it loads). */
-  poster: string;
-  ar: string;
-  en: string;
-  /** Posted this many hours ago (stories expire after 24 h). */
-  h: number;
-}
-
 const img = (id: string, co: string, h: number, ar: string, en: string): Story => ({
   id: 'st-' + co, co, kind: 'image', src: photo(id, 1080), poster: photo(id, 540), ar, en, h,
 });

@@ -25,9 +25,10 @@ Without them, it uses the bundled demo data in `src/data/demo.json`, which match
 
 Set up a Supabase project:
 
-1. Run the files in `supabase/migrations/` in order (`20261109000000_customer_app.sql`, then
-   `20261110000000_album_created_at.sql`), then `supabase/seed.sql`
-   (SQL editor, or `supabase db push` + `psql -f supabase/seed.sql`).
+1. Run the files in `supabase/migrations/` in order (`20261109000000_customer_app.sql`,
+   `20261110000000_album_created_at.sql`, `20261116000000_provider_app.sql`), then `supabase/seed.sql`
+   (SQL editor, or `supabase db push` + `psql -f supabase/seed.sql`). The third migration is for the
+   company dashboard in `../provider` (see its README).
 2. In **Authentication → Providers**, turn on **Anonymous sign-ins**. The app signs the customer in
    anonymously, so row-level security can scope their records to them until real login exists.
 3. Put the project URL and anon key in `.env.local`.
@@ -39,20 +40,24 @@ What goes to Supabase when it's configured:
 | Site-visit booking (`MJB-BK-…`, stored in UTC, entered in Asia/Muscat time) | `bookings` |
 | Cancel booking / accept proposed time | `bookings` update / `accept_booking_reschedule()` |
 | Favorites | `customer_favorites` |
-| Chat messages (one conversation per customer + company) | `conversations`, `messages` |
+| Follow / unfollow a company | `customer_follows` |
+| Activity for the company's stats: profile and service views, story views, WhatsApp / call / directions taps | `company_events` |
+
+What the app reads from companies (posted in the provider app): logos and photos they upload (full URLs in
+place of Unsplash ids), live stories (`stories`, 24 h), and branch map pins used by «الاتجاهات».
 
 The database blocks new bookings and requests when the company or the platform has them turned off
 (`platform_settings`, `companies.accepts_*`).
 
-The migration, seed and policies were tested on Postgres 16 with a stub `auth` schema: anon can read
-the catalog but can't write; customers only see their own rows; a customer can't confirm their own booking.
+The migrations, seed and policies were tested on Postgres with a stub `auth` schema: anon can read
+the catalog but can't write; customers only see their own rows; a customer can't confirm their own booking;
+a company member can only change their own company and can't verify it.
 
 ## What is still local or simulated
 
-- The UI keeps the customer's bookings, chats, favorites and followed companies in `localStorage`, starting
-  from the demo history (3 bookings, 3 chats). Server writes are additional: the lists aren't read
-  back from Supabase yet, because the demo history has no owner in the database.
-- The company "reply" in chat is a canned message after 1.4 s; there is no provider inbox yet.
+- The UI keeps the customer's bookings, favorites and followed companies in `localStorage`, starting
+  from the demo history. Server writes are additional: those lists aren't read back from Supabase yet.
+- There is no in-app chat; customers contact companies by WhatsApp or phone.
 - **WhatsApp** opens `wa.me/<number>` and **Call** opens `tel:`. The demo numbers are fictional.
   Email, website, social links, Settings, Help and Sign out show a notice only.
 - The service video uses the design system's striped placeholder, as in the design.
@@ -68,7 +73,7 @@ src/i18n/        All UI strings, Arabic + English
 src/data/        Types, Supabase client and loaders, bundled demo data
 src/app/         App state and navigation, shared view pieces, booking dates, mouse drag-scroll
 src/screens/     Discover (home, categories, explore), Provider (listing, company, service, album),
-                 Flows (booking), Account (messages, chat, profile, bookings…)
+                 Flows (booking), Account (profile, bookings, favorites, notifications)
 supabase/        Migration and generated seed
 scripts/         export-data (design data → demo.json), build-seed (demo.json → seed.sql), build-icons
 ```

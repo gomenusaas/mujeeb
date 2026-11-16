@@ -10,11 +10,11 @@ import { AlbumPage, CompanyPage, CompanySheet, Listing, ReachSheets, ServicePage
 import { BookingPage, DonePage } from './screens/Flows';
 import { StoryViewer } from './screens/Stories';
 import { STORIES } from './data/stories';
-import { Bookings, ChatPage, Favorites, Messages, Notifications, Profile } from './screens/Account';
+import { Bookings, Favorites, Notifications, Profile } from './screens/Account';
 
 const TABS: { id: RootTab; icon: string }[] = [
   { id: 'home', icon: 'house' }, { id: 'categories', icon: 'layout-grid' }, { id: 'explore', icon: 'compass' },
-  { id: 'messages', icon: 'message-circle' }, { id: 'profile', icon: 'user-round' },
+  { id: 'profile', icon: 'user-round' },
 ];
 
 export default function App() {
@@ -47,7 +47,7 @@ function Shell({ catalog, seed }: { catalog: Catalog; seed: CustomerSeed }) {
 
 function Phone() {
   const a = useApp();
-  const { t, ar, top, stack, tab, chats, toast, lang } = a;
+  const { t, ar, top, stack, tab, toast, lang } = a;
   const scrollRef = useRef<HTMLDivElement>(null);
   useDragScroll();
 
@@ -58,7 +58,6 @@ function Phone() {
   const key = base.s + '|' + (base.id || '') + '|' + (base.cat ?? '') + '|' + tab + '|' + (a.bk?.step ?? '');
   useLayoutEffect(() => { scrollRef.current?.scrollTo({ top: 0 }); }, [key]);
 
-  const unread = Object.values(chats).reduce((n, c) => n + (c.unread || 0), 0);
   const showTabs = stack.length === 1 && TABS.some(x => x.id === top.s);
   const company = top.s === 'company' ? a.idx.co.get(top.id!) : undefined;
   // Company behind the Contact / Directions buttons on the company or service page.
@@ -72,12 +71,12 @@ function Phone() {
           <span style={{ display: 'flex', gap: 6 }}><Icon name="signal" size={16} /><Icon name="wifi" size={16} /><Icon name="battery-full" size={18} /></span>
         </div>
         <div className="mj-s mj-scroll" ref={scrollRef}>
-          <ScreenSwitch route={base} scrollRef={scrollRef} />
+          <ScreenSwitch route={base} />
         </div>
         {top.s === 'story' && <StoryViewer key={top.id} />}
         {showTabs && (
           <div style={{ position: 'absolute', insetInline: 0, bottom: 0, zIndex: 10 }}>
-            <TabBar items={TABS.map(x => ({ ...x, label: t[x.id], badge: x.id === 'messages' && unread ? String(unread) : undefined }))} active={tab} onChange={a.setTab} />
+            <TabBar items={TABS.map(x => ({ ...x, label: t[x.id] }))} active={tab} onChange={a.setTab} />
           </div>
         )}
         {company && <CompanySheet co={company} />}
@@ -94,12 +93,11 @@ function Phone() {
   );
 }
 
-function ScreenSwitch({ route, scrollRef }: { route: Route; scrollRef: React.RefObject<HTMLDivElement | null> }) {
+function ScreenSwitch({ route }: { route: Route }) {
   switch (route.s) {
     case 'home': return <Home />;
     case 'categories': return <Categories />;
     case 'explore': return <Explore />;
-    case 'messages': return <Messages />;
     case 'profile': return <Profile />;
     case 'listing': return <Listing />;
     case 'company': return <CompanyPage />;
@@ -107,7 +105,6 @@ function ScreenSwitch({ route, scrollRef }: { route: Route; scrollRef: React.Ref
     case 'album': return <AlbumPage />;
     case 'booking': return <BookingPage />;
     case 'bkDone': return <DonePage />;
-    case 'chat': return <ChatPage scrollEl={scrollRef} />;
     case 'bookings': return <Bookings />;
     case 'favs': return <Favorites />;
     case 'notifs': return <Notifications />;
@@ -124,7 +121,6 @@ function DemoPanel() {
     ['Home', jump([H])], ['Categories', jump([{ s: 'categories' }], 'categories')], ['Listing · AC', jump([H, { s: 'listing', cat: 1 }])],
     ['Company profile', jump([H, { s: 'company', id: 'c4' }])], ['Service details', jump([H, { s: 'service', id: 's7' }])], ['Album', jump([H, { s: 'album', id: 'a3' }])],
     ['Book site visit', () => { a.reset([H, { s: 'company', id: 'c4' }], 'home'); setTimeout(() => a.startBk('c4'), 0); }],
-    ['Messages', jump([{ s: 'messages' }], 'messages')], ['Chat', jump([{ s: 'messages' }, { s: 'chat', id: 'c4' }], 'messages')],
     ['My bookings', jump([{ s: 'profile' }, { s: 'bookings' }], 'profile')], ['Explore', jump([{ s: 'explore' }], 'explore')],
     ['Profile', jump([{ s: 'profile' }], 'profile')], ['Notifications', jump([H, { s: 'notifs' }])], ['Stories', jump([H, { s: 'story', id: STORIES[0].id }])],
   ];

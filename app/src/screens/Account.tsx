@@ -1,91 +1,11 @@
-import { useEffect, useRef } from 'react';
-import { Avatar, Badge, Button, ChatBubble, EmptyState, Icon, IconButton, ListItem } from '../ds';
+import { Avatar, Badge, Button, EmptyState, Icon, IconButton, ListItem } from '../ds';
 import { useApp } from '../app/store';
-import { Img, TopBar, callPhone, card, helpers, stop } from '../app/view';
+import { Img, TopBar, card, helpers, openWhatsApp, stop } from '../app/view';
 import { BK_ST, NOTIFS, PURPOSES } from '../i18n/strings';
 import { logoUrl, remote } from '../data/api';
 
 const ROOT = { padding: 'calc(var(--top-inset) + 8px) 20px 100px', display: 'flex', flexDirection: 'column' } as const;
 const badge = (m: Record<string, readonly [string, string, string]>, k: string, ar: boolean) => ({ label: m[k][ar ? 0 : 1], tone: m[k][2] });
-
-export function Messages() {
-  const a = useApp();
-  const { t, ar, chats } = a;
-  const h = helpers(a);
-  const ids = Object.keys(chats).filter(id => chats[id].msgs.length && a.idx.co.has(id));
-  return (
-    <div style={{ ...ROOT, gap: 14 }}>
-      <span style={{ font: 'var(--type-h1)' }}>{t.messages}</span>
-      {!ids.length && <EmptyState icon="message-circle" title={t.noChats} body={t.noChatsBody} />}
-      {ids.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', ...card, overflow: 'hidden' }}>
-          {ids.map(id => {
-            const co = a.idx.co.get(id)!, c = chats[id], last = c.msgs[c.msgs.length - 1];
-            return (
-              <button key={id} type="button" onClick={() => a.openChat(id)} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '14px 16px', border: 'none', borderBottom: '1px solid var(--border-subtle)', background: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'start' }}>
-                <Avatar name={h.coName(co)} src={logoUrl(id)} size={48} />
-                <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
-                  <span style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-                    <span style={{ font: 'var(--type-body-strong)', color: 'var(--text-primary)' }}>{h.coName(co)}</span>
-                    <span style={{ font: 'var(--type-caption)', fontWeight: 500, color: 'var(--text-tertiary)' }}>{last.time}</span>
-                  </span>
-                  <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{(last.mine ? t.you : '') + (ar ? last.ar : last.en)}</span>
-                  {c.ref && <span style={{ font: 'var(--type-mono)', fontSize: 11, color: 'var(--text-tertiary)' }}>{c.ref}</span>}
-                </span>
-                {c.unread > 0 && <Badge tone="accent" size="sm">{String(c.unread)}</Badge>}
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
-export function ChatPage({ scrollEl }: { scrollEl: React.RefObject<HTMLDivElement | null> }) {
-  const a = useApp();
-  const { t, ar, top, chats, draft, setDraft } = a;
-  const h = helpers(a);
-  const co = a.idx.co.get(top.id!)!;
-  const c = chats[co.id];
-  const n = c?.msgs.length || 0;
-  const first = useRef(true);
-  useEffect(() => {
-    const el = scrollEl.current;
-    // Scroll to newest message, but leave the initial top-reset alone.
-    if (el && !first.current) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
-    first.current = false;
-  }, [n, scrollEl]);
-  return (
-    <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ position: 'sticky', top: 0, zIndex: 5, padding: 'var(--top-inset) 16px 8px', display: 'flex', alignItems: 'center', gap: 10, background: 'oklch(0.985 0.004 285 / 0.86)', backdropFilter: 'var(--blur-bar)', WebkitBackdropFilter: 'var(--blur-bar)', boxShadow: '0 1px 0 var(--border-subtle)' }}>
-        <IconButton icon="arrow-left" size={40} onClick={a.back} label="Back" />
-        <div onClick={() => a.go('company', { id: co.id })} style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
-          <Avatar name={h.coName(co)} src={logoUrl(co.id)} size={40} online />
-          <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-            <span style={{ font: 'var(--type-title)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{h.coName(co)}</span>
-            <span style={{ font: 'var(--type-caption)', fontWeight: 500, color: 'var(--text-tertiary)' }}>{t.replyFast}</span>
-          </span>
-        </div>
-        <IconButton icon="phone" variant="tonal" size={40} onClick={() => callPhone(a, co.phone)} label={t.call} />
-      </div>
-      <div style={{ flex: 1, padding: '16px 16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {c?.ref && (
-          <div style={{ alignSelf: 'center', display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: 'var(--text-secondary)' }}>
-            <Icon name="link" size={13} />{t.ref} <span style={{ font: 'var(--type-mono)', fontSize: 11 }}>{c.ref}</span>
-          </div>
-        )}
-        {(c?.msgs || []).map((m, k) => <ChatBubble key={k} mine={m.mine} time={m.time}>{ar ? m.ar : m.en}</ChatBubble>)}
-      </div>
-      <form onSubmit={e => { e.preventDefault(); a.send(); }} style={{ position: 'sticky', bottom: 0, display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px calc(26px + var(--safe-bottom))', background: 'oklch(1 0 0 / 0.94)', backdropFilter: 'var(--blur-bar)', WebkitBackdropFilter: 'var(--blur-bar)', boxShadow: 'var(--shadow-up)' }}>
-        <IconButton icon="paperclip" variant="plain" size={44} label="Attach" onClick={() => a.showToast(ar ? 'المرفقات قريبًا' : 'Attachments coming soon', 'info')} />
-        <input value={draft} onChange={e => setDraft(e.target.value)} placeholder={t.typeMsg} aria-label={t.typeMsg} enterKeyHint="send"
-          style={{ flex: 1, minWidth: 0, height: 44, padding: '0 16px', border: 'none', outline: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', font: 'var(--type-body)', color: 'var(--text-primary)' }} />
-        <IconButton icon="send" variant="filled" size={44} onClick={a.send} label="Send" />
-      </form>
-    </div>
-  );
-}
 
 export function Profile() {
   const a = useApp();
@@ -164,7 +84,7 @@ export function Bookings() {
                 </div>
               )}
               <div style={{ display: 'flex', gap: 10 }}>
-                <Button variant="secondary" size="sm" iconLeft="message-circle" onClick={() => a.openChat(b.co)}>{t.contactCo}</Button>
+                {co && <Button variant="secondary" size="sm" iconLeft="message-circle" onClick={() => openWhatsApp(a, co)}>{t.whatsapp}</Button>}
                 {resched && <Button size="sm" iconLeft="check" onClick={accept}>{t.acceptTime}</Button>}
                 {canCancel && <Button variant="ghost" size="sm" onClick={cancel}>{t.cancel}</Button>}
               </div>

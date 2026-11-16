@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { AppBar, Icon } from '../ds';
-import { logoUrl, photo } from '../data/api';
+import { logoUrl, photo, remote } from '../data/api';
 import type { Album, Branch, Company, Service } from '../data/types';
 import type { App } from './store';
 import { arDigits } from '../i18n/strings';
@@ -104,24 +104,28 @@ export function ContactGrid({ a, co }: { a: App; co: Company }) {
   );
 }
 
-/* Deep links. Clicks are tracked separately from confirmed business (not implemented server-side yet). */
+/* Deep links. Each tap is logged for the company's stats (Supabase only); clicks are interactions, not confirmed business. */
 const digits = (p: string) => p.replace(/[^\d]/g, '');
 export function openWhatsApp(a: App, co: Company) {
   a.showToast(a.t.opening, 'info');
+  remote.track(co.id, 'whatsapp');
   window.open('https://wa.me/' + digits(co.phone), '_blank', 'noopener');
 }
 /**
- * Opens the phone's maps app with directions to a branch. Branches have no coordinates yet, so the
- * destination is a search for "company, branch area, Oman". Apple Maps on iPhone/iPad, Google Maps elsewhere.
+ * Opens the phone's maps app with directions to a branch: to its map pin when the company has set one in
+ * the provider app, otherwise to a search for "company, branch area, Oman". Apple Maps on iPhone/iPad, Google Maps elsewhere.
  */
 export function openDirections(a: App, co: Company, branch?: Branch) {
-  const q = encodeURIComponent(co.en + ', ' + (branch ? branch[1] : co.cityEn) + ', Oman');
+  const lat = branch?.[3], lng = branch?.[4];
+  const q = lat != null && lng != null ? lat + ',' + lng : encodeURIComponent(co.en + ', ' + (branch ? branch[1] : co.cityEn) + ', Oman');
   const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   a.showToast(a.t.openingMaps, 'info');
+  remote.track(co.id, 'directions');
   window.open(ios ? 'https://maps.apple.com/?daddr=' + q + '&dirflg=d' : 'https://www.google.com/maps/dir/?api=1&destination=' + q, '_blank', 'noopener');
 }
-export function callPhone(a: App, phone: string) {
+export function callPhone(a: App, phone: string, companyId?: string) {
   a.showToast(a.t.calling + ' ' + phone, 'info');
+  if (companyId) remote.track(companyId, 'call');
   window.location.href = 'tel:' + digits(phone).replace(/^/, '+');
 }
 

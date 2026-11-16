@@ -2,13 +2,14 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Avatar, Button, Icon, IconButton } from '../ds';
 import { useApp, type App } from '../app/store';
 import { helpers } from '../app/view';
-import { logoUrl } from '../data/api';
+import { logoUrl, remote } from '../data/api';
 import { STORIES, type Story } from '../data/stories';
 
 /** How long a photo story stays on screen. Videos play to their end. */
 const IMAGE_MS = 5000;
 
-const storiesFor = (a: App) => STORIES.filter(s => a.idx.co.has(s.co));
+/** Live stories posted by companies (Supabase), or the bundled demo stories. */
+const storiesFor = (a: App) => (a.catalog.stories ?? STORIES).filter(s => a.idx.co.has(s.co));
 const ago = (a: App, s: Story) => a.t.hoursAgo.replace('{n}', helpers(a).num(s.h));
 
 /** The circular company logo with a story ring: brand gradient while unseen, muted once seen. */
@@ -94,7 +95,11 @@ export function StoryViewer() {
 
   useLayoutEffect(() => { scrollTo(start, 'instant'); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => { if (story) a.markSeen(story.id); }, [story?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!story) return;
+    a.markSeen(story.id);
+    remote.track(story.co, 'story_view', story.id);
+  }, [story?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Play the current story (and only it), and drive its progress bar.
   useEffect(() => {

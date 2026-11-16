@@ -5,13 +5,13 @@ export type GovId = 'all' | 'muscat' | 'batinah' | 'dakhiliyah' | 'dhofar' | 'sh
 
 export interface Category { i: number; ar: string; en: string; sar: string; sen: string; icon: string; color: string; art: string }
 
-/** Branch: [nameAr, nameEn, isPrimary]. */
-export type Branch = [string, string, boolean];
+/** Branch: [nameAr, nameEn, isPrimary, lat?, lng?]. The map location is set by the company in the provider app. */
+export type Branch = [string, string, boolean, (number | null)?, (number | null)?];
 
 export interface Company {
   id: string; ar: string; en: string; cats: number[];
   cityAr: string; cityEn: string; gov: GovId; cov: GovId[];
-  /** Unsplash photo id for the cover. */
+  /** Cover photo: an Unsplash photo id (demo data) or a full URL (uploaded by the company). */
   img: string;
   verified: boolean; book: boolean; phone: string;
   since: number; dar: string; den: string; branches: Branch[];
@@ -31,12 +31,27 @@ export interface Booking {
   nAr?: string; nEn?: string; nTime?: string;
 }
 
-export interface ChatMessage { mine: boolean; ar: string; en: string; time: string }
-export interface Chat { unread: number; ref: string | null; msgs: ChatMessage[] }
+/** A company story (24 hours), shown on Home. */
+export interface Story {
+  id: string;
+  /** Company id. */
+  co: string;
+  kind: 'image' | 'video';
+  /** Full-size image, or the video file. */
+  src: string;
+  /** Still image for the thumbnail (and the video's poster while it loads). */
+  poster: string;
+  ar: string;
+  en: string;
+  /** Posted this many hours ago (stories expire after 24 h). */
+  h: number;
+}
 
 export interface Catalog {
   cats: Category[]; gov: Record<GovId, Pair>; hours: [string, string, string | null][];
   companies: Company[]; services: Service[]; albums: Album[];
+  /** Live stories from Supabase; undefined in demo mode (the bundled demo stories are used). */
+  stories?: Story[];
 }
 
-export interface CustomerSeed { bookings: Booking[]; chats: Record<string, Chat> }
+export interface CustomerSeed { bookings: Booking[] }

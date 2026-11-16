@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import type { Album, Branch, Catalog, Category, Company, CustomerSeed, GovId, Pair, Service } from './types';
+import type { Album, Branch, Catalog, Category, Company, CustomerSeed, GovId, Pair, Service, Story } from './types';
 
 const URL_ = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
@@ -8,18 +8,21 @@ const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 export const supabase: SupabaseClient | null = URL_ && KEY ? createClient(URL_, KEY) : null;
 export const dataSource: 'supabase' | 'demo' = supabase ? 'supabase' : 'demo';
 
-export const photo = (id: string, w = 600) =>
-  'https://images.unsplash.com/photo-' + id + '?w=' + w + '&q=70&auto=format&fit=crop';
-export const logoUrl = (companyId: string) => '/logos/' + companyId + '.png';
+/** Photos are Unsplash ids in the demo data, or full URLs once a company uploads its own. */
+export const photo = (id: string, w = 600) => (/^https?:/.test(id) ? id
+  : 'https://images.unsplash.com/photo-' + id + '?w=' + w + '&q=70&auto=format&fit=crop');
+/** Logos uploaded by companies (Supabase), by company id; the bundled demo logos are the fallback. */
+const LOGOS = new Map<string, string>();
+export const logoUrl = (companyId: string) => LOGOS.get(companyId) || '/logos/' + companyId + '.png';
 
 async function demo() {
   return (await import('./demo.json')).default as unknown as Catalog & CustomerSeed;
 }
 
-/** Demo history for the signed-in customer (bookings, chats). */
+/** Demo history for the signed-in customer (bookings). */
 export async function loadCustomerSeed(): Promise<CustomerSeed> {
   const d = await demo();
-  return { bookings: d.bookings, chats: d.chats };
+  return { bookings: d.bookings };
 }
 
 export async function loadCatalog(): Promise<Catalog> {
@@ -49,7 +52,8 @@ export async function loadCatalog(): Promise<Catalog> {
   };
   const catsBy = by(cc, 'company_id', r => r.category_id as number);
   const covBy = by(areas, 'company_id', r => r.location_id as GovId);
-  const brBy = by(branches, 'company_id', r => [r.name_ar, r.name_en, r.is_primary] as Branch);
+  const brBy = by(branches, 'company_id', r => [r.name_ar, r.name_en, r.is_primary, r.lat, r.lng] as Branch);
+  for (const c of cos) if (c.logo_url) LOGOS.set(c.id, c.logo_url);
   const gov = Object.fromEntries(locs.map(l => [l.id, [l.name_ar, l.name_en] as Pair])) as Record<GovId, Pair>;
   // Keep the demo's ordering: original companies (c*) first, then generated ones.
   const companies: Company[] = cos.map(c => ({
@@ -61,7 +65,15 @@ export async function loadCatalog(): Promise<Catalog> {
   const categories: Category[] = cats.map(c => ({ i: c.id, ar: c.name_ar, en: c.name_en, sar: c.short_ar, sen: c.short_en, icon: c.icon, color: c.color, art: c.art_url }));
   const services: Service[] = svcs.map(s => ({ id: s.id, co: s.company_id, cat: s.category_id, ar: s.title_ar, en: s.title_en, imgs: s.photos, dar: s.description_ar, den: s.description_en }));
   const albums: Album[] = albs.map(a => ({ id: a.id, co: a.company_id, cat: a.category_id, ar: a.title_ar, en: a.title_en, pAr: a.place_ar, pEn: a.place_en, n: a.photo_count, img: a.cover_photo, imgs: a.photos, added: a.created_at }));
-  return { cats: categories, gov, hours: hours.map(h => [h.days_ar, h.days_en, h.hours]), companies, services, albums };
+  // Live stories (RLS only returns ones that haven't expired). A video without a poster uses the company cover.
+  const { data: st } = await sb.from('stories').select('*').order('created_at', { ascending: false });
+  const coverOf = new Map(companies.map(c => [c.id, c.img]));
+  const stories: Story[] = (st || []).map((r: Row) => ({
+    id: r.id, co: r.company_id, kind: r.kind, src: r.media_url,
+    poster: r.poster_url || (r.kind === 'image' ? r.media_url : photo(coverOf.get(r.company_id) || '', 540)),
+    ar: r.caption_ar, en: r.caption_en, h: Math.max(1, Math.round((Date.now() - Date.parse(r.created_at)) / 36e5)),
+  }));
+  return { cats: categories, gov, hours: hours.map(h => [h.days_ar, h.days_en, h.hours]), companies, services, albums, stories };
 }
 
 function sortKey(id: string) {
@@ -106,8 +118,13 @@ export const remote = {
     (await run('booking', sb => sb.from('bookings').insert(b).select('reference').single()))?.reference as string | null ?? null,
   cancelBooking: (reference: string) => run('cancel booking', sb => sb.from('bookings').update({ status: 'cancelled' }).eq('reference', reference)),
   acceptReschedule: (reference: string) => run('accept reschedule', sb => sb.rpc('accept_booking_reschedule', { booking_ref: reference })),
-  sendMessage: async (companyId: string, body: string) => {
-    const conv = await run('conversation', sb => sb.from('conversations').upsert({ company_id: companyId }, { onConflict: 'customer_id,company_id' }).select('id').single());
-    if (conv) await run('message', sb => sb.from('messages').insert({ conversation_id: conv.id, body }));
+  setFollow: (companyId: string, on: boolean) => run('follow', sb => on
+    ? sb.from('customer_follows').upsert({ company_id: companyId })
+    : sb.from('customer_follows').delete().eq('company_id', companyId)),
+  /** Activity for the company's stats in the provider app. Fire-and-forget; never blocks the UI. */
+  track: (companyId: string, kind: EventKind, refId?: string) => {
+    run('event', sb => sb.from('company_events').insert({ company_id: companyId, kind, ref_id: refId ?? null })).catch(() => {});
   },
 };
+
+export type EventKind = 'profile_view' | 'service_view' | 'story_view' | 'whatsapp' | 'call' | 'directions';
