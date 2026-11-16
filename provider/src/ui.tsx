@@ -139,8 +139,31 @@ export function FileButton({ accept, multiple, onFiles, children, variant = 'out
   );
 }
 
-/** Ordered photo list: first is the cover. Add (upload), remove, make cover. */
-export function PhotoEditor({ photos, onChange, error }: { photos: string[]; onChange: (p: string[]) => void; error?: string }) {
+/** Gallery visibility for one photo or video: optional, only on projects. */
+type GalleryProps = { hidden?: string[]; onHidden?: (h: string[]) => void };
+
+/** Dims a thumbnail that is kept out of the gallery and labels it "Not in gallery". */
+function HiddenVeil({ src, hidden }: { src: string; hidden?: string[] }) {
+  const { t } = useP();
+  if (!hidden?.includes(src)) return null;
+  return (
+    <span style={{ position: 'absolute', inset: 0, background: 'oklch(1 0 0 / 0.55)', display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end', padding: 6, pointerEvents: 'none' }}>
+      <span style={{ padding: '2px 8px', borderRadius: 999, background: 'oklch(0.25 0.02 285)', color: '#fff', font: '700 11px/18px var(--font-sans)' }}>{t.notInGallery}</span>
+    </span>
+  );
+}
+
+/** Eye button: shown in the gallery (filled) or hidden from it (crossed out). */
+function GalleryMark({ src, hidden, onHidden }: { src: string } & GalleryProps) {
+  const { t } = useP();
+  if (!hidden || !onHidden) return null;
+  const off = hidden.includes(src);
+  return <MiniBtn icon={off ? 'eye-off' : 'eye'} label={off ? t.showInGallery : t.hideFromGallery} on={!off}
+    onClick={() => onHidden(off ? hidden.filter(x => x !== src) : [...hidden, src])} />;
+}
+
+/** Ordered photo list: first is the cover. Add (upload), remove, make cover; on projects, show or hide each in the gallery. */
+export function PhotoEditor({ photos, onChange, error, hidden, onHidden }: { photos: string[]; onChange: (p: string[]) => void; error?: string } & GalleryProps) {
   const { t, repo, company, showToast } = useP();
   const [busy, setBusy] = useState(false);
   const add = async (files: File[]) => {
@@ -164,8 +187,10 @@ export function PhotoEditor({ photos, onChange, error }: { photos: string[]; onC
           {photos.map((p, k) => (
             <div key={p + k} style={{ position: 'relative', aspectRatio: '4/3', borderRadius: 12, overflow: 'hidden', background: 'var(--neutral-100)' }}>
               <img src={photoUrl(p, 300)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              <HiddenVeil src={p} hidden={hidden} />
               {k === 0 && <span style={{ position: 'absolute', top: 6, insetInlineStart: 6, padding: '2px 8px', borderRadius: 999, background: 'var(--brand)', color: '#fff', font: '700 11px/18px var(--font-sans)' }}>{t.coverTag}</span>}
               <span style={{ position: 'absolute', insetInline: 6, bottom: 6, display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                <GalleryMark src={p} hidden={hidden} onHidden={onHidden} />
                 {k > 0 && <MiniBtn icon="star" label={t.makeCover} onClick={() => onChange([p, ...photos.filter((_, j) => j !== k)])} />}
                 <MiniBtn icon="trash-2" label={t.remove} onClick={() => onChange(photos.filter((_, j) => j !== k))} />
               </span>
@@ -177,9 +202,53 @@ export function PhotoEditor({ photos, onChange, error }: { photos: string[]; onC
   );
 }
 
-export const MiniBtn = ({ icon, label, onClick }: { icon: string; label: string; onClick: () => void }) => (
-  <button type="button" title={label} aria-label={label} onClick={onClick}
-    style={{ width: 30, height: 30, borderRadius: '50%', border: 'none', background: 'oklch(1 0 0 / 0.9)', color: 'var(--text-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-xs)' }}>
+const MAX_VIDEO = 50 * 1024 * 1024;
+
+/** A project's videos: add (upload, up to 50 MB each), remove, show or hide each in the gallery. */
+export function VideoEditor({ videos, onChange, hidden, onHidden }: { videos: string[]; onChange: (v: string[]) => void } & GalleryProps) {
+  const { t, repo, company, showToast } = useP();
+  const [busy, setBusy] = useState(false);
+  const add = async (files: File[]) => {
+    const ok = files.filter(f => f.size <= MAX_VIDEO);
+    if (ok.length < files.length) showToast(t.videoTooBig, 'error');
+    if (!ok.length) return;
+    setBusy(true);
+    try {
+      const urls = await Promise.all(ok.map(f => repo.upload(company.id, f, f.name)));
+      onChange([...videos, ...urls]);
+    } catch { showToast(t.uploadFailed, 'error'); } finally { setBusy(false); }
+  };
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+        <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <span style={{ font: 'var(--type-body-sm)', fontWeight: 600 }}>{t.videos}</span>
+          <span style={{ font: 'var(--type-caption)', fontWeight: 500, color: 'var(--text-tertiary)' }}>{t.videosHelp}</span>
+        </span>
+        <FileButton accept="video/mp4,video/quicktime" multiple onFiles={add} icon="video" loading={busy}>{t.addVideos}</FileButton>
+      </div>
+      {videos.length > 0 && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10 }}>
+          {videos.map((v, k) => (
+            <div key={v + k} style={{ position: 'relative', aspectRatio: '4/3', borderRadius: 12, overflow: 'hidden', background: 'var(--neutral-900, #111)' }}>
+              <video src={v + '#t=0.1'} muted playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              <HiddenVeil src={v} hidden={hidden} />
+              <span style={{ position: 'absolute', top: 6, insetInlineStart: 6, width: 24, height: 24, borderRadius: '50%', background: 'oklch(0 0 0 / 0.55)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="play" size={12} /></span>
+              <span style={{ position: 'absolute', insetInline: 6, bottom: 6, display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                <GalleryMark src={v} hidden={hidden} onHidden={onHidden} />
+                <MiniBtn icon="trash-2" label={t.remove} onClick={() => onChange(videos.filter((_, j) => j !== k))} />
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export const MiniBtn = ({ icon, label, onClick, on }: { icon: string; label: string; onClick: () => void; on?: boolean }) => (
+  <button type="button" title={label} aria-label={label} aria-pressed={on} onClick={onClick}
+    style={{ width: 30, height: 30, borderRadius: '50%', border: 'none', background: on ? 'var(--brand)' : 'oklch(1 0 0 / 0.9)', color: on ? '#fff' : 'var(--text-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-xs)' }}>
     <Icon name={icon} size={15} />
   </button>
 );

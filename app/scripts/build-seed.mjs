@@ -20,7 +20,7 @@ sql += rows('company_hours', ['company_id', 'day', 'is_closed', 'opens', 'closes
   d.companies.flatMap(c => (c.hrs || []).map((h, day) => [q(c.id), day, q(!h), q(h?.[0]), q(h?.[1]), q(h?.[2]), q(h?.[3])])));
 sql += rows('services', ['id', 'company_id', 'category_id', 'title_ar', 'title_en', 'description_ar', 'description_en', 'photos', 'position'],
   d.services.map((s, i) => [q(s.id), q(s.co), s.cat, q(s.ar), q(s.en), q(s.dar), q(s.den), arr(s.imgs), i]));
-sql += rows('portfolio_albums', ['id', 'company_id', 'category_id', 'title_ar', 'title_en', 'place_ar', 'place_en', 'photo_count', 'cover_photo', 'photos', 'position', 'created_at'],
-  d.albums.map((a, i) => [q(a.id), q(a.co), a.cat, q(a.ar), q(a.en), q(a.pAr), q(a.pEn), a.n, q(a.img), arr(a.imgs), i, q(a.added + 'T08:00:00+04:00')]));
+sql += rows('portfolio_albums', ['id', 'company_id', 'category_id', 'title_ar', 'title_en', 'place_ar', 'place_en', 'photo_count', 'cover_photo', 'photos', 'videos', 'position', 'created_at'],
+  d.albums.map((a, i) => [q(a.id), q(a.co), a.cat, q(a.ar), q(a.en), q(a.pAr), q(a.pEn), a.n, q(a.img), arr(a.imgs), arr(a.vids || []), i, q(a.added + 'T08:00:00+04:00')]));
 fs.writeFileSync(new URL('../supabase/seed.sql', import.meta.url), sql);
 console.log('seed.sql', (sql.length / 1024).toFixed(0) + ' KB');

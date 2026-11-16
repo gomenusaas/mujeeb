@@ -99,6 +99,8 @@ export function StoryViewer() {
     if (!story) return;
     a.markSeen(story.id);
     remote.track(story.co, 'story_view', story.id);
+    // Keep the address on the story being shown, so Share and reloads point at it.
+    if (top.id !== story.id) a.replace('story', { id: story.id });
   }, [story?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Play the current story (and only it), and drive its progress bar.
@@ -209,7 +211,10 @@ export function StoryViewer() {
             <span style={{ font: '700 14px/18px var(--font-sans)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
             <span style={{ font: 'var(--type-caption)', opacity: 0.8 }}>{ago(a, story)}</span>
           </span>
-          <span style={{ pointerEvents: 'auto' }}><IconButton icon="x" variant="glass" size={40} label={t.close} onClick={a.back} /></span>
+          <span style={{ pointerEvents: 'auto', display: 'flex', gap: 8 }}>
+            <IconButton icon="share-2" variant="glass" size={40} label={t.share} onClick={() => a.sharePage({ s: 'story', id: story.id }, name, ar ? story.ar : story.en)} />
+            <IconButton icon="x" variant="glass" size={40} label={t.close} onClick={a.back} />
+          </span>
         </div>
       </div>
 

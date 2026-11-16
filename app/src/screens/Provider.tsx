@@ -1,7 +1,7 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { Avatar, Badge, BottomSheet, Button, EmptyState, Icon, IconButton, ImageSlot, ListItem, SearchBar, SectionHeader } from '../ds';
-import { useApp, type Filters, type ListView, type SheetKey } from '../app/store';
-import { ContactGrid, HScroll, Img, MetaLine, TopBar, callPhone, card, helpers, openDirections, openWhatsApp, stop } from '../app/view';
+import { useApp, type CoView, type Filters, type ListView, type SheetKey } from '../app/store';
+import { ContactGrid, HScroll, Img, MetaLine, TopBar, albumMedia, callPhone, card, companyGallery, helpers, openDirections, openWhatsApp, stop, type Media } from '../app/view';
 import { logoUrl, photo, remote } from '../data/api';
 import type { Company } from '../data/types';
 import { WEEK_ORDER, dayName, fmtTime, isOpenNow, muscatToday, shifts } from '../app/hours';
@@ -9,6 +9,71 @@ import { WEEK_ORDER, dayName, fmtTime, isOpenNow, muscatToday, shifts } from '..
 const VIEWS: { v: ListView; icon: string; label: 'viewLarge' | 'viewGrid' | 'viewRows' }[] = [
   { v: 'large', icon: 'gallery-vertical', label: 'viewLarge' }, { v: 'grid', icon: 'grid-2x2', label: 'viewGrid' }, { v: 'rows', icon: 'layout-list', label: 'viewRows' },
 ];
+
+const CO_VIEWS: { v: CoView; icon: string; label: 'services' | 'gallery' }[] = [
+  { v: 'list', icon: 'layout-list', label: 'services' }, { v: 'gallery', icon: 'layout-dashboard', label: 'gallery' },
+];
+
+/** Company page: services list or project gallery. */
+function CoViewSwitch({ value, onPick }: { value: CoView; onPick: (v: CoView) => void }) {
+  const a = useApp();
+  return (
+    <div role="radiogroup" aria-label={a.t.viewAs} style={{ flex: 'none', display: 'flex', gap: 2, padding: 3, borderRadius: 'var(--radius-pill)', background: 'var(--neutral-100)' }}>
+      {CO_VIEWS.map(x => {
+        const on = value === x.v;
+        return (
+          <button key={x.v} type="button" role="radio" aria-checked={on} aria-label={a.t[x.label]} title={a.t[x.label]} onClick={() => onPick(x.v)}
+            style={{ width: 34, height: 34, border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: on ? 'var(--brand)' : 'transparent', color: on ? '#fff' : 'var(--text-secondary)', transition: 'all var(--dur-base) var(--ease-out)' }}>
+            <Icon name={x.icon} size={17} />
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** The nearest scrolling ancestor (the screen's scroll area). */
+function scrollParent(el: HTMLElement | null): HTMLElement | null {
+  for (let p = el?.parentElement; p; p = p.parentElement) {
+    const o = getComputedStyle(p).overflowY;
+    if ((o === 'auto' || o === 'scroll') && p.scrollHeight > p.clientHeight) return p;
+  }
+  return null;
+}
+
+/** A photo (cropped to `ratio`, or at its natural height) or a silent looping video with a play badge. */
+function MediaTile({ m, w, ratio, onOpen, style }: { m: Media; w: number; ratio?: string; onOpen: () => void; style?: CSSProperties }) {
+  return (
+    <button type="button" onClick={onOpen} aria-label={m.video ? 'video' : 'photo'}
+      style={{ position: 'relative', display: 'block', width: '100%', padding: 0, border: 'none', borderRadius: 'var(--radius-md)', overflow: 'hidden', background: 'var(--neutral-100)', cursor: 'zoom-in', ...style }}>
+      {m.video
+        ? <video src={m.src + '#t=0.1'} muted loop playsInline autoPlay preload="metadata" style={{ width: '100%', display: 'block', minHeight: 120, objectFit: 'cover' }} />
+        : <img src={photo(m.src, w)} alt="" loading="lazy" decoding="async" style={{ width: '100%', display: 'block', minHeight: 80, ...(ratio ? { aspectRatio: ratio, objectFit: 'cover' } : {}) }} />}
+      {m.video && (
+        <span style={{ position: 'absolute', top: 8, insetInlineEnd: 8, width: 26, height: 26, borderRadius: '50%', background: 'oklch(0 0 0 / 0.5)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name="play" size={13} />
+        </span>
+      )}
+    </button>
+  );
+}
+
+/** Photo shapes down each gallery column, so the two columns stagger (Pinterest-style). Videos keep their own shape. */
+const MASONRY_RATIOS = ['3/4', '1/1', '4/5', '4/3', '3/4', '1/1', '4/5'];
+
+/** Two staggered columns of photos and videos. */
+function Masonry({ items, onOpen }: { items: Media[]; onOpen: (k: number) => void }) {
+  const cols = [0, 1].map(c => items.map((m, k) => ({ m, k })).filter(x => x.k % 2 === c));
+  return (
+    <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+      {cols.map((col, c) => (
+        <div key={c} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {col.map(({ m, k }, j) => <MediaTile key={k} m={m} w={500} ratio={MASONRY_RATIOS[(j * 2 + c * 3) % MASONRY_RATIOS.length]} onOpen={() => onOpen(k)} />)}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 /** Three-icon switch for the company list layout; sits beside the sort control and matches its height. */
 function ViewSwitch() {
@@ -83,7 +148,10 @@ export function Listing() {
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column', paddingBottom: 40 }}>
       <div style={{ position: 'relative', overflow: 'hidden', padding: 'var(--top-inset) 0 4px', background: 'var(--cat-' + color + '-600)', borderRadius: '0 0 28px 28px', color: '#fff' }}>
         <span style={{ position: 'absolute', insetInlineEnd: -50, top: -40, width: 200, height: 200, borderRadius: '50%', background: 'oklch(1 0 0 / 0.14)' }} />
-        <div style={{ position: 'relative', display: 'flex', padding: '8px 16px' }}><IconButton icon="arrow-left" variant="glass" size={40} onClick={a.back} label="Back" /></div>
+        <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', padding: '8px 16px' }}>
+          <IconButton icon="arrow-left" variant="glass" size={40} onClick={a.back} label="Back" />
+          <IconButton icon="share-2" variant="glass" size={40} label={t.share} onClick={() => a.sharePage(top, c == null ? t.allServices : h.cname(c))} />
+        </div>
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 14, padding: '6px 20px 18px' }}>
           <span style={{ flex: 'none', width: 52, height: 52, borderRadius: 'var(--radius-tile)', background: 'oklch(1 0 0 / 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Icon name={c == null ? 'layout-grid' : catalog.cats[c].icon} size={26} color="#fff" />
@@ -175,7 +243,33 @@ export function CompanyPage() {
   const co = a.idx.co.get(top.id!)!;
   const cv = h.coV(co);
   const services = catalog.services.filter(s => s.co === co.id).map(h.svcV);
+  const gallery = companyGallery(a, co.id);
+  // Every visit opens on the services list; the gallery is a choice for this visit only (not remembered).
+  // Without gallery items there's nothing to switch to.
+  const [picked, setPicked] = useState<{ id: string; v: CoView }>({ id: co.id, v: 'list' });
+  const view: CoView = gallery.length && picked.id === co.id ? picked.v : 'list';
   useEffect(() => { remote.track(co.id, 'profile_view'); }, [co.id]);
+
+  // Switching list ⇄ gallery keeps the page where it is: the section heading stays put on screen,
+  // and the section keeps at least enough height below it that a shorter view can't pull the page up.
+  const sec = useRef<HTMLDivElement>(null);
+  const anchor = useRef<number | null>(null);
+  const [hold, setHold] = useState<{ id: string; h: number } | null>(null);
+  const pickView = (v: CoView) => {
+    const el = sec.current, sc = scrollParent(el);
+    if (el && sc && v !== view) {
+      const top = el.getBoundingClientRect().top - sc.getBoundingClientRect().top;
+      anchor.current = top;
+      setHold({ id: co.id, h: Math.max(0, sc.clientHeight - top) });
+    }
+    setPicked({ id: co.id, v });
+  };
+  useLayoutEffect(() => {
+    const el = sec.current, sc = scrollParent(el), want = anchor.current;
+    if (!el || !sc || want == null) return;
+    anchor.current = null;
+    sc.scrollTop += el.getBoundingClientRect().top - sc.getBoundingClientRect().top - want;
+  }, [view]);
   return (
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ position: 'relative', height: 250, background: cv.c100 }}>
@@ -183,7 +277,7 @@ export function CompanyPage() {
         <div style={{ position: 'absolute', top: 'calc(var(--top-inset) + 4px)', insetInline: 16, display: 'flex', justifyContent: 'space-between' }}>
           <IconButton icon="arrow-left" variant="glass" size={40} onClick={a.back} label="Back" />
           <div style={{ display: 'flex', gap: 8 }}>
-            <IconButton icon="share-2" variant="glass" size={40} onClick={() => share(cv.name)} label="Share" />
+            <IconButton icon="share-2" variant="glass" size={40} onClick={() => a.sharePage(top, cv.name, a.ar ? co.dar : co.den)} label={t.share} />
             {/* Directions, like «الاتجاهات»: branch picker when there are several branches. */}
             <IconButton icon="navigation" variant="glass" size={40} label={t.directions}
               onClick={() => (co.branches.length > 1 ? a.setSheet('directions') : openDirections(a, co, co.branches[0]))} />
@@ -194,11 +288,7 @@ export function CompanyPage() {
       <div style={{ position: 'relative', marginTop: -28, borderRadius: '28px 28px 0 0', background: 'var(--bg-app)', padding: '0 20px 28px', display: 'flex', flexDirection: 'column', gap: 18, flex: 1 }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 14, marginTop: -36 }}>
           <Avatar name={cv.name} src={cv.logo} size={84} verified={cv.verified} style={{ borderRadius: '50%', boxShadow: '0 0 0 4px var(--bg-app)' }} />
-          {/* Favorite: white circle, grey outline heart, filled red once saved. */}
-          <button type="button" className="mj-press" aria-label={t.favorites} title={t.favorites} aria-pressed={cv.fav} onClick={cv.onFav}
-            style={{ flex: 'none', alignSelf: 'center', width: 46, height: 46, borderRadius: '50%', border: 'none', background: 'var(--surface-card)', color: cv.fav ? 'var(--danger)' : 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 4px var(--bg-app), var(--shadow-sm)', transition: 'color var(--dur-base)' }}>
-            <Icon name="heart" size={26} filled={cv.fav} />
-          </button>
+          <FavButton id={co.id} />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <span style={{ font: 'var(--type-h1)' }}>{cv.name}</span>
@@ -209,9 +299,14 @@ export function CompanyPage() {
           {co.cats.map(i => <CatTag key={i} color={catalog.cats[i].color}>{h.cname(i)}</CatTag>)}
         </div>
         <ContactGrid a={a} co={co} />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <SectionHeader title={t.services} />
-          {services.map(s => <ServiceRow key={s.id} {...s} thumb={96} />)}
+        <div ref={sec} style={{ display: 'flex', flexDirection: 'column', gap: 12, minHeight: hold?.id === co.id ? hold.h : undefined }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+            <SectionHeader title={view === 'gallery' ? t.gallery : t.services} />
+            {gallery.length > 0 && <CoViewSwitch value={view} onPick={pickView} />}
+          </div>
+          {view === 'gallery'
+            ? <Masonry items={gallery} onOpen={k => a.go('photo', { src: 'gallery', id: co.id, i: k })} />
+            : services.map(s => <ServiceRow key={s.id} {...s} thumb={96} />)}
         </div>
       </div>
     </div>
@@ -291,6 +386,18 @@ function HoursSheet({ co }: { co: Company }) {
   );
 }
 
+/** Round favorite button beside the company logo (company and service pages): grey outline heart, filled red once saved. */
+function FavButton({ id }: { id: string }) {
+  const a = useApp();
+  const on = !!a.fav[id];
+  return (
+    <button type="button" className="mj-press" aria-label={a.t.favorites} title={a.t.favorites} aria-pressed={on} onClick={() => a.toggleFav(id)}
+      style={{ flex: 'none', alignSelf: 'center', width: 46, height: 46, borderRadius: '50%', border: 'none', background: 'var(--surface-card)', color: on ? 'var(--danger)' : 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 4px var(--bg-app), var(--shadow-sm)', transition: 'color var(--dur-base)' }}>
+      <Icon name="heart" size={26} filled={on} />
+    </button>
+  );
+}
+
 export const CatTag = ({ color, children, h = 28, pad = 12 }: { color: string; children: React.ReactNode; h?: number; pad?: number }) => (
   <span style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', height: h, padding: '0 ' + pad + 'px', borderRadius: 'var(--radius-pill)', background: 'var(--cat-' + color + '-100)', color: 'var(--cat-' + color + '-800)', font: 'var(--type-caption)' }}>{children}</span>
 );
@@ -308,10 +415,6 @@ function ServiceRow({ title, cat, img, open, thumb }: { title: string; cat?: str
   );
 }
 
-function share(title: string) {
-  if (navigator.share) navigator.share({ title, url: location.href }).catch(() => {});
-}
-
 export function ServicePage() {
   const a = useApp();
   const { t, ar, catalog, top } = a;
@@ -326,20 +429,28 @@ export function ServicePage() {
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ position: 'relative' }}>
         <div className="mj-s" style={{ display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory', scrollbarWidth: 'none', aspectRatio: '4/3', background: 'var(--cat-' + color + '-100)' }}>
-          {s.imgs.map((im, k) => <img key={k} src={photo(im, 800)} alt="" style={{ flex: 'none', width: '100%', height: '100%', objectFit: 'cover', scrollSnapAlign: 'start', display: 'block' }} />)}
+          {s.imgs.map((im, k) => <img key={k} src={photo(im, 800)} alt="" onClick={() => a.go('photo', { src: 'service', id: s.id, i: k })} style={{ flex: 'none', width: '100%', height: '100%', objectFit: 'cover', scrollSnapAlign: 'start', display: 'block', cursor: 'zoom-in' }} />)}
         </div>
         <div style={{ position: 'absolute', top: 'calc(var(--top-inset) + 4px)', insetInline: 16, display: 'flex', justifyContent: 'space-between' }}>
           <IconButton icon="arrow-left" variant="glass" size={40} onClick={a.back} label="Back" />
-          <IconButton icon="share-2" variant="glass" size={40} onClick={() => share(ar ? s.ar : s.en)} label="Share" />
+          <div style={{ display: 'flex', gap: 8 }}>
+            <IconButton icon="share-2" variant="glass" size={40} onClick={() => a.sharePage(top, (ar ? s.ar : s.en) + ' · ' + h.coName(co))} label={t.share} />
+            <IconButton icon="navigation" variant="glass" size={40} label={t.directions}
+              onClick={() => (co.branches.length > 1 ? a.setSheet('directions') : openDirections(a, co, co.branches[0]))} />
+            <IconButton icon="menu" variant="glass" size={40} onClick={() => a.setSheet('menu')} label={t.menu} />
+          </div>
         </div>
         <span style={{ position: 'absolute', bottom: 40, insetInlineEnd: 16 }}><Badge tone="dark" icon="images">{s.imgs.length + ' ' + t.photos}</Badge></span>
       </div>
       <div style={{ position: 'relative', marginTop: -28, borderRadius: '28px 28px 0 0', background: 'var(--bg-app)', padding: '0 20px 28px', display: 'flex', flexDirection: 'column', gap: 20, flex: 1 }}>
         {/* Company logo overlapping the photo, as on the company page. */}
-        <button type="button" onClick={() => a.go('company', { id: co.id })} aria-label={h.coName(co)}
-          style={{ alignSelf: 'flex-start', marginTop: -36, marginBottom: -6, padding: 0, border: 'none', background: 'none', borderRadius: '50%', cursor: 'pointer' }}>
-          <Avatar name={h.coName(co)} src={logoUrl(co.id)} size={84} verified={co.verified} style={{ borderRadius: '50%', boxShadow: '0 0 0 4px var(--bg-app)' }} />
-        </button>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 14, marginTop: -36, marginBottom: -6 }}>
+          <button type="button" onClick={() => a.go('company', { id: co.id })} aria-label={h.coName(co)}
+            style={{ padding: 0, border: 'none', background: 'none', borderRadius: '50%', cursor: 'pointer' }}>
+            <Avatar name={h.coName(co)} src={logoUrl(co.id)} size={84} verified={co.verified} style={{ borderRadius: '50%', boxShadow: '0 0 0 4px var(--bg-app)' }} />
+          </button>
+          <FavButton id={co.id} />
+        </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <CatTag color={color} h={26} pad={10}>{h.cname(s.cat)}</CatTag>
           <span style={{ font: 'var(--type-h1)' }}>{ar ? s.ar : s.en}</span>
@@ -385,10 +496,10 @@ export function AlbumPage() {
   const h = helpers(a);
   const al = a.idx.alb.get(top.id!)!;
   const co = a.idx.co.get(al.co)!;
-  const imgs = al.imgs.concat(al.imgs).slice(0, 6);
+  const media = albumMedia(al);
   return (
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
-      <TopBar title={ar ? al.ar : al.en} subtitle={al.n + ' ' + t.photos} onBack={a.back} />
+      <TopBar title={ar ? al.ar : al.en} subtitle={al.n + ' ' + t.photos + (al.vids?.length ? ' · ' + h.num(al.vids.length) + ' ' + t.video : '')} onBack={a.back} />
       <div style={{ padding: '8px 20px 28px', display: 'flex', flexDirection: 'column', gap: 16, flex: 1 }}>
         <div onClick={() => a.go('company', { id: co.id })} style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
           <Avatar name={h.coName(co)} src={logoUrl(co.id)} size={40} verified={co.verified} />
@@ -399,9 +510,9 @@ export function AlbumPage() {
           <Button variant="secondary" size="sm" onClick={() => a.go('company', { id: co.id })}>{t.viewProfile}</Button>
         </div>
         <div style={{ columns: 2, columnGap: 10 }}>
-          {imgs.map((im, k) => (
-            <div key={k} style={{ breakInside: 'avoid', marginBottom: 10, aspectRatio: ALB_RATIOS[k], borderRadius: 'var(--radius-md)', overflow: 'hidden', background: 'var(--neutral-100)' }}><Img src={photo(im, 600)} /></div>
-          ))}
+          {media.map((m, k) => m.video
+            ? <MediaTile key={k} m={m} w={600} onOpen={() => a.go('photo', { src: 'album', id: al.id, i: k })} style={{ breakInside: 'avoid', marginBottom: 10 }} />
+            : <div key={k} onClick={() => a.go('photo', { src: 'album', id: al.id, i: k })} style={{ breakInside: 'avoid', marginBottom: 10, aspectRatio: ALB_RATIOS[k % ALB_RATIOS.length], borderRadius: 'var(--radius-md)', overflow: 'hidden', background: 'var(--neutral-100)', cursor: 'zoom-in' }}><Img src={photo(m.src, 600)} /></div>)}
         </div>
       </div>
     </div>
@@ -410,25 +521,19 @@ export function AlbumPage() {
 
 /* ── Company menu bottom sheet (About, Branches, Address, Coverage, Contact, Website, Social) ── */
 
-const MENU: [Exclude<SheetKey, null | 'menu' | 'sort' | 'reach' | 'directions'>, string, string, 'about' | 'hours' | 'branches' | 'coAddress' | 'svcAreas' | 'contact' | 'website' | 'social'][] = [
+const MENU: [Exclude<SheetKey, null | 'menu' | 'sort' | 'directions'>, string, string, 'about' | 'hours' | 'branches' | 'coAddress' | 'svcAreas' | 'contact' | 'website' | 'social'][] = [
   ['about', 'info', 'violet', 'about'], ['hours', 'clock', 'gold', 'hours'], ['branches', 'building-2', 'sky', 'branches'], ['address', 'map-pin', 'teal', 'coAddress'],
   ['coverage', 'route', 'green', 'svcAreas'], ['contact', 'phone', 'amber', 'contact'], ['website', 'globe', 'indigo', 'website'], ['social', 'at-sign', 'pink', 'social'],
 ];
 
-/** Sheets behind the Contact and Directions buttons (company and service pages). */
+/** Branch picker behind the directions button when a company has several branches. */
 export function ReachSheets({ co }: { co: Company }) {
   const a = useApp();
   const { t, ar, sheet, setSheet } = a;
   const close = (fn: () => void) => () => { setSheet(null); fn(); };
   return (
     <div style={{ position: 'absolute', inset: 0, zIndex: 40, pointerEvents: 'none' }}>
-      <BottomSheet open={sheet === 'reach' || sheet === 'directions'} onClose={() => setSheet(null)} title={sheet === 'directions' ? t.chooseBranch : t.reachTitle}>
-        {sheet === 'reach' && (
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <ListItem icon="message-circle" color="green" title={t.whatsapp} subtitle={co.phone} onClick={close(() => openWhatsApp(a, co))} />
-            <ListItem icon="phone" color="sky" title={t.call} subtitle={co.phone} onClick={close(() => callPhone(a, co.phone, co.id))} />
-          </div>
-        )}
+      <BottomSheet open={sheet === 'directions'} onClose={() => setSheet(null)} title={t.chooseBranch}>
         {sheet === 'directions' && (
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             {co.branches.map((b, k) => (

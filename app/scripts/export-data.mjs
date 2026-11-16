@@ -17,11 +17,14 @@ const hoursFor = id => {
   const p = PATTERNS[[...id].reduce((n, ch) => n + ch.charCodeAt(0), 0) % PATTERNS.length];
   return Array.from({ length: 7 }, (_, day) => (p.days.includes(day) ? p.hrs : null));
 };
+// Demo project videos (free Mixkit stock clips, https://mixkit.co/license/#videoFree), by album id.
+const mixkit = id => 'https://assets.mixkit.co/videos/' + id + '/' + id + '-720.mp4';
+const VIDEOS = { a1: [mixkit(4010)], a2: [mixkit(43033)], a3: [mixkit(41178)], 'ag0-2': [mixkit(1439)] };
 const out = {
   cats: MJ.CATS.map(({ i, ar, en, sar, sen, icon, color, art }) => ({ i, ar, en, sar, sen, icon, color, art })),
   gov: MJ.GOV, hours: MJ.HOURS,
   companies: MJ.COMPANIES.map(({ logo, ...c }) => ({ ...c, hrs: hoursFor(c.id) })),
-  services: MJ.SERVICES, albums: MJ.ALBUMS,
+  services: MJ.SERVICES, albums: MJ.ALBUMS.map(a => ({ ...a, vids: VIDEOS[a.id] || [] })),
   bookings: MJ.BOOKINGS,
 };
 fs.writeFileSync(new URL('../src/data/demo.json', import.meta.url), JSON.stringify(out));

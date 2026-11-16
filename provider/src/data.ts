@@ -21,6 +21,10 @@ export interface Service {
 export interface Album {
   id?: string; company_id: string; category_id: number; title_ar: string; title_en: string; place_ar: string | null; place_en: string | null;
   photos: string[]; cover_photo: string; is_published: boolean; position: number; created_at?: string;
+  /** Project videos (uploaded files). */
+  videos: string[];
+  /** Photos and videos kept out of the gallery on the company page (everything else is shown). */
+  gallery_hidden: string[];
 }
 export interface Story {
   id?: string; company_id: string; kind: 'image' | 'video'; media_url: string; poster_url: string | null;
@@ -172,7 +176,7 @@ type DemoData = {
   gov: Record<string, [string, string]>;
   companies: { id: string; ar: string; en: string; cats: number[]; hrs?: (string[] | null)[]; cityAr: string; cityEn: string; gov: string; img: string; verified: boolean; phone: string; since: number; dar: string; den: string; branches: [string, string, boolean][] }[];
   services: { id: string; co: string; cat: number; ar: string; en: string; imgs: string[]; dar: string; den: string }[];
-  albums: { id: string; co: string; cat: number; ar: string; en: string; pAr: string; pEn: string; img: string; imgs: string[]; added: string }[];
+  albums: { id: string; co: string; cat: number; ar: string; en: string; pAr: string; pEn: string; img: string; imgs: string[]; vids?: string[]; added: string }[];
 };
 
 async function demoRepo(): Promise<Repo> {
@@ -194,6 +198,7 @@ async function demoRepo(): Promise<Repo> {
   }));
   let albums: Album[] = d.albums.filter(a => a.co === CID).map((a, k) => ({
     id: a.id, company_id: CID, category_id: a.cat, title_ar: a.ar, title_en: a.en, place_ar: a.pAr, place_en: a.pEn, photos: a.imgs, cover_photo: a.img, is_published: true, position: k, created_at: a.added,
+    videos: a.vids || [], gallery_hidden: [],
   }));
   let week: DayHours[] = Array.from({ length: 7 }, (_, d) => {
     const h = co.hrs?.[d];

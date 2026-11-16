@@ -9,6 +9,7 @@ import { Categories, Explore, Home } from './screens/Discover';
 import { AlbumPage, CompanyPage, CompanySheet, Listing, ReachSheets, ServicePage, SortSheet } from './screens/Provider';
 import { BookingPage, DonePage } from './screens/Flows';
 import { StoryViewer } from './screens/Stories';
+import { PhotoViewer } from './screens/Photo';
 import { STORIES } from './data/stories';
 import { Bookings, Favorites, Notifications, Profile } from './screens/Account';
 
@@ -51,8 +52,9 @@ function Phone() {
   const scrollRef = useRef<HTMLDivElement>(null);
   useDragScroll();
 
-  // A story opens over the screen it was tapped on, which stays put underneath.
-  const base = top.s === 'story' ? stack[stack.length - 2] ?? { s: 'home' } : top;
+  // A story or full-screen photo opens over the screen it was tapped on, which stays put underneath.
+  const overlay = top.s === 'story' || top.s === 'photo';
+  const base = overlay ? stack[stack.length - 2] ?? { s: 'home' } : top;
 
   // Every new screen (or wizard step) opens at the top.
   const key = base.s + '|' + (base.id || '') + '|' + (base.cat ?? '') + '|' + tab + '|' + (a.bk?.step ?? '');
@@ -60,26 +62,27 @@ function Phone() {
 
   const showTabs = stack.length === 1 && TABS.some(x => x.id === top.s);
   const company = top.s === 'company' ? a.idx.co.get(top.id!) : undefined;
-  // Company behind the Contact / Directions buttons on the company or service page.
+  // Company behind the menu and directions on the company or service page.
   const reachCo = company || (top.s === 'service' ? a.idx.co.get(a.idx.svc.get(top.id!)?.co || '') : undefined);
 
   return (
     <div className="mj-root">
       <div className="mj-frame" dir={ar ? 'rtl' : 'ltr'} lang={lang}>
-        <div className="mj-status" dir="ltr" style={{ color: top.s === 'home' || top.s === 'story' ? '#fff' : 'var(--text-primary)' }}>
+        <div className="mj-status" dir="ltr" style={{ color: top.s === 'home' || overlay ? '#fff' : 'var(--text-primary)' }}>
           <span>9:41</span>
           <span style={{ display: 'flex', gap: 6 }}><Icon name="signal" size={16} /><Icon name="wifi" size={16} /><Icon name="battery-full" size={18} /></span>
         </div>
         <div className="mj-s mj-scroll" ref={scrollRef}>
           <ScreenSwitch route={base} />
         </div>
-        {top.s === 'story' && <StoryViewer key={top.id} />}
+        {top.s === 'story' && <StoryViewer key="story" />}
+        {top.s === 'photo' && <PhotoViewer key={top.src + '|' + top.id} />}
         {showTabs && (
           <div style={{ position: 'absolute', insetInline: 0, bottom: 0, zIndex: 10 }}>
             <TabBar items={TABS.map(x => ({ ...x, label: t[x.id] }))} active={tab} onChange={a.setTab} />
           </div>
         )}
-        {company && <CompanySheet co={company} />}
+        {reachCo && <CompanySheet co={reachCo} />}
         {reachCo && <ReachSheets co={reachCo} />}
         {top.s === 'listing' && <SortSheet />}
         {toast && (
@@ -108,7 +111,7 @@ function ScreenSwitch({ route }: { route: Route }) {
     case 'bookings': return <Bookings />;
     case 'favs': return <Favorites />;
     case 'notifs': return <Notifications />;
-    case 'story': return null;
+    case 'story': case 'photo': return null;
   }
 }
 

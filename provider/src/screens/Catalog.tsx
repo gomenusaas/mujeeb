@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button, EmptyState, Icon } from '../shared/ds';
 import { photoUrl, type Album, type Service } from '../data';
 import { useList, useP } from '../state';
-import { Confirm, Field, Modal, PageHeader, PhotoEditor, Pill, Select, Spinner, Toggle, card } from '../ui';
+import { Confirm, Field, Modal, PageHeader, PhotoEditor, Pill, Select, Spinner, Toggle, VideoEditor, card } from '../ui';
 
 /* Services and projects share one layout: a grid of cards and a bilingual editor. */
 
@@ -10,6 +10,8 @@ type Item = {
   id?: string; title_ar: string; title_en: string; category_id: number; photos: string[]; is_published: boolean;
   /** Services: description. Projects: place. */
   a_ar: string; a_en: string;
+  /** Projects only: videos, and the photos/videos kept out of the company gallery. */
+  videos?: string[]; hidden?: string[];
 };
 
 function Tile({ item, sub, onEdit, onDelete }: { item: Item; sub: string; onEdit: () => void; onDelete: () => void }) {
@@ -24,6 +26,7 @@ function Tile({ item, sub, onEdit, onDelete }: { item: Item; sub: string; onEdit
         <span style={{ position: 'absolute', top: 10, insetInlineStart: 10 }}><Pill tone={item.is_published ? 'green' : 'neutral'}>{item.is_published ? t.published : t.hidden}</Pill></span>
         <span style={{ position: 'absolute', bottom: 10, insetInlineEnd: 10, display: 'inline-flex', alignItems: 'center', gap: 4, height: 24, padding: '0 9px', borderRadius: 999, background: 'oklch(0.2 0.02 285 / 0.72)', color: '#fff', font: '700 12px var(--font-sans)' }}>
           <Icon name="images" size={13} />{p.num(item.photos.length)}
+          {!!item.videos?.length && <><Icon name="play" size={12} style={{ marginInlineStart: 4 }} />{p.num(item.videos.length)}</>}
         </span>
       </button>
       <div style={{ padding: '12px 14px 14px', display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
@@ -75,7 +78,16 @@ function Editor({ title, initial, isProject, onClose, onSave }: {
         <Select label={t.category} value={x.category_id} onChange={v => set({ category_id: v })}
           options={company.categories.map(id => ({ value: id, label: p.pick(p.cat(id)?.name_ar || '', p.cat(id)?.name_en || '') }))} />
       </div>
-      <PhotoEditor photos={x.photos} onChange={photos => set({ photos })} error={tried && !x.photos.length ? t.needPhoto : undefined} />
+      <PhotoEditor photos={x.photos} onChange={photos => set({ photos })} error={tried && !x.photos.length ? t.needPhoto : undefined}
+        hidden={isProject ? x.hidden || [] : undefined} onHidden={hidden => set({ hidden })} />
+      {isProject && (
+        <>
+          <VideoEditor videos={x.videos || []} onChange={videos => set({ videos })} hidden={x.hidden || []} onHidden={hidden => set({ hidden })} />
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', fontWeight: 500, color: 'var(--text-tertiary)' }}>
+            <Icon name="eye" size={14} />{t.galleryHelp}
+          </span>
+        </>
+      )}
       <Toggle on={x.is_published} onChange={v => set({ is_published: v })} label={x.is_published ? t.published : t.hidden} help={t.publishedHelp} />
     </Modal>
   );
@@ -121,7 +133,7 @@ export function Services() {
 
 /* ───────────────────────── Projects (portfolio albums) ───────────────────────── */
 
-const albToItem = (a: Album): Item => ({ id: a.id, title_ar: a.title_ar, title_en: a.title_en, category_id: a.category_id, photos: a.photos, is_published: a.is_published, a_ar: a.place_ar || '', a_en: a.place_en || '' });
+const albToItem = (a: Album): Item => ({ id: a.id, title_ar: a.title_ar, title_en: a.title_en, category_id: a.category_id, photos: a.photos, is_published: a.is_published, a_ar: a.place_ar || '', a_en: a.place_en || '', videos: a.videos || [], hidden: a.gallery_hidden || [] });
 
 export function Projects() {
   const p = useP();
@@ -130,10 +142,11 @@ export function Projects() {
   const [edit, setEdit] = useState<Album | 'new' | null>(null);
   const [del, setDel] = useState<Album | null>(null);
   const [busy, setBusy] = useState(false);
-  const blank: Item = { title_ar: '', title_en: '', category_id: company.categories[0], photos: [], is_published: true, a_ar: '', a_en: '' };
+  const blank: Item = { title_ar: '', title_en: '', category_id: company.categories[0], photos: [], is_published: true, a_ar: '', a_en: '', videos: [], hidden: [] };
   const save = async (x: Item) => {
     const base = edit && edit !== 'new' ? edit : { company_id: company.id, position: 0 };
-    await repo.saveAlbum({ ...base, id: x.id, company_id: company.id, category_id: x.category_id, title_ar: x.title_ar, title_en: x.title_en, place_ar: x.a_ar.trim() || null, place_en: x.a_en.trim() || null, photos: x.photos, cover_photo: x.photos[0], is_published: x.is_published } as Album);
+    await repo.saveAlbum({ ...base, id: x.id, company_id: company.id, category_id: x.category_id, title_ar: x.title_ar, title_en: x.title_en, place_ar: x.a_ar.trim() || null, place_en: x.a_en.trim() || null, photos: x.photos, cover_photo: x.photos[0], is_published: x.is_published,
+      videos: x.videos || [], gallery_hidden: (x.hidden || []).filter(h => x.photos.includes(h) || (x.videos || []).includes(h)) } as Album);
     p.showToast(t.saved); setEdit(null); reload();
   };
   const remove = async () => {

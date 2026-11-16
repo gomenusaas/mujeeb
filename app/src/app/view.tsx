@@ -32,6 +32,33 @@ export function helpers(a: App) {
   return { cat, cname, cshort, gname, covText, num, coName, city, coV, albV, svcV };
 }
 
+/** Photos shown on a project page (the demo pads short albums to six). The photo viewer uses the same list. */
+export const albumPhotos = (al: Album) => al.imgs.concat(al.imgs).slice(0, 6);
+
+/** One photo or video. `src` is an Unsplash id (demo) or a full URL; `al` is the project it belongs to. */
+export interface Media { src: string; video: boolean; al?: Album }
+
+/** Everything on a project page: its photos, then its videos. */
+export const albumMedia = (al: Album): Media[] => [
+  ...albumPhotos(al).map(src => ({ src, video: false, al })),
+  ...(al.vids || []).map(src => ({ src, video: true, al })),
+];
+
+/**
+ * A company's gallery: photos and videos from all of its projects, newest project first,
+ * minus anything the company hid from the gallery in the provider app.
+ */
+export function companyGallery(a: App, coId: string): Media[] {
+  const seen = new Set<string>(); // the same photo used in two projects shows once
+  return a.catalog.albums.filter(al => al.co === coId).sort((x, y) => (y.added || '').localeCompare(x.added || ''))
+    .flatMap(al => {
+      const hide = new Set(al.hide || []);
+      return al.imgs.map(src => ({ src, video: false, al }))
+        .concat((al.vids || []).map(src => ({ src, video: true, al })))
+        .filter(m => !hide.has(m.src) && !seen.has(m.src) && !!seen.add(m.src));
+    });
+}
+
 export const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 
 /** Horizontal, snap-scrolling carousel row with hidden scrollbar (mouse-draggable, see useDragScroll). */
@@ -82,12 +109,12 @@ export const MetaLine = ({ icon, children, size = 13, style }: { icon: string; c
   </span>
 );
 
-/** Contact, Directions and Follow on company & service pages. Contact and multi-branch directions open sheets (ReachSheets). */
+/** WhatsApp, Call and Follow on company & service pages. Directions live in the company page's top bar. */
 export function ContactGrid({ a, co }: { a: App; co: Company }) {
   const { t } = a;
   const items = [
-    { icon: 'headset', label: t.reach, tone: 'green', go: () => a.setSheet('reach') },
-    { icon: 'navigation', label: t.directions, tone: 'sky', go: () => (co.branches.length > 1 ? a.setSheet('directions') : openDirections(a, co, co.branches[0])) },
+    { icon: 'message-circle', label: t.whatsapp, tone: 'green', go: () => openWhatsApp(a, co) },
+    { icon: 'phone', label: t.call, tone: 'sky', go: () => callPhone(a, co.phone, co.id) },
     { icon: a.follows[co.id] ? 'user-check' : 'user-plus', label: a.follows[co.id] ? t.following : t.follow, tone: 'amber', on: !!a.follows[co.id], go: () => a.toggleFollow(co.id) },
   ];
   return (

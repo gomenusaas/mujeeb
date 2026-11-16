@@ -28,6 +28,10 @@ export interface Album {
   id: string; co: string; cat: number; ar: string; en: string; pAr: string; pEn: string; n: number; img: string; imgs: string[];
   /** When the album was added to the platform (ISO date or timestamp). */
   added: string;
+  /** Project videos (full URLs). */
+  vids?: string[];
+  /** Photos and videos the company keeps out of its gallery on the company page. */
+  hide?: string[];
 }
 
 export type BookingStatus = 'pending' | 'confirmed' | 'reschedule' | 'cancelled' | 'rejected' | 'completed' | 'noshow';

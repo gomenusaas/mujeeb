@@ -3,15 +3,20 @@ import type { Booking, Catalog, Company, CustomerSeed, GovId, Lang } from '../da
 import { remote } from '../data/api';
 import { strings, STR, type T } from '../i18n/strings';
 import { bookingDays, type BookingDay } from './dates';
+import { pathToStack, routeToPath, shareLink } from './links';
+import { STORIES } from '../data/stories';
 
 export type Screen = 'home' | 'categories' | 'explore' | 'profile' | 'listing' | 'company' | 'service' | 'album'
-  | 'booking' | 'bkDone' | 'bookings' | 'favs' | 'notifs' | 'story';
+  | 'booking' | 'bkDone' | 'bookings' | 'favs' | 'notifs' | 'story' | 'photo';
 export type RootTab = 'home' | 'categories' | 'explore' | 'profile';
-export interface Route { s: Screen; id?: string; cat?: number; co?: string }
+/** `src` + `i`: which photo a `photo` route shows (of the album or service `id`). */
+export interface Route { s: Screen; id?: string; cat?: number; co?: string; src?: 'album' | 'service' | 'gallery'; i?: number }
 export interface Filters { gov: 'all' | GovId; verified: boolean; sort: 'rel' | 'near' | 'recent' | 'verified'; q: string }
 /** How the company list is laid out: big cards, two per row, or thin rows. */
 export type ListView = 'large' | 'grid' | 'rows';
-export type SheetKey = null | 'menu' | 'about' | 'hours' | 'branches' | 'address' | 'coverage' | 'contact' | 'website' | 'social' | 'sort' | 'reach' | 'directions';
+/** Company page: its services as a list, or a gallery of its project photos and videos. */
+export type CoView = 'list' | 'gallery';
+export type SheetKey = null | 'menu' | 'about' | 'hours' | 'branches' | 'address' | 'coverage' | 'contact' | 'website' | 'social' | 'sort' | 'directions';
 export interface BookingDraft { co: string; purpose: string; city: string; gov: GovId; day: number; time: string; notes: string; step: number }
 
 const DEFAULT_F: Filters = { gov: 'all', verified: false, sort: 'rel', q: '' };
@@ -26,8 +31,10 @@ function readPersisted(): Partial<Persisted> {
 export function useAppState(catalog: Catalog, seed: CustomerSeed) {
   const saved = useRef(readPersisted()).current;
   const [lang, setLang] = useState<Lang>(saved.lang || 'ar');
-  const [stack, setStack] = useState<Route[]>([{ s: 'home' }]);
-  const [tab, setTabState] = useState<RootTab>('home');
+  // Opening a shared link (e.g. /company/c4) starts on that screen.
+  const initial = useRef(pathToStack(location.pathname, catalog, catalog.stories ?? STORIES)).current;
+  const [stack, setStack] = useState<Route[]>(initial.stack);
+  const [tab, setTabState] = useState<RootTab>(initial.tab);
   const [toast, setToast] = useState<{ msg: string; tone: string } | null>(null);
   const [fav, setFav] = useState<Record<string, boolean>>(saved.fav || { c2: true, c4: true });
   const [f, setF] = useState<Filters>(DEFAULT_F);
@@ -57,6 +64,12 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
     document.documentElement.dir = ar ? 'rtl' : 'ltr';
     document.title = ar ? 'مجيب' : 'MUJEEB';
   }, [lang, ar]);
+
+  // The address bar follows the screen on top, so the URL is always shareable.
+  useEffect(() => {
+    const path = routeToPath(top);
+    if (location.pathname !== path) history.replaceState(history.state, '', path);
+  }, [top]);
 
   const tt = useRef<number>(0);
   const showToast = useCallback((msg: string, tone = 'success') => {
@@ -145,10 +158,15 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
     replace('bkDone', { id, co: bk.co });
   }, [bk, days, seq.bk, replace, showToast, ar]);
 
+  /** Share a page or photo by its link (share sheet, or copy the link where there is none). */
+  const sharePage = useCallback((route: Route, title: string, text?: string) => {
+    shareLink(routeToPath(route), title, text, () => showToast(STR.linkCopied[ar ? 0 : 1], 'info'));
+  }, [ar, showToast]);
+
   const coById = useCallback((id?: string): Company | undefined => (id ? idx.co.get(id) : undefined), [idx]);
 
   return {
-    catalog, idx, coById, lang, setLang, ar, t, stack, top, tab, setTab, go, back, replace, reset, toast, showToast,
+    catalog, idx, coById, sharePage, lang, setLang, ar, t, stack, top, tab, setTab, go, back, replace, reset, toast, showToast,
     fav, toggleFav, f, setF, sheet, setSheet, exCat, setExCat,
     bookings, setBookings,
     bk, setBk, startBk, submitBooking, days, seen, markSeen, listView, setListView, follows, toggleFollow,

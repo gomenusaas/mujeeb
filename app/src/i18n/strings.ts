@@ -11,7 +11,7 @@ export const STR = {
   allCats: ['جميع الفئات', 'All categories'], majorCats: ['فئات رئيسية', 'major categories'], allServices: ['كل الخدمات', 'All services'],
   results: ['شركة', 'companies'], list: ['قائمة', 'List'], map: ['خريطة', 'Map'], relevance: ['الأنسب', 'Relevance'], nearest: ['الأقرب', 'Nearest'], recent: ['الأحدث', 'Recent'],
   verifiedOnly: ['موثّقة فقط', 'Verified only'], viewProfile: ['عرض الملف', 'View profile'], noResults: ['لا توجد نتائج', 'No matches yet'], noResultsBody: ['جرّب منطقة أخرى أو أزل بعض الفلاتر.', 'Try another area or remove a filter.'], clear: ['مسح الفلاتر', 'Clear filters'],
-  services: ['الخدمات', 'Services'], portfolio: ['الأعمال', 'Portfolio'], about: ['نبذة', 'About'],
+  services: ['الخدمات', 'Services'], gallery: ['المعرض', 'Gallery'], viewProject: ['عرض المشروع', 'View project'], portfolio: ['الأعمال', 'Portfolio'], about: ['نبذة', 'About'],
   whatsapp: ['واتساب', 'WhatsApp'], call: ['اتصال', 'Call'], bookVisit: ['احجز زيارة', 'Book visit'],
   menu: ['القائمة', 'Menu'], coAddress: ['العنوان', 'Address'], svcAreas: ['توفر الخدمة حسب المنطقة', 'Service locations availability'], contact: ['التواصل', 'Contact'], website: ['الموقع الإلكتروني', 'Website'], social: ['حسابات التواصل الاجتماعي', 'Social media'], email: ['البريد الإلكتروني', 'Email'], openMaps: ['افتح في الخرائط', 'Open in Maps'], covIntro: ['تقدم الشركة خدماتها في المناطق التالية:', 'This company serves the following areas:'],
   branches: ['الفروع', 'Branches'], primary: ['الفرع الرئيسي', 'Main branch'], branch: ['فرع', 'Branch'], hours: ['ساعات العمل', 'Working hours'], openNow: ['مفتوح الآن', 'Open now'], closedNow: ['مغلق الآن', 'Closed now'], today: ['اليوم', 'Today'], closed: ['مغلق', 'Closed'], since: ['منذ', 'Since'],
@@ -34,8 +34,8 @@ export const STR = {
   memberSince: ['عضو منذ ٢٠٢٥', 'Member since 2025'], userName: ['أحمد البلوشي', 'Ahmed Al Balushi'],
   loading: ['جارٍ التحميل…', 'Loading…'], loadError: ['تعذر تحميل البيانات', 'Could not load data'],
   stories: ['قصص الشركات', 'Company stories'], latestProjects: ['آخر المشاريع', 'Last projects'],
-  viewAs: ['طريقة العرض', 'View as'], sortBy: ['ترتيب حسب', 'Sort by'], follow: ['متابعة', 'Follow'], readMore: ['اقرأ المزيد', 'Read more'],
-  reach: ['تواصل', 'Contact'], reachTitle: ['تواصل مع الشركة', 'Contact the company'], directions: ['الاتجاهات', 'Directions'], chooseBranch: ['اختر الفرع', 'Choose a branch'], openingMaps: ['جارٍ فتح الخرائط…', 'Opening Maps…'], following: ['تمت المتابعة', 'Following'],
+  viewAs: ['طريقة العرض', 'View as'], sortBy: ['ترتيب حسب', 'Sort by'], follow: ['متابعة', 'Follow'], readMore: ['اقرأ المزيد', 'Read more'], share: ['مشاركة', 'Share'], linkCopied: ['تم نسخ الرابط', 'Link copied'],
+  directions: ['الاتجاهات', 'Directions'], chooseBranch: ['اختر الفرع', 'Choose a branch'], openingMaps: ['جارٍ فتح الخرائط…', 'Opening Maps…'], following: ['تمت المتابعة', 'Following'],
   followedT: ['تمت متابعة الشركة', 'You’re following this company'], unfollowedT: ['أُلغيت المتابعة', 'Unfollowed'], verifiedSort: ['موثّقة', 'Verified'], viewLarge: ['بطاقات كبيرة', 'Large cards'], viewGrid: ['بطاقتان في الصف', 'Two per row'], viewRows: ['قائمة مختصرة', 'Compact list'], close: ['إغلاق', 'Close'], hoursAgo: ['منذ {n} س', '{n}h'],
 } satisfies Record<string, Pair>;
 
