@@ -6,6 +6,7 @@ import { Dashboard } from './screens/Dashboard';
 import { Branches, Profile } from './screens/Company';
 import { Projects, Services } from './screens/Catalog';
 import { Stories } from './screens/Stories';
+import { Hours } from './screens/Hours';
 
 export function Shell({ repo, email, company, refs, onSignOut }: {
   repo: Repo; email: string; company: Company; refs: { categories: Category[]; locations: Location[] }; onSignOut: () => void;
@@ -43,6 +44,7 @@ function Layout({ onSignOut }: { onSignOut: () => void }) {
         <main className="pv-page" key={section}>
           {section === 'dashboard' && <Dashboard />}
           {section === 'profile' && <Profile />}
+          {section === 'hours' && <Hours />}
           {section === 'branches' && <Branches />}
           {section === 'services' && <Services />}
           {section === 'projects' && <Projects />}

@@ -5,10 +5,22 @@ const src = fs.readFileSync(new URL('../../project/mujeeb-data.js', import.meta.
 const ctx = { window: {} };
 vm.runInNewContext(src, ctx);
 const MJ = ctx.window.MJ;
+
+// Demo working hours per company: index = weekday (0 = Sunday), null = closed, otherwise
+// [opens, closes] or [opens, closes, opens2, closes2]. Three common Omani patterns, picked by id.
+const PATTERNS = [
+  { days: [0, 1, 2, 3, 4, 6], hrs: ['08:00', '18:00'] },                   // Saturday – Thursday, Friday off
+  { days: [0, 1, 2, 3, 4, 6], hrs: ['08:00', '13:00', '16:00', '21:00'] }, // split shift
+  { days: [0, 1, 2, 3, 4], hrs: ['07:30', '15:30'] },                      // Sunday – Thursday
+];
+const hoursFor = id => {
+  const p = PATTERNS[[...id].reduce((n, ch) => n + ch.charCodeAt(0), 0) % PATTERNS.length];
+  return Array.from({ length: 7 }, (_, day) => (p.days.includes(day) ? p.hrs : null));
+};
 const out = {
   cats: MJ.CATS.map(({ i, ar, en, sar, sen, icon, color, art }) => ({ i, ar, en, sar, sen, icon, color, art })),
   gov: MJ.GOV, hours: MJ.HOURS,
-  companies: MJ.COMPANIES.map(({ logo, ...c }) => c),
+  companies: MJ.COMPANIES.map(({ logo, ...c }) => ({ ...c, hrs: hoursFor(c.id) })),
   services: MJ.SERVICES, albums: MJ.ALBUMS,
   bookings: MJ.BOOKINGS,
 };

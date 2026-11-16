@@ -11,7 +11,7 @@ export interface Route { s: Screen; id?: string; cat?: number; co?: string }
 export interface Filters { gov: 'all' | GovId; verified: boolean; sort: 'rel' | 'near' | 'recent' | 'verified'; q: string }
 /** How the company list is laid out: big cards, two per row, or thin rows. */
 export type ListView = 'large' | 'grid' | 'rows';
-export type SheetKey = null | 'menu' | 'about' | 'branches' | 'address' | 'coverage' | 'contact' | 'website' | 'social' | 'sort' | 'reach' | 'directions';
+export type SheetKey = null | 'menu' | 'about' | 'hours' | 'branches' | 'address' | 'coverage' | 'contact' | 'website' | 'social' | 'sort' | 'reach' | 'directions';
 export interface BookingDraft { co: string; purpose: string; city: string; gov: GovId; day: number; time: string; notes: string; step: number }
 
 const DEFAULT_F: Filters = { gov: 'all', verified: false, sort: 'rel', q: '' };

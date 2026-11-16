@@ -15,6 +15,9 @@ sql += rows('companies', ['id', 'name_ar', 'name_en', 'description_ar', 'descrip
 sql += rows('company_categories', ['company_id', 'category_id', 'position'], d.companies.flatMap(c => c.cats.map((k, i) => [q(c.id), k, i])));
 sql += rows('company_service_areas', ['company_id', 'location_id'], d.companies.flatMap(c => c.cov.map(g => [q(c.id), q(g)])));
 sql += rows('company_branches', ['company_id', 'name_ar', 'name_en', 'is_primary', 'position'], d.companies.flatMap(c => c.branches.map((b, i) => [q(c.id), q(b[0]), q(b[1]), q(b[2]), i])));
+// company_hours comes from migration 20261117000000_company_hours.sql.
+sql += rows('company_hours', ['company_id', 'day', 'is_closed', 'opens', 'closes', 'opens2', 'closes2'],
+  d.companies.flatMap(c => (c.hrs || []).map((h, day) => [q(c.id), day, q(!h), q(h?.[0]), q(h?.[1]), q(h?.[2]), q(h?.[3])])));
 sql += rows('services', ['id', 'company_id', 'category_id', 'title_ar', 'title_en', 'description_ar', 'description_en', 'photos', 'position'],
   d.services.map((s, i) => [q(s.id), q(s.co), s.cat, q(s.ar), q(s.en), q(s.dar), q(s.den), arr(s.imgs), i]));
 sql += rows('portfolio_albums', ['id', 'company_id', 'category_id', 'title_ar', 'title_en', 'place_ar', 'place_en', 'photo_count', 'cover_photo', 'photos', 'position', 'created_at'],

@@ -10,6 +10,7 @@ the customer app in `../app`, so everything a company changes here shows up for 
 | Services | Adds / edits / hides services with photos (first photo = cover) | Company page, service pages, listings |
 | Projects | Adds / edits / hides portfolio projects | «آخر المشاريع» on Home, Explore, related work |
 | Company profile | Names, about text, phone (used for Call and WhatsApp), city, governorate, founding year, logo, cover | Company page and cards |
+| Working hours | Open/closed per weekday, one or two shifts, “apply to all days” | «ساعات العمل» in the company menu, with an open-now status |
 | Branches & locations | Branch names, addresses, main branch, **map pin** | «الاتجاهات» opens the maps app at the pin |
 
 Arabic (RTL) and English. Sidebar on desktop; top bar and slide-out menu on phones.
@@ -36,10 +37,12 @@ data), with a yellow banner. Edits and uploads work but only live in that browse
 ## Connect Supabase
 
 1. In the Supabase SQL editor, run the files in `../app/supabase/migrations/` in order, then `../app/supabase/seed.sql`:
-   `20261109000000_customer_app.sql`, `20261110000000_album_created_at.sql`, `20261116000000_provider_app.sql`.
+   `20261109000000_customer_app.sql`, `20261110000000_album_created_at.sql`, `20261116000000_provider_app.sql`,
+   `20261117000000_company_hours.sql`.
    The last one adds company accounts, editing rights, stories, the `media` storage bucket, followers
-   and activity stats. Run it **before** the seed only if you are starting fresh;
-   on an existing database just run it.
+   and activity stats; the next adds per-company working hours. On a fresh database run all migrations, then the
+   seed (it includes demo hours). On a database that already has the seed, just run the new migrations; companies
+   without hours show the platform's general hours until they set their own.
 2. **Authentication → Providers:** keep **Email** on (providers sign in with email + password) and
    **Anonymous sign-ins** on (for customers). Add the provider site's URL under
    **Authentication → URL Configuration → Redirect URLs** so password-reset links work.
@@ -69,7 +72,7 @@ src/data.ts         Types, the Repo interface, Supabase implementation and in-me
 src/state.tsx       Session-wide state: language, company, section, toast
 src/Shell.tsx       Sidebar / phone drawer layout
 src/ui.tsx          Cards, fields, select, toggle, modal, confirm, photo editor
-src/screens/        Auth, Dashboard, Company (profile + branches), Catalog (services + projects), Stories
+src/screens/        Auth, Dashboard, Company (profile + branches), Hours, Catalog (services + projects), Stories
 src/i18n.ts         All strings, Arabic + English
 src/shared/         Generated copy of ../app/src/ds and demo.json (do not edit)
 ```

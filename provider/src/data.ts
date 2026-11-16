@@ -26,6 +26,8 @@ export interface Story {
   id?: string; company_id: string; kind: 'image' | 'video'; media_url: string; poster_url: string | null;
   caption_ar: string; caption_en: string; created_at?: string; expires_at?: string;
 }
+/** One weekday's hours. day: 0 = Sunday … 6 = Saturday. Times are "HH:MM" (Oman time). */
+export interface DayHours { day: number; is_closed: boolean; opens: string | null; closes: string | null; opens2: string | null; closes2: string | null }
 export type StatKind = 'profile_view' | 'service_view' | 'story_view' | 'whatsapp' | 'call' | 'directions' | 'follow';
 export interface Stats {
   /** Count in the last 14 days and in the 14 days before. */
@@ -61,6 +63,9 @@ export interface Repo {
   createStory(s: Story): Promise<Story>;
   deleteStory(id: string): Promise<void>;
   /** Uploads to the company's media folder and returns a public URL. */
+  /** All 7 days, Sunday first; days not set yet come back closed. */
+  hours(cid: string): Promise<DayHours[]>;
+  saveHours(cid: string, week: DayHours[]): Promise<void>;
   upload(cid: string, file: File | Blob, name: string): Promise<string>;
   stats(cid: string): Promise<Stats>;
 }
@@ -69,6 +74,13 @@ export interface Repo {
 export const photoUrl = (id: string, w = 600) => (/^(https?:|blob:|data:)/.test(id) ? id
   : 'https://images.unsplash.com/photo-' + id + '?w=' + w + '&q=70&auto=format&fit=crop');
 export const logoOf = (c: Pick<Company, 'id' | 'logo_url'>) => c.logo_url || '/logos/' + c.id + '.png';
+
+const closedDay = (day: number): DayHours => ({ day, is_closed: true, opens: null, closes: null, opens2: null, closes2: null });
+const hm = (v: string | null) => (v ? v.slice(0, 5) : null);
+const fullWeek = (rows: DayHours[]) => Array.from({ length: 7 }, (_, d) => {
+  const r = rows.find(x => x.day === d);
+  return r ? { ...r, opens: hm(r.opens), closes: hm(r.closes), opens2: hm(r.opens2), closes2: hm(r.closes2) } : closedDay(d);
+});
 
 const KINDS: StatKind[] = ['profile_view', 'service_view', 'story_view', 'whatsapp', 'call', 'directions', 'follow'];
 const emptyTotals = () => Object.fromEntries(KINDS.map(k => [k, { cur: 0, prev: 0 }])) as Stats['totals'];
@@ -125,6 +137,8 @@ function supabaseRepo(sb: SupabaseClient): Repo {
     },
     async createStory(s) { return ok(await sb.from('stories').insert(s).select().single()) as Story; },
     async deleteStory(id) { ok(await sb.from('stories').delete().eq('id', id)); },
+    async hours(cid) { return fullWeek(ok(await sb.from('company_hours').select('day, is_closed, opens, closes, opens2, closes2').eq('company_id', cid)) as DayHours[]); },
+    async saveHours(cid, week) { ok(await sb.from('company_hours').upsert(week.map(d => ({ ...d, company_id: cid })), { onConflict: 'company_id,day' })); },
     async upload(cid, file, name) {
       const path = cid + '/' + Date.now() + '-' + name.toLowerCase().replace(/[^a-z0-9.]+/g, '-');
       ok(await sb.storage.from('media').upload(path, file, { cacheControl: '31536000', upsert: false }));
@@ -156,7 +170,7 @@ function supabaseRepo(sb: SupabaseClient): Repo {
 type DemoData = {
   cats: { i: number; ar: string; en: string; color: string; icon: string }[];
   gov: Record<string, [string, string]>;
-  companies: { id: string; ar: string; en: string; cats: number[]; cityAr: string; cityEn: string; gov: string; img: string; verified: boolean; phone: string; since: number; dar: string; den: string; branches: [string, string, boolean][] }[];
+  companies: { id: string; ar: string; en: string; cats: number[]; hrs?: (string[] | null)[]; cityAr: string; cityEn: string; gov: string; img: string; verified: boolean; phone: string; since: number; dar: string; den: string; branches: [string, string, boolean][] }[];
   services: { id: string; co: string; cat: number; ar: string; en: string; imgs: string[]; dar: string; den: string }[];
   albums: { id: string; co: string; cat: number; ar: string; en: string; pAr: string; pEn: string; img: string; imgs: string[]; added: string }[];
 };
@@ -181,6 +195,10 @@ async function demoRepo(): Promise<Repo> {
   let albums: Album[] = d.albums.filter(a => a.co === CID).map((a, k) => ({
     id: a.id, company_id: CID, category_id: a.cat, title_ar: a.ar, title_en: a.en, place_ar: a.pAr, place_en: a.pEn, photos: a.imgs, cover_photo: a.img, is_published: true, position: k, created_at: a.added,
   }));
+  let week: DayHours[] = Array.from({ length: 7 }, (_, d) => {
+    const h = co.hrs?.[d];
+    return h ? { day: d, is_closed: false, opens: h[0], closes: h[1], opens2: h[2] ?? null, closes2: h[3] ?? null } : closedDay(d);
+  });
   let stories: Story[] = [
     { id: uid(), company_id: CID, kind: 'video', media_url: 'https://assets.mixkit.co/videos/43033/43033-720.mp4', poster_url: 'https://assets.mixkit.co/videos/43033/43033-thumb-720-0.jpg', caption_ar: 'مطبخ مفتوح سلّمناه هذا الأسبوع', caption_en: 'Open kitchen handed over this week', created_at: iso(6 * 36e5), expires_at: iso(-18 * 36e5) },
     { id: uid(), company_id: CID, kind: 'image', media_url: photoUrl('1600566753190-17f0baa2a6c3', 1080), poster_url: null, caption_ar: 'خزائن داكنة بلمسة نحاسية', caption_en: 'Dark cabinets with brass details', created_at: iso(30 * 36e5), expires_at: iso(6 * 36e5) },
@@ -219,6 +237,8 @@ async function demoRepo(): Promise<Repo> {
     stories: async () => wait(stories),
     createStory: async s => { const item = { ...s, id: uid(), created_at: iso(0), expires_at: iso(-24 * 36e5) }; stories = [item, ...stories]; return wait(item); },
     deleteStory: async id => { stories = stories.filter(s => s.id !== id); },
+    hours: async () => wait(week),
+    saveHours: async (_cid, w) => { week = w; await wait(0); },
     upload: async (_cid, file) => wait(URL.createObjectURL(file)),
     stats: async () => {
       const keys: [StatKind, number][] = [['profile_view', 420], ['service_view', 610], ['story_view', 980], ['whatsapp', 48], ['call', 21], ['directions', 33], ['follow', 26]];

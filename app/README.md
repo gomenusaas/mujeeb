@@ -26,7 +26,8 @@ Without them, it uses the bundled demo data in `src/data/demo.json`, which match
 Set up a Supabase project:
 
 1. Run the files in `supabase/migrations/` in order (`20261109000000_customer_app.sql`,
-   `20261110000000_album_created_at.sql`, `20261116000000_provider_app.sql`), then `supabase/seed.sql`
+   `20261110000000_album_created_at.sql`, `20261116000000_provider_app.sql`,
+   `20261117000000_company_hours.sql`), then `supabase/seed.sql`
    (SQL editor, or `supabase db push` + `psql -f supabase/seed.sql`). The third migration is for the
    company dashboard in `../provider` (see its README).
 2. In **Authentication → Providers**, turn on **Anonymous sign-ins**. The app signs the customer in
@@ -44,7 +45,9 @@ What goes to Supabase when it's configured:
 | Activity for the company's stats: profile and service views, story views, WhatsApp / call / directions taps | `company_events` |
 
 What the app reads from companies (posted in the provider app): logos and photos they upload (full URLs in
-place of Unsplash ids), live stories (`stories`, 24 h), and branch map pins used by «الاتجاهات».
+place of Unsplash ids), live stories (`stories`, 24 h), branch map pins used by «الاتجاهات», and working hours
+(`company_hours`, shown under «ساعات العمل» in the company menu with an open-now status in Oman time; companies
+without their own hours show the platform's general hours).
 
 The database blocks new bookings and requests when the company or the platform has them turned off
 (`platform_settings`, `companies.accepts_*`).

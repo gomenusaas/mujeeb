@@ -2,13 +2,14 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { Category, Company, Location, Repo } from './data';
 import { arDigits, strings, type T } from './i18n';
 
-export type Section = 'dashboard' | 'profile' | 'branches' | 'services' | 'projects' | 'stories';
+export type Section = 'dashboard' | 'profile' | 'hours' | 'branches' | 'services' | 'projects' | 'stories';
 export const SECTIONS: { id: Section; icon: string; label: keyof T }[] = [
   { id: 'dashboard', icon: 'layout-dashboard', label: 'dashboard' },
   { id: 'stories', icon: 'circle-play', label: 'stories' },
   { id: 'services', icon: 'briefcase', label: 'services' },
   { id: 'projects', icon: 'images', label: 'projects' },
   { id: 'profile', icon: 'building-2', label: 'profile' },
+  { id: 'hours', icon: 'clock', label: 'hours' },
   { id: 'branches', icon: 'map-pin', label: 'branches' },
 ];
 

@@ -8,6 +8,9 @@ export interface Category { i: number; ar: string; en: string; sar: string; sen:
 /** Branch: [nameAr, nameEn, isPrimary, lat?, lng?]. The map location is set by the company in the provider app. */
 export type Branch = [string, string, boolean, (number | null)?, (number | null)?];
 
+/** Working hours by weekday (index 0 = Sunday): null = closed, else [opens, closes] or [opens, closes, opens2, closes2] as "HH:MM". */
+export type WeekHours = (string[] | null)[];
+
 export interface Company {
   id: string; ar: string; en: string; cats: number[];
   cityAr: string; cityEn: string; gov: GovId; cov: GovId[];
@@ -15,6 +18,8 @@ export interface Company {
   img: string;
   verified: boolean; book: boolean; phone: string;
   since: number; dar: string; den: string; branches: Branch[];
+  /** The company's own working hours; when missing, the platform's general hours are shown. */
+  hrs?: WeekHours;
 }
 
 export interface Service { id: string; co: string; cat: number; ar: string; en: string; imgs: string[]; dar: string; den: string }

@@ -39,6 +39,13 @@ export const STR = {
   save: ['حفظ', 'Save'], saved: ['تم الحفظ', 'Saved'], saving: ['جارٍ الحفظ…', 'Saving…'], cancel: ['إلغاء', 'Cancel'], unsaved: ['تغييرات غير محفوظة', 'Unsaved changes'],
   saveFailed: ['تعذر الحفظ. حاول مرة أخرى.', 'Couldn’t save. Try again.'], required: ['مطلوب', 'Required'],
 
+  // Working hours
+  hours: ['ساعات العمل', 'Working hours'], hoursSub: ['تظهر للعملاء في صفحة شركتك مع حالة «مفتوح الآن».', 'Shown to customers on your company page, with an “Open now” status.'],
+  openDay: ['مفتوح', 'Open'], closedDay: ['مغلق', 'Closed'], addShift: ['فترة ثانية', 'Second shift'], removeShift: ['إزالة الفترة الثانية', 'Remove second shift'],
+  copyToAll: ['تطبيق على كل الأيام', 'Apply to all days'], copied: ['طُبّقت على كل الأيام المفتوحة', 'Applied to all open days'],
+  badTime: ['أدخل وقت فتح ووقت إغلاق مختلفين.', 'Enter different opening and closing times.'], omanTime: ['بتوقيت عُمان', 'Oman time'],
+  from: ['من', 'From'], to: ['إلى', 'To'],
+
   // Branches
   addBranch: ['إضافة فرع', 'Add branch'], editBranch: ['تعديل الفرع', 'Edit branch'], branchNameAr: ['اسم الفرع بالعربية', 'Branch name (Arabic)'], branchNameEn: ['اسم الفرع بالإنجليزية', 'Branch name (English)'],
   addressAr: ['العنوان بالعربية (اختياري)', 'Address in Arabic (optional)'], addressEn: ['العنوان بالإنجليزية (اختياري)', 'Address in English (optional)'],

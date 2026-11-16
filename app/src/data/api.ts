@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import type { Album, Branch, Catalog, Category, Company, CustomerSeed, GovId, Pair, Service, Story } from './types';
+import type { Album, Branch, Catalog, Category, Company, CustomerSeed, GovId, Pair, Service, Story, WeekHours } from './types';
 
 const URL_ = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
@@ -52,6 +52,14 @@ export async function loadCatalog(): Promise<Catalog> {
   };
   const catsBy = by(cc, 'company_id', r => r.category_id as number);
   const covBy = by(areas, 'company_id', r => r.location_id as GovId);
+  // Company working hours (optional table from migration 20261117000000_company_hours.sql).
+  const { data: hrsRows } = await sb.from('company_hours').select('*');
+  const hrsBy: Record<string, WeekHours> = {};
+  for (const r of (hrsRows || []) as Row[]) {
+    const w = (hrsBy[r.company_id] ||= Array(7).fill(null));
+    const t = (v: string | null) => (v ? v.slice(0, 5) : null);
+    w[r.day] = r.is_closed ? null : [t(r.opens), t(r.closes), t(r.opens2), t(r.closes2)].filter(Boolean) as string[];
+  }
   const brBy = by(branches, 'company_id', r => [r.name_ar, r.name_en, r.is_primary, r.lat, r.lng] as Branch);
   for (const c of cos) if (c.logo_url) LOGOS.set(c.id, c.logo_url);
   const gov = Object.fromEntries(locs.map(l => [l.id, [l.name_ar, l.name_en] as Pair])) as Record<GovId, Pair>;
@@ -60,7 +68,7 @@ export async function loadCatalog(): Promise<Catalog> {
     id: c.id, ar: c.name_ar, en: c.name_en, cats: catsBy[c.id] || [], cityAr: c.city_ar, cityEn: c.city_en,
     gov: c.governorate, cov: covBy[c.id] || [], img: c.cover_photo, verified: c.is_verified, book: c.accepts_bookings,
     phone: c.phone, since: c.founded_year, dar: c.description_ar, den: c.description_en,
-    branches: brBy[c.id] || [],
+    branches: brBy[c.id] || [], hrs: hrsBy[c.id],
   })).sort((a, b) => sortKey(a.id) - sortKey(b.id));
   const categories: Category[] = cats.map(c => ({ i: c.id, ar: c.name_ar, en: c.name_en, sar: c.short_ar, sen: c.short_en, icon: c.icon, color: c.color, art: c.art_url }));
   const services: Service[] = svcs.map(s => ({ id: s.id, co: s.company_id, cat: s.category_id, ar: s.title_ar, en: s.title_en, imgs: s.photos, dar: s.description_ar, den: s.description_en }));

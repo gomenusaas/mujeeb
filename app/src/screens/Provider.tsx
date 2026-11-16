@@ -4,6 +4,7 @@ import { useApp, type Filters, type ListView, type SheetKey } from '../app/store
 import { ContactGrid, HScroll, Img, MetaLine, TopBar, callPhone, card, helpers, openDirections, openWhatsApp, stop } from '../app/view';
 import { logoUrl, photo, remote } from '../data/api';
 import type { Company } from '../data/types';
+import { WEEK_ORDER, dayName, fmtTime, isOpenNow, muscatToday, shifts } from '../app/hours';
 
 const VIEWS: { v: ListView; icon: string; label: 'viewLarge' | 'viewGrid' | 'viewRows' }[] = [
   { v: 'large', icon: 'gallery-vertical', label: 'viewLarge' }, { v: 'grid', icon: 'grid-2x2', label: 'viewGrid' }, { v: 'rows', icon: 'layout-list', label: 'viewRows' },
@@ -183,6 +184,9 @@ export function CompanyPage() {
           <IconButton icon="arrow-left" variant="glass" size={40} onClick={a.back} label="Back" />
           <div style={{ display: 'flex', gap: 8 }}>
             <IconButton icon="share-2" variant="glass" size={40} onClick={() => share(cv.name)} label="Share" />
+            {/* Directions, like «الاتجاهات»: branch picker when there are several branches. */}
+            <IconButton icon="navigation" variant="glass" size={40} label={t.directions}
+              onClick={() => (co.branches.length > 1 ? a.setSheet('directions') : openDirections(a, co, co.branches[0]))} />
             <IconButton icon="menu" variant="glass" size={40} onClick={() => a.setSheet('menu')} label={t.menu} />
           </div>
         </div>
@@ -190,6 +194,11 @@ export function CompanyPage() {
       <div style={{ position: 'relative', marginTop: -28, borderRadius: '28px 28px 0 0', background: 'var(--bg-app)', padding: '0 20px 28px', display: 'flex', flexDirection: 'column', gap: 18, flex: 1 }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 14, marginTop: -36 }}>
           <Avatar name={cv.name} src={cv.logo} size={84} verified={cv.verified} style={{ borderRadius: '50%', boxShadow: '0 0 0 4px var(--bg-app)' }} />
+          {/* Favorite: outline heart, filled red once saved. */}
+          <button type="button" className="mj-press" aria-label={t.favorites} title={t.favorites} aria-pressed={cv.fav} onClick={cv.onFav}
+            style={{ flex: 'none', alignSelf: 'center', width: 46, height: 46, borderRadius: '50%', border: 'none', background: 'var(--cat-pink-100)', color: cv.fav ? 'var(--danger)' : 'var(--cat-pink-600)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 4px var(--bg-app)', transition: 'color var(--dur-base)' }}>
+            <Icon name="heart" size={20} filled={cv.fav} />
+          </button>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <span style={{ font: 'var(--type-h1)' }}>{cv.name}</span>
@@ -238,6 +247,47 @@ function ClampedAbout({ text }: { text: string }) {
         </span>
       )}
     </span>
+  );
+}
+
+/** The company's week (Saturday first) with today highlighted and an open-now status; platform hours as a fallback. */
+function HoursSheet({ co }: { co: Company }) {
+  const a = useApp();
+  const { t, ar, catalog } = a;
+  if (!co.hrs) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '14px 16px', borderRadius: 'var(--radius-card)', background: 'var(--surface-sunken)' }}>
+        {catalog.hours.map((hr, k) => (
+          <div key={k} style={{ display: 'flex', justifyContent: 'space-between', font: 'var(--type-body)', color: 'var(--text-secondary)' }}>
+            <span>{ar ? hr[0] : hr[1]}</span><span style={{ color: 'var(--text-primary)', fontWeight: 600 }} dir="ltr">{hr[2] || t.closed}</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  const week = co.hrs;
+  const open = isOpenNow(week);
+  const today = muscatToday();
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <span style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 6, height: 30, padding: '0 12px', borderRadius: 999, background: open ? 'var(--success-tint)' : 'var(--danger-tint)', color: open ? 'var(--success)' : 'var(--danger)', font: 'var(--type-body-sm)', fontWeight: 700 }}>
+        <span style={{ width: 8, height: 8, borderRadius: 8, background: 'currentColor' }} />{open ? t.openNow : t.closedNow}
+      </span>
+      <div style={{ display: 'flex', flexDirection: 'column', borderRadius: 'var(--radius-card)', background: 'var(--surface-sunken)', overflow: 'hidden' }}>
+        {WEEK_ORDER.map(day => {
+          const sh = shifts(week[day]);
+          const isToday = day === today;
+          return (
+            <div key={day} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, padding: '12px 16px', background: isToday ? 'var(--brand-tint)' : undefined, font: 'var(--type-body)', color: isToday ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: isToday ? 700 : 400 }}>
+              <span>{dayName(day, ar)}{isToday && <span style={{ marginInlineStart: 8, font: 'var(--type-caption)', color: 'var(--brand)' }}>{t.today}</span>}</span>
+              <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2, color: sh.length ? 'var(--text-primary)' : 'var(--danger)', fontWeight: 600 }}>
+                {sh.length ? sh.map(([o, c], k) => <span key={k}>{fmtTime(o, ar) + ' – ' + fmtTime(c, ar)}</span>) : t.closed}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -360,8 +410,8 @@ export function AlbumPage() {
 
 /* ── Company menu bottom sheet (About, Branches, Address, Coverage, Contact, Website, Social) ── */
 
-const MENU: [Exclude<SheetKey, null | 'menu'>, string, string, 'about' | 'branches' | 'coAddress' | 'svcAreas' | 'contact' | 'website' | 'social'][] = [
-  ['about', 'info', 'violet', 'about'], ['branches', 'building-2', 'sky', 'branches'], ['address', 'map-pin', 'teal', 'coAddress'],
+const MENU: [Exclude<SheetKey, null | 'menu' | 'sort' | 'reach' | 'directions'>, string, string, 'about' | 'hours' | 'branches' | 'coAddress' | 'svcAreas' | 'contact' | 'website' | 'social'][] = [
+  ['about', 'info', 'violet', 'about'], ['hours', 'clock', 'gold', 'hours'], ['branches', 'building-2', 'sky', 'branches'], ['address', 'map-pin', 'teal', 'coAddress'],
   ['coverage', 'route', 'green', 'svcAreas'], ['contact', 'phone', 'amber', 'contact'], ['website', 'globe', 'indigo', 'website'], ['social', 'at-sign', 'pink', 'social'],
 ];
 
@@ -394,7 +444,7 @@ export function ReachSheets({ co }: { co: Company }) {
 
 export function CompanySheet({ co }: { co: Company }) {
   const a = useApp();
-  const { t, ar, sheet, setSheet, catalog } = a;
+  const { t, ar, sheet, setSheet } = a;
   const h = helpers(a);
   const slug = co.en.toLowerCase().replace(/[^a-z0-9]/g, '');
   const cur = MENU.find(m => m[0] === sheet);
@@ -432,18 +482,9 @@ export function CompanySheet({ co }: { co: Company }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <span style={{ font: 'var(--type-body)', color: 'var(--text-secondary)', textWrap: 'pretty' }}>{ar ? co.dar : co.den}</span>
             <div style={{ display: 'flex', gap: 6 }}><Badge tone="neutral" size="sm" icon="calendar">{t.since + ' ' + co.since}</Badge></div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <span style={{ font: 'var(--type-title)' }}>{t.hours}</span>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '14px 16px', borderRadius: 'var(--radius-card)', background: 'var(--surface-sunken)' }}>
-                {catalog.hours.map((hr, k) => (
-                  <div key={k} style={{ display: 'flex', justifyContent: 'space-between', font: 'var(--type-body)', color: 'var(--text-secondary)' }}>
-                    <span>{ar ? hr[0] : hr[1]}</span><span style={{ color: 'var(--text-primary)', fontWeight: 600 }} dir="ltr">{hr[2] || t.closed}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         )}
+        {sheet === 'hours' && <HoursSheet co={co} />}
         {list && (
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             {list.map((r, k) => <ListItem key={k} icon={r.icon} color={r.color} title={r.title} subtitle={r.sub} chevron={r.chev} onClick={r.go} />)}
