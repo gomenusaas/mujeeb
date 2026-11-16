@@ -26,12 +26,6 @@ export const STR = {
   pendingBody: ['لن تظهر للعملاء حتى نوافق عليها. أكمل ملفك الآن: صورة الغلاف والشعار والخدمات والمشاريع.', 'Customers won’t see it until we approve it. Meanwhile, complete your profile: cover photo, logo, services and projects.'],
   rejectedTitle: ['لم تتم الموافقة على شركتك بعد', 'Your company wasn’t approved yet'], rejectedBody: ['عدّل ما يلزم ثم أعد الإرسال للمراجعة.', 'Fix what’s needed, then send it for review again.'],
   resubmit: ['إعادة الإرسال للمراجعة', 'Send for review again'], resubmitted: ['أُرسلت للمراجعة', 'Sent for review'],
-  approvals: ['طلبات الانضمام', 'Approvals'], approvalsSub: ['شركات سجّلت وتنتظر موافقتك قبل أن تظهر للعملاء.', 'Companies that signed up and wait for your approval before customers see them.'],
-  noPending: ['لا توجد طلبات الآن', 'Nothing to review'], noPendingBody: ['ستظهر هنا الشركات الجديدة عند تسجيلها.', 'New companies appear here when they sign up.'],
-  approve: ['موافقة', 'Approve'], approveVerify: ['موافقة وتوثيق', 'Approve + verify'], reject: ['رفض', 'Reject'],
-  rejectReason: ['سبب الرفض (تراه الشركة)', 'Reason (the company will see it)'], approvedT: ['تمت الموافقة، الشركة ظاهرة للعملاء الآن', 'Approved. Customers can see it now'], rejectedT: ['تم الرفض', 'Rejected'],
-  statusPending: ['بانتظار المراجعة', 'Pending'], statusRejected: ['مرفوضة', 'Rejected'], owner: ['المالك', 'Owner'],
-  noCover: ['بلا غلاف', 'No cover'], noLogo: ['بلا شعار', 'No logo'], adminTag: ['إدارة مجيب', 'MUJEEB admin'],
   deleteAccount: ['حذف الحساب', 'Delete account'], deleteForGood: ['حذف نهائيًا', 'Delete for good'],
   deleteAccountBody: ['سيُحذف حسابك نهائيًا، ومعه شركتك إن كنت عضوها الوحيد. لا يمكن التراجع.', 'Your account will be deleted for good, along with your company if you are its only member. This can’t be undone.'],
 

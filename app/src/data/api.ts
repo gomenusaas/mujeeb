@@ -13,7 +13,9 @@ export const photo = (id: string, w = 600) => (/^https?:/.test(id) ? id
   : 'https://images.unsplash.com/photo-' + id + '?w=' + w + '&q=70&auto=format&fit=crop');
 /** Logos uploaded by companies (Supabase), by company id; the bundled demo logos are the fallback. */
 const LOGOS = new Map<string, string>();
-export const logoUrl = (companyId: string) => LOGOS.get(companyId) || '/logos/' + companyId + '.png';
+/** Bundled logos exist only for the demo companies (c1, g0-2, …); others show their initials until they upload a logo. */
+export const DEMO_LOGO = /^(c\d+|g\d+-\d+)$/;
+export const logoUrl = (companyId: string) => LOGOS.get(companyId) || (DEMO_LOGO.test(companyId) ? '/logos/' + companyId + '.png' : '');
 
 async function demo() {
   return (await import('./demo.json')).default as unknown as Catalog & CustomerSeed;

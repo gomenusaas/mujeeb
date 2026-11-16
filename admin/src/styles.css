@@ -1,0 +1,68 @@
+@import './shared/ds/tokens/colors.css';
+@import './shared/ds/tokens/typography.css';
+@import './shared/ds/tokens/spacing.css';
+@import './shared/ds/tokens/effects.css';
+@import './shared/ds/tokens/base.css';
+
+/* Same category hues and fonts as the customer app (app/src/app.css). */
+:root {
+  --cat-orange-50: oklch(0.97 0.03 50); --cat-orange-100: oklch(0.93 0.07 50); --cat-orange-500: oklch(0.7 0.18 50); --cat-orange-600: oklch(0.64 0.19 47); --cat-orange-700: oklch(0.52 0.16 45); --cat-orange-800: oklch(0.4 0.12 45);
+  --cat-gold-50: oklch(0.97 0.035 88); --cat-gold-100: oklch(0.94 0.08 88); --cat-gold-500: oklch(0.78 0.15 82); --cat-gold-600: oklch(0.66 0.14 78); --cat-gold-700: oklch(0.54 0.12 75); --cat-gold-800: oklch(0.42 0.09 72);
+  --cat-ruby-50: oklch(0.965 0.025 15); --cat-ruby-100: oklch(0.92 0.06 15); --cat-ruby-500: oklch(0.6 0.2 18); --cat-ruby-600: oklch(0.52 0.19 18); --cat-ruby-700: oklch(0.44 0.16 18); --cat-ruby-800: oklch(0.36 0.12 18);
+  --cat-steel-50: oklch(0.97 0.008 250); --cat-steel-100: oklch(0.92 0.018 250); --cat-steel-500: oklch(0.6 0.04 250); --cat-steel-600: oklch(0.5 0.045 250); --cat-steel-700: oklch(0.42 0.04 250); --cat-steel-800: oklch(0.33 0.035 250);
+  --cat-wood-50: oklch(0.97 0.02 60); --cat-wood-100: oklch(0.92 0.045 60); --cat-wood-500: oklch(0.6 0.1 55); --cat-wood-600: oklch(0.5 0.1 52); --cat-wood-700: oklch(0.42 0.085 50); --cat-wood-800: oklch(0.34 0.07 48);
+  --font-sans: 'Plus Jakarta Sans', 'IBM Plex Sans Arabic', ui-sans-serif, system-ui, sans-serif;
+  --top-inset: 0px;
+  --safe-bottom: env(safe-area-inset-bottom);
+  --side-w: 264px;
+}
+
+html, body, #root { margin: 0; }
+body { background: var(--bg-app); font-family: var(--font-sans); color: var(--text-primary); }
+button { -webkit-tap-highlight-color: transparent; font-family: inherit; }
+:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+[dir=rtl], [dir=rtl] * { letter-spacing: 0 !important; }
+[dir=rtl] .ds-mirror { transform: scaleX(-1); }
+input, textarea, select { font: inherit; }
+
+/* ── Layout: sidebar on desktop, top bar + drawer on phones ── */
+.pv-shell { min-height: 100dvh; display: flex; }
+.pv-side { position: sticky; top: 0; height: 100dvh; flex: none; width: var(--side-w); box-sizing: border-box; display: flex; flex-direction: column; gap: 18px; padding: 22px 16px; background: var(--surface-card); box-shadow: 1px 0 0 var(--border-subtle); overflow-y: auto; }
+[dir=rtl] .pv-side { box-shadow: -1px 0 0 var(--border-subtle); }
+.pv-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.pv-top { display: none; }
+.pv-page { width: 100%; max-width: 1080px; box-sizing: border-box; margin: 0 auto; padding: 32px 36px 64px; display: flex; flex-direction: column; gap: 22px; }
+.pv-drawer { display: none; }
+.pv-nav-item { display: flex; align-items: center; gap: 12px; width: 100%; height: 44px; padding: 0 12px; border: none; border-radius: 12px; background: none; cursor: pointer; font: var(--type-body-sm); font-weight: 600; color: var(--text-secondary); text-align: start; }
+.pv-nav-item:hover { background: var(--neutral-50); color: var(--text-primary); }
+.pv-nav-item[aria-current=page] { background: var(--brand-tint-strong); color: var(--brand-ink); font-weight: 700; }
+
+.pv-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.pv-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.pv-grid-dash { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 16px; }
+.pv-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.pv-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+.pv-split { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 0; min-height: 560px; }
+.pv-hide-phone { }
+.pv-only-phone { display: none !important; }
+
+@media (max-width: 900px) {
+  .pv-side { display: none; }
+  .pv-top { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 10px; padding: calc(env(safe-area-inset-top) + 10px) 14px 10px; background: oklch(1 0 0 / 0.92); backdrop-filter: var(--blur-bar); -webkit-backdrop-filter: var(--blur-bar); box-shadow: 0 1px 0 var(--border-subtle); }
+  .pv-page { padding: 18px 16px calc(48px + var(--safe-bottom)); gap: 18px; }
+  .pv-drawer { display: block; position: fixed; inset: 0; z-index: 50; pointer-events: none; }
+  .pv-drawer[data-open=true] { pointer-events: auto; }
+  .pv-drawer-scrim { position: absolute; inset: 0; background: var(--surface-scrim); opacity: 0; transition: opacity var(--dur-base); }
+  .pv-drawer[data-open=true] .pv-drawer-scrim { opacity: 1; }
+  .pv-drawer-panel { position: absolute; top: 0; bottom: 0; inset-inline-start: 0; width: min(300px, 84vw); box-sizing: border-box; display: flex; flex-direction: column; gap: 18px; padding: calc(env(safe-area-inset-top) + 18px) 16px 18px; background: var(--surface-card); overflow-y: auto; transform: translateX(-105%); transition: transform var(--dur-slow) var(--ease-out); }
+  [dir=rtl] .pv-drawer-panel { transform: translateX(105%); }
+  .pv-drawer[data-open=true] .pv-drawer-panel { transform: none; }
+  .pv-grid-2, .pv-grid-3, .pv-grid-dash { grid-template-columns: minmax(0, 1fr); }
+  .pv-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .pv-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .pv-split { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+  .pv-hide-phone { display: none !important; }
+  .pv-only-phone { display: flex !important; }
+}
+
+@keyframes pv-spin { to { transform: rotate(360deg); } }

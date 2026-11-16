@@ -7,13 +7,12 @@ import { Branches, Profile } from './screens/Company';
 import { Projects, Services } from './screens/Catalog';
 import { Stories } from './screens/Stories';
 import { Hours } from './screens/Hours';
-import { Approvals } from './screens/Admin';
 import { Modal } from './ui';
 
-export function Shell({ repo, email, company, refs, isAdmin, onSignOut }: {
-  repo: Repo; email: string; company: Company; refs: { categories: Category[]; locations: Location[] }; isAdmin: boolean; onSignOut: () => void;
+export function Shell({ repo, email, company, refs, onSignOut }: {
+  repo: Repo; email: string; company: Company; refs: { categories: Category[]; locations: Location[] }; onSignOut: () => void;
 }) {
-  const state = useProviderState(repo, company, refs, email, isAdmin);
+  const state = useProviderState(repo, company, refs, email);
   return <StateProvider value={state}><Layout onSignOut={onSignOut} /></StateProvider>;
 }
 
@@ -43,7 +42,7 @@ function Layout({ onSignOut }: { onSignOut: () => void }) {
             <Icon name="info" size={16} />{t.demoMode}
           </div>
         )}
-        {section !== 'approvals' && <ReviewBanner />}
+        <ReviewBanner />
         <main className="pv-page" key={section}>
           {section === 'dashboard' && <Dashboard />}
           {section === 'profile' && <Profile />}
@@ -52,7 +51,6 @@ function Layout({ onSignOut }: { onSignOut: () => void }) {
           {section === 'services' && <Services />}
           {section === 'projects' && <Projects />}
           {section === 'stories' && <Stories />}
-          {section === 'approvals' && p.isAdmin && <Approvals repo={repo} t={t} ar={p.ar} refs={p.refs} toast={p.showToast} />}
         </main>
       </div>
       {toast && (
@@ -81,7 +79,7 @@ function Nav({ onSignOut, onPick }: { onSignOut: () => void; onPick?: () => void
         </span>
       </div>
       <nav style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {SECTIONS.filter(s => !s.admin || p.isAdmin).map(s => (
+        {SECTIONS.map(s => (
           <button key={s.id} type="button" className="pv-nav-item" aria-current={section === s.id ? 'page' : undefined} onClick={() => { go(s.id); onPick?.(); }}>
             <Icon name={s.icon} size={20} />
             <span style={{ flex: 1 }}>{t[s.label]}</span>
@@ -125,7 +123,7 @@ function ReviewBanner() {
 }
 
 /** Required by the app stores: delete the account (and the company if this is its only member). */
-export function DeleteAccount({ repo, t, onDeleted }: { repo: Repo; t: { deleteAccount: string; deleteAccountBody: string; deleteForGood: string; cancel: string; saveFailed: string }; onDeleted: () => void }) {
+function DeleteAccount({ repo, t, onDeleted }: { repo: Repo; t: { deleteAccount: string; deleteAccountBody: string; deleteForGood: string; cancel: string; saveFailed: string }; onDeleted: () => void }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');

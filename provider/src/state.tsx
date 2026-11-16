@@ -2,9 +2,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { Category, Company, Location, Repo } from './data';
 import { arDigits, strings, type T } from './i18n';
 
-export type Section = 'dashboard' | 'profile' | 'hours' | 'branches' | 'services' | 'projects' | 'stories' | 'approvals';
-/** `admin`: only for MUJEEB admins. */
-export const SECTIONS: { id: Section; icon: string; label: keyof T; admin?: boolean }[] = [
+export type Section = 'dashboard' | 'profile' | 'hours' | 'branches' | 'services' | 'projects' | 'stories';
+export const SECTIONS: { id: Section; icon: string; label: keyof T }[] = [
   { id: 'dashboard', icon: 'layout-dashboard', label: 'dashboard' },
   { id: 'stories', icon: 'circle-play', label: 'stories' },
   { id: 'services', icon: 'briefcase', label: 'services' },
@@ -12,7 +11,6 @@ export const SECTIONS: { id: Section; icon: string; label: keyof T; admin?: bool
   { id: 'profile', icon: 'building-2', label: 'profile' },
   { id: 'hours', icon: 'clock', label: 'hours' },
   { id: 'branches', icon: 'map-pin', label: 'branches' },
-  { id: 'approvals', icon: 'shield-check', label: 'approvals', admin: true },
 ];
 
 const LS = 'mujeeb.provider.v1';
@@ -22,12 +20,12 @@ const sectionFromHash = (): Section => {
   return SECTIONS.some(x => x.id === s) ? s : 'dashboard';
 };
 
-export function useProviderState(repo: Repo, initial: Company, refs: { categories: Category[]; locations: Location[] }, email: string, isAdmin: boolean) {
+export function useProviderState(repo: Repo, initial: Company, refs: { categories: Category[]; locations: Location[] }, email: string) {
   const [lang, setLang] = useState<'ar' | 'en'>(readLang);
   const ar = lang === 'ar';
   const t = useMemo(() => strings(ar), [ar]);
   const [company, setCompany] = useState(initial);
-  const [section, setSection] = useState<Section>(() => { const s = sectionFromHash(); return s === 'approvals' && !isAdmin ? 'dashboard' : s; });
+  const [section, setSection] = useState<Section>(sectionFromHash);
   const [toast, setToast] = useState<{ msg: string; tone: string } | null>(null);
 
   useEffect(() => {
@@ -56,7 +54,7 @@ export function useProviderState(repo: Repo, initial: Company, refs: { categorie
   const pick = useCallback(<X,>(arV: X, enV: X) => (ar ? arV : enV), [ar]);
 
   return {
-    repo, email, isAdmin, lang, setLang, ar, t, company, setCompany, refs, cat, section, go, toast, showToast,
+    repo, email, lang, setLang, ar, t, company, setCompany, refs, cat, section, go, toast, showToast,
     num, pick,
   };
 }

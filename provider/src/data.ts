@@ -17,12 +17,6 @@ export interface Company {
 export interface NewCompany {
   name_ar: string; name_en: string; phone: string; governorate: string; city_ar: string; city_en: string; categories: number[];
 }
-/** A company waiting for review, as the admin sees it. */
-export interface QueueItem {
-  id: string; name_ar: string; name_en: string; phone: string; city_ar: string; city_en: string; governorate: string;
-  status: 'pending' | 'rejected'; review_note: string | null; submitted_at: string | null; owner_email: string | null;
-  categories: number[]; services: number; projects: number; has_cover: boolean; has_logo: boolean;
-}
 export type SignInResult = 'ok' | 'bad' | 'unconfirmed';
 export type CompanyPatch = Partial<Pick<Company, 'name_ar' | 'name_en' | 'description_ar' | 'description_en' | 'city_ar' | 'city_en' | 'governorate' | 'cover_photo' | 'logo_url' | 'phone' | 'founded_year'>>;
 export interface Branch {
@@ -66,9 +60,6 @@ export interface Repo {
   registerCompany(c: NewCompany): Promise<string>;
   /** Asks for another review after a rejection. */
   resubmit(cid: string): Promise<void>;
-  isAdmin(): Promise<boolean>;
-  adminQueue(): Promise<QueueItem[]>;
-  adminReview(cid: string, approve: boolean, note?: string, verified?: boolean): Promise<void>;
   /** Deletes the account (and the company, when this account is its only member). */
   deleteAccount(): Promise<void>;
   signOut(): Promise<void>;
@@ -103,7 +94,8 @@ export interface Repo {
 /** Display URL for a photo: demo data stores Unsplash ids, uploads are full URLs. */
 export const photoUrl = (id: string, w = 600) => (/^(https?:|blob:|data:)/.test(id) ? id
   : 'https://images.unsplash.com/photo-' + id + '?w=' + w + '&q=70&auto=format&fit=crop');
-export const logoOf = (c: Pick<Company, 'id' | 'logo_url'>) => c.logo_url || '/logos/' + c.id + '.png';
+/** Uploaded logo, or the bundled one for demo companies; empty (initials) otherwise. */
+export const logoOf = (c: Pick<Company, 'id' | 'logo_url'>) => c.logo_url || (/^(c\d+|g\d+-\d+)$/.test(c.id) ? '/logos/' + c.id + '.png' : '');
 
 const closedDay = (day: number): DayHours => ({ day, is_closed: true, opens: null, closes: null, opens2: null, closes2: null });
 const hm = (v: string | null) => (v ? v.slice(0, 5) : null);
@@ -146,9 +138,6 @@ function supabaseRepo(sb: SupabaseClient): Repo {
       })) as string;
     },
     async resubmit(cid) { ok(await sb.rpc('resubmit_company', { cid })); },
-    async isAdmin() { return !!ok(await sb.rpc('is_platform_admin')); },
-    async adminQueue() { return ok(await sb.rpc('admin_company_queue')) as QueueItem[]; },
-    async adminReview(cid, approve, note, verified) { ok(await sb.rpc('admin_review_company', { cid, approve, note: note ?? null, verified: verified ?? null })); },
     async deleteAccount() { ok(await sb.rpc('delete_my_account')); await sb.auth.signOut({ scope: 'local' }); },
     async signOut() { await sb.auth.signOut(); },
     async sendReset(email) { ok(await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin })); },
@@ -240,11 +229,6 @@ async function demoRepo(): Promise<Repo> {
     governorate: co.gov, cover_photo: co.img, logo_url: null, phone: co.phone, founded_year: co.since, is_verified: co.verified, categories: co.cats,
     status: 'approved', review_note: null,
   };
-  // A sample sign-up waiting for review, so the demo shows the admin's Approvals page.
-  let queue: QueueItem[] = [{
-    id: 'co-demo1', name_ar: 'لمسة الضوء للإنارة', name_en: 'Light Touch Lighting', phone: '+968 9555 0101', city_ar: 'صحار', city_en: 'Sohar', governorate: 'batinah',
-    status: 'pending', review_note: null, submitted_at: iso(5 * 36e5), owner_email: 'owner@lighttouch.om', categories: [2], services: 2, projects: 1, has_cover: true, has_logo: false,
-  }];
   let branches: Branch[] = co.branches.map((b, k) => ({
     id: uid(), company_id: CID, name_ar: b[0], name_en: b[1], address_ar: null, address_en: null,
     lat: k === 0 ? 23.6143 : null, lng: k === 0 ? 58.4734 : null, is_primary: b[2], position: k,
@@ -276,8 +260,6 @@ async function demoRepo(): Promise<Repo> {
     mode: 'demo',
     session: async () => 'demo@mujeeb.om', signIn: async () => 'ok', signOut: async () => {}, sendReset: async () => {},
     signUp: async () => ({}), registerCompany: async () => CID, resubmit: async () => { company = { ...company, status: 'pending' }; },
-    isAdmin: async () => true, adminQueue: async () => wait(queue),
-    adminReview: async (cid, approve, note) => { queue = approve ? queue.filter(q => q.id !== cid) : queue.map(q => (q.id === cid ? { ...q, status: 'rejected', review_note: note ?? null } : q)); },
     deleteAccount: async () => {},
     recovering: () => false, setPassword: async () => {},
     myCompanyIds: async () => [CID],
