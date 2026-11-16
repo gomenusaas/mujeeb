@@ -1,0 +1,14 @@
+# Provider dashboard. Create a second Netlify site from this repo with
+# Base directory = provider (Netlify then reads this file).
+[build]
+  command = "npm ci && npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Single-page app: serve index.html for any path.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

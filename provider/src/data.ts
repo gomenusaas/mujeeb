@@ -1,0 +1,235 @@
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+
+/* ───────────────────────── Types (database rows) ───────────────────────── */
+
+export interface Category { id: number; name_ar: string; name_en: string; color: string; icon: string }
+export interface Location { id: string; name_ar: string; name_en: string }
+export interface Company {
+  id: string; name_ar: string; name_en: string; description_ar: string; description_en: string;
+  city_ar: string; city_en: string; governorate: string; cover_photo: string; logo_url: string | null;
+  phone: string; founded_year: number | null; is_verified: boolean; categories: number[];
+}
+export type CompanyPatch = Partial<Pick<Company, 'name_ar' | 'name_en' | 'description_ar' | 'description_en' | 'city_ar' | 'city_en' | 'governorate' | 'cover_photo' | 'logo_url' | 'phone' | 'founded_year'>>;
+export interface Branch {
+  id?: string; company_id: string; name_ar: string; name_en: string; address_ar: string | null; address_en: string | null;
+  lat: number | null; lng: number | null; is_primary: boolean; position: number;
+}
+export interface Service {
+  id?: string; company_id: string; category_id: number; title_ar: string; title_en: string;
+  description_ar: string; description_en: string; photos: string[]; is_published: boolean; position: number;
+}
+export interface Album {
+  id?: string; company_id: string; category_id: number; title_ar: string; title_en: string; place_ar: string | null; place_en: string | null;
+  photos: string[]; cover_photo: string; is_published: boolean; position: number; created_at?: string;
+}
+export interface Story {
+  id?: string; company_id: string; kind: 'image' | 'video'; media_url: string; poster_url: string | null;
+  caption_ar: string; caption_en: string; created_at?: string; expires_at?: string;
+}
+export type StatKind = 'profile_view' | 'service_view' | 'story_view' | 'whatsapp' | 'call' | 'directions' | 'follow';
+export interface Stats {
+  /** Count in the last 14 days and in the 14 days before. */
+  totals: Record<StatKind, { cur: number; prev: number }>;
+  /** Profile views per day for the last 14 days (oldest first). */
+  daily: { day: string; n: number }[];
+  followers: number;
+}
+
+export interface Repo {
+  mode: 'supabase' | 'demo';
+  session(): Promise<string | null>;
+  signIn(email: string, password: string): Promise<boolean>;
+  signOut(): Promise<void>;
+  sendReset(email: string): Promise<void>;
+  /** True when the user arrived from a password-reset email and should choose a new password. */
+  recovering(): boolean;
+  setPassword(pw: string): Promise<void>;
+  myCompanyIds(): Promise<string[]>;
+  refs(): Promise<{ categories: Category[]; locations: Location[] }>;
+  company(id: string): Promise<Company>;
+  saveCompany(id: string, patch: CompanyPatch): Promise<void>;
+  branches(cid: string): Promise<Branch[]>;
+  saveBranch(b: Branch): Promise<Branch>;
+  deleteBranch(id: string): Promise<void>;
+  services(cid: string): Promise<Service[]>;
+  saveService(s: Service): Promise<Service>;
+  deleteService(id: string): Promise<void>;
+  albums(cid: string): Promise<Album[]>;
+  saveAlbum(a: Album): Promise<Album>;
+  deleteAlbum(id: string): Promise<void>;
+  stories(cid: string): Promise<Story[]>;
+  createStory(s: Story): Promise<Story>;
+  deleteStory(id: string): Promise<void>;
+  /** Uploads to the company's media folder and returns a public URL. */
+  upload(cid: string, file: File | Blob, name: string): Promise<string>;
+  stats(cid: string): Promise<Stats>;
+}
+
+/** Display URL for a photo: demo data stores Unsplash ids, uploads are full URLs. */
+export const photoUrl = (id: string, w = 600) => (/^(https?:|blob:|data:)/.test(id) ? id
+  : 'https://images.unsplash.com/photo-' + id + '?w=' + w + '&q=70&auto=format&fit=crop');
+export const logoOf = (c: Pick<Company, 'id' | 'logo_url'>) => c.logo_url || '/logos/' + c.id + '.png';
+
+const KINDS: StatKind[] = ['profile_view', 'service_view', 'story_view', 'whatsapp', 'call', 'directions', 'follow'];
+const emptyTotals = () => Object.fromEntries(KINDS.map(k => [k, { cur: 0, prev: 0 }])) as Stats['totals'];
+const dayKey = (d: Date) => d.toLocaleDateString('en-CA', { timeZone: 'Asia/Muscat' });
+const last14 = () => Array.from({ length: 14 }, (_, k) => dayKey(new Date(Date.now() - (13 - k) * 864e5)));
+
+/* ───────────────────────── Supabase ───────────────────────── */
+
+function supabaseRepo(sb: SupabaseClient): Repo {
+  const ok = <T,>(r: { data: T | null; error: unknown }): T => { if (r.error) throw r.error; return r.data as T; };
+  const recovery = /type=recovery/.test(location.hash);
+  return {
+    mode: 'supabase',
+    async session() { return (await sb.auth.getSession()).data.session?.user.email ?? null; },
+    async signIn(email, password) { return !(await sb.auth.signInWithPassword({ email, password })).error; },
+    async signOut() { await sb.auth.signOut(); },
+    async sendReset(email) { ok(await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin })); },
+    recovering: () => recovery,
+    async setPassword(password) {
+      const { error } = await sb.auth.updateUser({ password });
+      if (error) throw error;
+      history.replaceState(null, '', location.pathname);
+    },
+    async myCompanyIds() { return ok(await sb.from('company_members').select('company_id')).map(r => r.company_id as string); },
+    async refs() {
+      const [c, l] = await Promise.all([sb.from('categories').select('id, name_ar, name_en, color, icon').order('sort_order'), sb.from('locations').select('id, name_ar, name_en').order('sort_order')]);
+      return { categories: ok(c) as Category[], locations: (ok(l) as Location[]).filter(x => x.id !== 'all') };
+    },
+    async company(id) {
+      const [c, cc] = await Promise.all([sb.from('companies').select('*').eq('id', id).single(), sb.from('company_categories').select('category_id').eq('company_id', id).order('position')]);
+      return { ...(ok(c) as Company), categories: (ok(cc) as { category_id: number }[]).map(r => r.category_id) };
+    },
+    async saveCompany(id, patch) { ok(await sb.from('companies').update(patch).eq('id', id)); },
+    async branches(cid) { return ok(await sb.from('company_branches').select('*').eq('company_id', cid).order('position')) as Branch[]; },
+    async saveBranch(b) {
+      // Only one main branch per company.
+      if (b.is_primary) {
+        let q = sb.from('company_branches').update({ is_primary: false }).eq('company_id', b.company_id);
+        if (b.id) q = q.neq('id', b.id);
+        ok(await q);
+      }
+      return ok(await sb.from('company_branches').upsert(b).select().single()) as Branch;
+    },
+    async deleteBranch(id) { ok(await sb.from('company_branches').delete().eq('id', id)); },
+    async services(cid) { return ok(await sb.from('services').select('*').eq('company_id', cid).order('position')) as Service[]; },
+    async saveService(s) { return ok(await sb.from('services').upsert(s).select().single()) as Service; },
+    async deleteService(id) { ok(await sb.from('services').delete().eq('id', id)); },
+    async albums(cid) { return ok(await sb.from('portfolio_albums').select('*').eq('company_id', cid).order('created_at', { ascending: false })) as Album[]; },
+    async saveAlbum(a) { return ok(await sb.from('portfolio_albums').upsert({ ...a, photo_count: a.photos.length }).select().single()) as Album; },
+    async deleteAlbum(id) { ok(await sb.from('portfolio_albums').delete().eq('id', id)); },
+    async stories(cid) {
+      const since = new Date(Date.now() - 7 * 864e5).toISOString();
+      return ok(await sb.from('stories').select('*').eq('company_id', cid).gte('created_at', since).order('created_at', { ascending: false })) as Story[];
+    },
+    async createStory(s) { return ok(await sb.from('stories').insert(s).select().single()) as Story; },
+    async deleteStory(id) { ok(await sb.from('stories').delete().eq('id', id)); },
+    async upload(cid, file, name) {
+      const path = cid + '/' + Date.now() + '-' + name.toLowerCase().replace(/[^a-z0-9.]+/g, '-');
+      ok(await sb.storage.from('media').upload(path, file, { cacheControl: '31536000', upsert: false }));
+      return sb.storage.from('media').getPublicUrl(path).data.publicUrl;
+    },
+    async stats(cid) {
+      const [rows, fol] = await Promise.all([
+        sb.rpc('company_stats', { cid, days: 14 }),
+        sb.from('customer_follows').select('user_id', { count: 'exact', head: true }).eq('company_id', cid),
+      ]);
+      const data = ok(rows) as { kind: StatKind; day: string; n: number }[];
+      const days = last14(), first = days[0];
+      const totals = emptyTotals();
+      const daily = new Map(days.map(d => [d, 0]));
+      for (const r of data) {
+        const t = totals[r.kind]; if (!t) continue;
+        if (r.day >= first) t.cur += Number(r.n); else t.prev += Number(r.n);
+        if (r.kind === 'profile_view' && daily.has(r.day)) daily.set(r.day, daily.get(r.day)! + Number(r.n));
+      }
+      return { totals, daily: days.map(day => ({ day, n: daily.get(day)! })), followers: fol.count ?? 0 };
+    },
+  };
+}
+
+/* ───────────────────────── Demo (in memory) ─────────────────────────
+ * Runs when no Supabase keys are set: a sample company from the bundled demo data,
+ * edits kept in memory for this tab only. */
+
+type DemoData = {
+  cats: { i: number; ar: string; en: string; color: string; icon: string }[];
+  gov: Record<string, [string, string]>;
+  companies: { id: string; ar: string; en: string; cats: number[]; cityAr: string; cityEn: string; gov: string; img: string; verified: boolean; phone: string; since: number; dar: string; den: string; branches: [string, string, boolean][] }[];
+  services: { id: string; co: string; cat: number; ar: string; en: string; imgs: string[]; dar: string; den: string }[];
+  albums: { id: string; co: string; cat: number; ar: string; en: string; pAr: string; pEn: string; img: string; imgs: string[]; added: string }[];
+};
+
+async function demoRepo(): Promise<Repo> {
+  const d = (await import('./shared/demo.json')).default as unknown as DemoData;
+  const CID = 'c4';
+  const co = d.companies.find(c => c.id === CID)!;
+  const uid = () => Math.random().toString(36).slice(2, 10);
+  const iso = (msAgo: number) => new Date(Date.now() - msAgo).toISOString();
+  let company: Company = {
+    id: co.id, name_ar: co.ar, name_en: co.en, description_ar: co.dar, description_en: co.den, city_ar: co.cityAr, city_en: co.cityEn,
+    governorate: co.gov, cover_photo: co.img, logo_url: null, phone: co.phone, founded_year: co.since, is_verified: co.verified, categories: co.cats,
+  };
+  let branches: Branch[] = co.branches.map((b, k) => ({
+    id: uid(), company_id: CID, name_ar: b[0], name_en: b[1], address_ar: null, address_en: null,
+    lat: k === 0 ? 23.6143 : null, lng: k === 0 ? 58.4734 : null, is_primary: b[2], position: k,
+  }));
+  let services: Service[] = d.services.filter(s => s.co === CID).map((s, k) => ({
+    id: s.id, company_id: CID, category_id: s.cat, title_ar: s.ar, title_en: s.en, description_ar: s.dar, description_en: s.den, photos: s.imgs, is_published: true, position: k,
+  }));
+  let albums: Album[] = d.albums.filter(a => a.co === CID).map((a, k) => ({
+    id: a.id, company_id: CID, category_id: a.cat, title_ar: a.ar, title_en: a.en, place_ar: a.pAr, place_en: a.pEn, photos: a.imgs, cover_photo: a.img, is_published: true, position: k, created_at: a.added,
+  }));
+  let stories: Story[] = [
+    { id: uid(), company_id: CID, kind: 'video', media_url: 'https://assets.mixkit.co/videos/43033/43033-720.mp4', poster_url: 'https://assets.mixkit.co/videos/43033/43033-thumb-720-0.jpg', caption_ar: 'مطبخ مفتوح سلّمناه هذا الأسبوع', caption_en: 'Open kitchen handed over this week', created_at: iso(6 * 36e5), expires_at: iso(-18 * 36e5) },
+    { id: uid(), company_id: CID, kind: 'image', media_url: photoUrl('1600566753190-17f0baa2a6c3', 1080), poster_url: null, caption_ar: 'خزائن داكنة بلمسة نحاسية', caption_en: 'Dark cabinets with brass details', created_at: iso(30 * 36e5), expires_at: iso(6 * 36e5) },
+  ];
+  // Random but stable-looking demo stats.
+  const seeded = (n: number) => { const x = Math.sin(n * 9301 + 49297) * 233280; return x - Math.floor(x); };
+  const stat = (k: number, base: number) => ({ cur: Math.round(base * (0.9 + seeded(k))), prev: Math.round(base * (0.7 + seeded(k + 50))) });
+  const wait = <T,>(v: T) => new Promise<T>(r => setTimeout(() => r(v), 120));
+  const upsert = <X extends { id?: string }>(list: X[], x: X): [X[], X] => {
+    const item = { ...x, id: x.id || uid() };
+    return [list.some(y => y.id === item.id) ? list.map(y => (y.id === item.id ? item : y)) : [...list, item], item];
+  };
+  return {
+    mode: 'demo',
+    session: async () => 'demo@mujeeb.om', signIn: async () => true, signOut: async () => {}, sendReset: async () => {},
+    recovering: () => false, setPassword: async () => {},
+    myCompanyIds: async () => [CID],
+    refs: async () => ({
+      categories: d.cats.map(c => ({ id: c.i, name_ar: c.ar, name_en: c.en, color: c.color, icon: c.icon })),
+      locations: Object.entries(d.gov).filter(([k]) => k !== 'all').map(([id, [ar, en]]) => ({ id, name_ar: ar, name_en: en })),
+    }),
+    company: async () => wait(company),
+    saveCompany: async (_id, patch) => { company = { ...company, ...patch }; await wait(0); },
+    branches: async () => wait(branches),
+    saveBranch: async b => {
+      if (b.is_primary) branches = branches.map(x => ({ ...x, is_primary: false }));
+      const [l, item] = upsert(branches, b); branches = l; return wait(item);
+    },
+    deleteBranch: async id => { branches = branches.filter(b => b.id !== id); },
+    services: async () => wait(services),
+    saveService: async s => { const [l, item] = upsert(services, s); services = l; return wait(item); },
+    deleteService: async id => { services = services.filter(s => s.id !== id); },
+    albums: async () => wait([...albums].sort((x, y) => (y.created_at || '').localeCompare(x.created_at || ''))),
+    saveAlbum: async a => { const [l, item] = upsert(albums, { ...a, cover_photo: a.photos.includes(a.cover_photo) ? a.cover_photo : a.photos[0], created_at: a.created_at || new Date().toISOString() }); albums = l; return wait(item); },
+    deleteAlbum: async id => { albums = albums.filter(a => a.id !== id); },
+    stories: async () => wait(stories),
+    createStory: async s => { const item = { ...s, id: uid(), created_at: iso(0), expires_at: iso(-24 * 36e5) }; stories = [item, ...stories]; return wait(item); },
+    deleteStory: async id => { stories = stories.filter(s => s.id !== id); },
+    upload: async (_cid, file) => wait(URL.createObjectURL(file)),
+    stats: async () => {
+      const keys: [StatKind, number][] = [['profile_view', 420], ['service_view', 610], ['story_view', 980], ['whatsapp', 48], ['call', 21], ['directions', 33], ['follow', 26]];
+      const totals = Object.fromEntries(keys.map(([k, b], i) => [k, stat(i, b)])) as Stats['totals'];
+      return wait({ totals, daily: last14().map((day, k) => ({ day, n: Math.round(18 + 22 * seeded(k + 7) + k * 0.8) })), followers: 312 });
+    },
+  };
+}
+
+const URL_ = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+
+/** Supabase when its keys are set, otherwise the in-memory demo. */
+export const repoPromise: Promise<Repo> = URL_ && KEY ? Promise.resolve(supabaseRepo(createClient(URL_, KEY))) : demoRepo();
