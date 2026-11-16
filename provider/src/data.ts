@@ -8,7 +8,22 @@ export interface Company {
   id: string; name_ar: string; name_en: string; description_ar: string; description_en: string;
   city_ar: string; city_en: string; governorate: string; cover_photo: string; logo_url: string | null;
   phone: string; founded_year: number | null; is_verified: boolean; categories: number[];
+  /** 'pending' until a MUJEEB admin approves it; customers see only approved companies. */
+  status: 'pending' | 'approved' | 'rejected';
+  /** Why it was rejected (from the admin), shown to the company. */
+  review_note: string | null;
 }
+/** What a company fills in when it signs up. */
+export interface NewCompany {
+  name_ar: string; name_en: string; phone: string; governorate: string; city_ar: string; city_en: string; categories: number[];
+}
+/** A company waiting for review, as the admin sees it. */
+export interface QueueItem {
+  id: string; name_ar: string; name_en: string; phone: string; city_ar: string; city_en: string; governorate: string;
+  status: 'pending' | 'rejected'; review_note: string | null; submitted_at: string | null; owner_email: string | null;
+  categories: number[]; services: number; projects: number; has_cover: boolean; has_logo: boolean;
+}
+export type SignInResult = 'ok' | 'bad' | 'unconfirmed';
 export type CompanyPatch = Partial<Pick<Company, 'name_ar' | 'name_en' | 'description_ar' | 'description_en' | 'city_ar' | 'city_en' | 'governorate' | 'cover_photo' | 'logo_url' | 'phone' | 'founded_year'>>;
 export interface Branch {
   id?: string; company_id: string; name_ar: string; name_en: string; address_ar: string | null; address_en: string | null;
@@ -44,7 +59,18 @@ export interface Stats {
 export interface Repo {
   mode: 'supabase' | 'demo';
   session(): Promise<string | null>;
-  signIn(email: string, password: string): Promise<boolean>;
+  signIn(email: string, password: string): Promise<SignInResult>;
+  /** New company account. `confirm`: Supabase emailed a confirmation link first. */
+  signUp(email: string, password: string, name: string): Promise<{ error?: 'taken' | 'weak' | 'email' | 'failed'; confirm?: boolean }>;
+  /** Creates the signed-in user's company (pending review) and returns its id. */
+  registerCompany(c: NewCompany): Promise<string>;
+  /** Asks for another review after a rejection. */
+  resubmit(cid: string): Promise<void>;
+  isAdmin(): Promise<boolean>;
+  adminQueue(): Promise<QueueItem[]>;
+  adminReview(cid: string, approve: boolean, note?: string, verified?: boolean): Promise<void>;
+  /** Deletes the account (and the company, when this account is its only member). */
+  deleteAccount(): Promise<void>;
   signOut(): Promise<void>;
   sendReset(email: string): Promise<void>;
   /** True when the user arrived from a password-reset email and should choose a new password. */
@@ -99,7 +125,31 @@ function supabaseRepo(sb: SupabaseClient): Repo {
   return {
     mode: 'supabase',
     async session() { return (await sb.auth.getSession()).data.session?.user.email ?? null; },
-    async signIn(email, password) { return !(await sb.auth.signInWithPassword({ email, password })).error; },
+    async signIn(email, password) {
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (!error) return 'ok';
+      return error.code === 'email_not_confirmed' || /not confirmed/i.test(error.message) ? 'unconfirmed' : 'bad';
+    },
+    async signUp(email, password, name) {
+      const { data, error } = await sb.auth.signUp({ email, password, options: { data: { full_name: name, kind: 'provider' }, emailRedirectTo: location.origin } });
+      if (error) {
+        const c = error.code || '';
+        return { error: c === 'user_already_exists' || c === 'email_exists' ? 'taken' : c === 'weak_password' ? 'weak' : c === 'email_address_invalid' || c === 'email_address_not_authorized' ? 'email' : 'failed' };
+      }
+      if (data.user && !data.user.identities?.length) return { error: 'taken' };
+      return { confirm: !data.session };
+    },
+    async registerCompany(c) {
+      return ok(await sb.rpc('register_company', {
+        p_name_ar: c.name_ar, p_name_en: c.name_en, p_phone: c.phone, p_governorate: c.governorate,
+        p_city_ar: c.city_ar, p_city_en: c.city_en, p_categories: c.categories,
+      })) as string;
+    },
+    async resubmit(cid) { ok(await sb.rpc('resubmit_company', { cid })); },
+    async isAdmin() { return !!ok(await sb.rpc('is_platform_admin')); },
+    async adminQueue() { return ok(await sb.rpc('admin_company_queue')) as QueueItem[]; },
+    async adminReview(cid, approve, note, verified) { ok(await sb.rpc('admin_review_company', { cid, approve, note: note ?? null, verified: verified ?? null })); },
+    async deleteAccount() { ok(await sb.rpc('delete_my_account')); await sb.auth.signOut({ scope: 'local' }); },
     async signOut() { await sb.auth.signOut(); },
     async sendReset(email) { ok(await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin })); },
     recovering: () => recovery,
@@ -188,7 +238,13 @@ async function demoRepo(): Promise<Repo> {
   let company: Company = {
     id: co.id, name_ar: co.ar, name_en: co.en, description_ar: co.dar, description_en: co.den, city_ar: co.cityAr, city_en: co.cityEn,
     governorate: co.gov, cover_photo: co.img, logo_url: null, phone: co.phone, founded_year: co.since, is_verified: co.verified, categories: co.cats,
+    status: 'approved', review_note: null,
   };
+  // A sample sign-up waiting for review, so the demo shows the admin's Approvals page.
+  let queue: QueueItem[] = [{
+    id: 'co-demo1', name_ar: 'لمسة الضوء للإنارة', name_en: 'Light Touch Lighting', phone: '+968 9555 0101', city_ar: 'صحار', city_en: 'Sohar', governorate: 'batinah',
+    status: 'pending', review_note: null, submitted_at: iso(5 * 36e5), owner_email: 'owner@lighttouch.om', categories: [2], services: 2, projects: 1, has_cover: true, has_logo: false,
+  }];
   let branches: Branch[] = co.branches.map((b, k) => ({
     id: uid(), company_id: CID, name_ar: b[0], name_en: b[1], address_ar: null, address_en: null,
     lat: k === 0 ? 23.6143 : null, lng: k === 0 ? 58.4734 : null, is_primary: b[2], position: k,
@@ -218,7 +274,11 @@ async function demoRepo(): Promise<Repo> {
   };
   return {
     mode: 'demo',
-    session: async () => 'demo@mujeeb.om', signIn: async () => true, signOut: async () => {}, sendReset: async () => {},
+    session: async () => 'demo@mujeeb.om', signIn: async () => 'ok', signOut: async () => {}, sendReset: async () => {},
+    signUp: async () => ({}), registerCompany: async () => CID, resubmit: async () => { company = { ...company, status: 'pending' }; },
+    isAdmin: async () => true, adminQueue: async () => wait(queue),
+    adminReview: async (cid, approve, note) => { queue = approve ? queue.filter(q => q.id !== cid) : queue.map(q => (q.id === cid ? { ...q, status: 'rejected', review_note: note ?? null } : q)); },
+    deleteAccount: async () => {},
     recovering: () => false, setPassword: async () => {},
     myCompanyIds: async () => [CID],
     refs: async () => ({

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Avatar, Icon, Toast } from './shared/ds';
+import { Avatar, Button, Icon, Toast } from './shared/ds';
 import { logoOf, type Category, type Company, type Location, type Repo } from './data';
 import { SECTIONS, StateProvider, useP, useProviderState } from './state';
 import { Dashboard } from './screens/Dashboard';
@@ -7,11 +7,13 @@ import { Branches, Profile } from './screens/Company';
 import { Projects, Services } from './screens/Catalog';
 import { Stories } from './screens/Stories';
 import { Hours } from './screens/Hours';
+import { Approvals } from './screens/Admin';
+import { Modal } from './ui';
 
-export function Shell({ repo, email, company, refs, onSignOut }: {
-  repo: Repo; email: string; company: Company; refs: { categories: Category[]; locations: Location[] }; onSignOut: () => void;
+export function Shell({ repo, email, company, refs, isAdmin, onSignOut }: {
+  repo: Repo; email: string; company: Company; refs: { categories: Category[]; locations: Location[] }; isAdmin: boolean; onSignOut: () => void;
 }) {
-  const state = useProviderState(repo, company, refs, email);
+  const state = useProviderState(repo, company, refs, email, isAdmin);
   return <StateProvider value={state}><Layout onSignOut={onSignOut} /></StateProvider>;
 }
 
@@ -41,6 +43,7 @@ function Layout({ onSignOut }: { onSignOut: () => void }) {
             <Icon name="info" size={16} />{t.demoMode}
           </div>
         )}
+        {section !== 'approvals' && <ReviewBanner />}
         <main className="pv-page" key={section}>
           {section === 'dashboard' && <Dashboard />}
           {section === 'profile' && <Profile />}
@@ -49,6 +52,7 @@ function Layout({ onSignOut }: { onSignOut: () => void }) {
           {section === 'services' && <Services />}
           {section === 'projects' && <Projects />}
           {section === 'stories' && <Stories />}
+          {section === 'approvals' && p.isAdmin && <Approvals repo={repo} t={t} ar={p.ar} refs={p.refs} toast={p.showToast} />}
         </main>
       </div>
       {toast && (
@@ -77,7 +81,7 @@ function Nav({ onSignOut, onPick }: { onSignOut: () => void; onPick?: () => void
         </span>
       </div>
       <nav style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {SECTIONS.map(s => (
+        {SECTIONS.filter(s => !s.admin || p.isAdmin).map(s => (
           <button key={s.id} type="button" className="pv-nav-item" aria-current={section === s.id ? 'page' : undefined} onClick={() => { go(s.id); onPick?.(); }}>
             <Icon name={s.icon} size={20} />
             <span style={{ flex: 1 }}>{t[s.label]}</span>
@@ -88,7 +92,55 @@ function Nav({ onSignOut, onPick }: { onSignOut: () => void; onPick?: () => void
         <span dir="ltr" style={{ padding: '4px 12px 8px', font: 'var(--type-caption)', color: 'var(--text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'start' }}>{p.email}</span>
         <button type="button" className="pv-nav-item" onClick={() => p.setLang(p.ar ? 'en' : 'ar')}><Icon name="languages" size={20} />{t.otherLang}</button>
         <button type="button" className="pv-nav-item" onClick={onSignOut}><Icon name="log-out" size={20} />{t.signOut}</button>
+        <DeleteAccount repo={p.repo} t={t} onDeleted={onSignOut} />
       </div>
+    </>
+  );
+}
+
+/** Under review / not approved: a notice on every page until the company is approved. */
+function ReviewBanner() {
+  const p = useP();
+  const { t, company, repo } = p;
+  const [busy, setBusy] = useState(false);
+  if (company.status === 'approved') return null;
+  const rejected = company.status === 'rejected';
+  const again = async () => {
+    setBusy(true);
+    try { await repo.resubmit(company.id); p.setCompany({ ...company, status: 'pending' }); p.showToast(t.resubmitted); }
+    catch { p.showToast(t.saveFailed, 'error'); } finally { setBusy(false); }
+  };
+  return (
+    <div role="status" style={{ display: 'flex', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap', margin: '16px 16px 0', padding: '14px 16px', borderRadius: 16,
+      background: rejected ? 'var(--danger-tint)' : 'var(--warning-tint)', color: rejected ? 'var(--danger)' : 'oklch(0.42 0.1 65)' }}>
+      <Icon name={rejected ? 'circle-alert' : 'hourglass'} size={22} style={{ flex: 'none', marginTop: 1 }} />
+      <span style={{ flex: 1, minWidth: 220, display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <span style={{ font: 'var(--type-body-strong)' }}>{rejected ? t.rejectedTitle : t.pendingTitle}</span>
+        <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }}>{rejected ? company.review_note || t.rejectedBody : t.pendingBody}</span>
+        {rejected && company.review_note && <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }}>{t.rejectedBody}</span>}
+      </span>
+      {rejected && <Button size="sm" iconLeft="send" loading={busy} onClick={again}>{t.resubmit}</Button>}
+    </div>
+  );
+}
+
+/** Required by the app stores: delete the account (and the company if this is its only member). */
+export function DeleteAccount({ repo, t, onDeleted }: { repo: Repo; t: { deleteAccount: string; deleteAccountBody: string; deleteForGood: string; cancel: string; saveFailed: string }; onDeleted: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const go = async () => {
+    setBusy(true); setErr('');
+    try { await repo.deleteAccount(); setOpen(false); onDeleted(); } catch { setErr(t.saveFailed); } finally { setBusy(false); }
+  };
+  return (
+    <>
+      <button type="button" className="pv-nav-item" onClick={() => setOpen(true)} style={{ color: 'var(--danger)' }}><Icon name="trash-2" size={20} />{t.deleteAccount}</button>
+      <Modal open={open} onClose={() => setOpen(false)} title={t.deleteAccount} width={440}
+        footer={<><Button variant="outline" onClick={() => setOpen(false)}>{t.cancel}</Button><Button variant="danger" iconLeft="trash-2" loading={busy} onClick={go}>{t.deleteForGood}</Button></>}>
+        <span style={{ font: 'var(--type-body)', color: 'var(--text-secondary)' }}>{t.deleteAccountBody}</span>
+        {err && <span style={{ font: 'var(--type-body-sm)', color: 'var(--danger)', fontWeight: 600 }}>{err}</span>}
+      </Modal>
     </>
   );
 }

@@ -1,41 +1,78 @@
 import { useState } from 'react';
-import { Avatar, Badge, Button, Chip, EmptyState, Icon, IconButton, ListItem } from '../ds';
+import { createPortal } from 'react-dom';
+import { Avatar, Badge, BottomSheet, Button, Chip, EmptyState, Icon, IconButton, ListItem } from '../ds';
 import { useApp } from '../app/store';
 import { Img, TopBar, card, helpers, openWhatsApp, stop } from '../app/view';
 import { BK_ST, NOTIFS, PURPOSES } from '../i18n/strings';
-import { logoUrl, remote } from '../data/api';
+import { auth, logoUrl, remote } from '../data/api';
 
 const ROOT = { padding: 'calc(var(--top-inset) + 8px) 20px 100px', display: 'flex', flexDirection: 'column' } as const;
 const badge = (m: Record<string, readonly [string, string, string]>, k: string, ar: boolean) => ({ label: m[k][ar ? 0 : 1], tone: m[k][2] });
 
 export function Profile() {
   const a = useApp();
-  const { t, ar, bookings, fav } = a;
+  const { t, ar, bookings, fav, me } = a;
+  const [askDelete, setAskDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const soon = () => a.showToast(ar ? 'قريبًا' : 'Coming soon', 'info');
+  // With Supabase the profile is the real account; the demo keeps its sample customer.
+  const live = auth.enabled;
   const rows = [
-    { icon: 'calendar-check', color: 'amber', title: t.myBookings, sub: String(bookings.filter(b => ['pending', 'confirmed', 'reschedule'].includes(b.st)).length) + ' ' + t.active, go: () => a.go('bookings') },
-    { icon: 'heart', color: 'pink', title: t.favorites, sub: Object.values(fav).filter(Boolean).length + t.companiesN, go: () => a.go('favs') },
-    { icon: 'bell', color: 'sky', title: t.notifications, sub: NOTIFS.length + t.newN, go: () => a.go('notifs') },
+    ...(live ? [] : [{ icon: 'calendar-check', color: 'amber', title: t.myBookings, sub: String(bookings.filter(b => ['pending', 'confirmed', 'reschedule'].includes(b.st)).length) + ' ' + t.active, go: () => a.go('bookings') }]),
+    { icon: 'heart', color: 'pink', title: t.favorites, sub: Object.values(fav).filter(Boolean).length + t.companiesN, go: () => (live && !me ? a.setAuthStep('signin') : a.go('favs')) },
+    ...(live ? [] : [{ icon: 'bell', color: 'sky', title: t.notifications, sub: NOTIFS.length + t.newN, go: () => a.go('notifs') }]),
     { icon: 'languages', color: 'teal', title: t.language, sub: t.langName, go: () => a.setLang(ar ? 'en' : 'ar') },
-    { icon: 'settings', color: 'indigo', title: t.settings, go: soon },
     { icon: 'life-buoy', color: 'green', title: t.help, go: soon },
   ];
+  const remove = async () => {
+    setDeleting(true);
+    const ok = await auth.deleteAccount();
+    setDeleting(false);
+    setAskDelete(false);
+    a.showToast(String(ok ? t.deletedT : t.errFailed), ok ? 'success' : 'error');
+  };
   return (
     <div style={{ ...ROOT, gap: 18 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 16, ...card }}>
-        <Avatar name="Ahmed Balushi" size={60} />
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <span style={{ font: 'var(--type-h3)' }}>{t.userName}</span>
-          <span style={{ alignSelf: 'flex-start', font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }} dir="ltr">+968 9123 4567</span>
-          <span style={{ font: 'var(--type-caption)', fontWeight: 500, color: 'var(--text-tertiary)' }}>{t.memberSince}</span>
+      {live && !me ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: 18, ...card }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <span style={{ width: 56, height: 56, borderRadius: '50%', flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--brand-subtle, var(--neutral-100))', color: 'var(--brand)' }}><Icon name="user-round" size={28} /></span>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <span style={{ font: 'var(--type-h3)' }}>{t.guest}</span>
+              <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }}>{t.guestSub}</span>
+            </div>
+          </div>
+          <Button fullWidth iconLeft="user-round" onClick={() => a.setAuthStep('signin')}>{t.signInCta}</Button>
         </div>
-      </div>
+      ) : (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 16, ...card }}>
+          <Avatar name={live ? me!.name || me!.email : 'Ahmed Balushi'} size={60} />
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <span style={{ font: 'var(--type-h3)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{live ? me!.name || me!.email.split('@')[0] : t.userName}</span>
+            <span style={{ alignSelf: 'flex-start', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }} dir="ltr">{live ? me!.email : '+968 9123 4567'}</span>
+            {!live && <span style={{ font: 'var(--type-caption)', fontWeight: 500, color: 'var(--text-tertiary)' }}>{t.memberSince}</span>}
+          </div>
+        </div>
+      )}
       <div style={{ display: 'flex', flexDirection: 'column', padding: '4px 12px', ...card }}>
         {rows.map(r => <ListItem key={r.icon} icon={r.icon} color={r.color} title={r.title} subtitle={r.sub} onClick={r.go} />)}
       </div>
-      <div style={{ padding: '4px 12px', ...card }}>
-        <ListItem icon="log-out" danger title={t.signOut} onClick={soon} />
-      </div>
+      {(!live || me) && (
+        <div style={{ padding: '4px 12px', ...card }}>
+          <ListItem icon="log-out" danger title={t.signOut} onClick={live ? a.signOut : soon} />
+          {live && <ListItem icon="trash-2" danger title={t.deleteAccount} onClick={() => setAskDelete(true)} />}
+        </div>
+      )}
+      {/* Over the whole phone screen, not inside the scrolling page. */}
+      {createPortal(<div style={{ position: 'absolute', inset: 0, zIndex: 55, pointerEvents: 'none' }}>
+        <BottomSheet open={askDelete} onClose={() => setAskDelete(false)} title={t.deleteTitle}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '4px 20px calc(24px + var(--safe-bottom))' }}>
+            <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-secondary)' }}>{t.deleteBody}</p>
+            <Button fullWidth variant="danger" loading={deleting} onClick={remove}>{t.deleteConfirm}</Button>
+            <Button fullWidth variant="secondary" onClick={() => setAskDelete(false)}>{t.cancel}</Button>
+          </div>
+        </BottomSheet>
+      </div>, document.querySelector('.mj-frame') || document.body)}
     </div>
   );
 }

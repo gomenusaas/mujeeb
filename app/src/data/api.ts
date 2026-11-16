@@ -1,4 +1,4 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient, type User } from '@supabase/supabase-js';
 import type { Album, Branch, Catalog, Category, Company, CustomerSeed, GovId, Pair, Service, Story, WeekHours } from './types';
 
 const URL_ = import.meta.env.VITE_SUPABASE_URL as string | undefined;
@@ -91,27 +91,104 @@ function sortKey(id: string) {
   return g ? 1000 + +g[1] * 10 + +g[2] : 1e6;
 }
 
-/* ───────────── Writes (only when Supabase is configured) ─────────────
- * The customer is signed in anonymously so RLS can scope rows to them.
- * Enable "Anonymous sign-ins" in Supabase Auth settings. Failures are
- * reported to the caller but the local state stays authoritative for the UI. */
+/* ───────────── Accounts ─────────────
+ * Browsing needs no account. Favorites and follows belong to a signed-in customer
+ * (email + password, or Google). Without Supabase (demo data) they stay on the phone. */
 
-let session: Promise<boolean> | null = null;
-function ensureUser(): Promise<boolean> {
-  if (!supabase) return Promise.resolve(false);
-  const sb = supabase;
-  return session ||= (async () => {
-    const { data } = await sb.auth.getSession();
-    if (data.session) return true;
-    const { error } = await sb.auth.signInAnonymously();
-    if (error) { session = null; console.warn('[mujeeb] anonymous sign-in failed:', error.message); return false; }
-    return true;
-  })();
+export interface Me { id: string; email: string; name: string }
+export type AuthError = 'badLogin' | 'emailTaken' | 'notConfirmed' | 'weakPassword' | 'badEmail' | 'tooMany' | 'emailNotAllowed' | 'failed';
+
+const toMe = (u: User | null | undefined): Me | null => (u && !u.is_anonymous
+  ? { id: u.id, email: u.email || '', name: String(u.user_metadata?.full_name || u.user_metadata?.name || '') } : null);
+
+/** Supabase's messages, reduced to the few cases the sign-in sheet explains. */
+function authError(e: { message?: string; code?: string } | null): AuthError | undefined {
+  if (!e) return undefined;
+  const c = e.code || '', m = (e.message || '').toLowerCase();
+  if (c === 'invalid_credentials' || m.includes('invalid login')) return 'badLogin';
+  if (c === 'user_already_exists' || c === 'email_exists' || m.includes('already registered')) return 'emailTaken';
+  if (c === 'email_not_confirmed' || m.includes('not confirmed')) return 'notConfirmed';
+  if (c === 'weak_password' || m.includes('password should')) return 'weakPassword';
+  if (c === 'email_address_invalid' || m.includes('invalid format') || m.includes('is invalid')) return 'badEmail';
+  if (c === 'email_address_not_authorized') return 'emailNotAllowed';
+  if (c.startsWith('over_') || m.includes('rate limit')) return 'tooMany';
+  return 'failed';
 }
+
+/** Where links in account emails (confirm, reset password) come back to. */
+const returnUrl = () => location.origin + '/profile';
+
+export const auth = {
+  enabled: !!supabase,
+  /** Google sign-in needs a Google web client id (Google Cloud → Credentials). */
+  googleClientId: (import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined) || '',
+  async current(): Promise<Me | null> {
+    if (!supabase) return null;
+    return toMe((await supabase.auth.getSession()).data.session?.user);
+  },
+  /** Calls back on sign-in, sign-out and when a reset-password link was opened ('recovery'). */
+  onChange(cb: (me: Me | null, recovery: boolean) => void) {
+    if (!supabase) return () => {};
+    const { data } = supabase.auth.onAuthStateChange((event, s) => {
+      // Run outside Supabase's lock: callbacks may call Supabase again.
+      setTimeout(() => cb(toMe(s?.user), event === 'PASSWORD_RECOVERY'), 0);
+    });
+    return () => data.subscription.unsubscribe();
+  },
+  /** `confirm`: Supabase sent a confirmation email; the account works once the link is opened. */
+  async signUp(email: string, password: string, name: string): Promise<{ error?: AuthError; confirm?: boolean }> {
+    if (!supabase) return { error: 'failed' };
+    const { data, error } = await supabase.auth.signUp({ email: email.trim(), password, options: { data: { full_name: name.trim(), kind: 'customer' }, emailRedirectTo: returnUrl() } });
+    if (error) return { error: authError(error) };
+    // An existing, confirmed address comes back as a user with no identities (Supabase hides that it exists).
+    if (data.user && !data.user.identities?.length) return { error: 'emailTaken' };
+    return { confirm: !data.session };
+  },
+  async signIn(email: string, password: string): Promise<AuthError | undefined> {
+    if (!supabase) return 'failed';
+    return authError((await supabase.auth.signInWithPassword({ email: email.trim(), password })).error);
+  },
+  /** Google One Tap / Sign in with Google: the ID token Google returned, and the raw nonce sent with the request. */
+  async google(idToken: string, nonce: string): Promise<AuthError | undefined> {
+    if (!supabase) return 'failed';
+    return authError((await supabase.auth.signInWithIdToken({ provider: 'google', token: idToken, nonce })).error);
+  },
+  async sendReset(email: string): Promise<AuthError | undefined> {
+    if (!supabase) return 'failed';
+    return authError((await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: returnUrl() })).error);
+  },
+  async setPassword(password: string): Promise<AuthError | undefined> {
+    if (!supabase) return 'failed';
+    return authError((await supabase.auth.updateUser({ password })).error);
+  },
+  async signOut() { await supabase?.auth.signOut(); },
+  /** Deletes the account and its favorites and follows (required by the app stores). */
+  async deleteAccount(): Promise<boolean> {
+    if (!supabase) return false;
+    const { error } = await supabase.rpc('delete_my_account');
+    if (error) return false;
+    await supabase.auth.signOut({ scope: 'local' });
+    return true;
+  },
+  /** The signed-in customer's favorites and follows. */
+  async lists(): Promise<{ fav: string[]; follows: string[] }> {
+    if (!supabase) return { fav: [], follows: [] };
+    const [f, w] = await Promise.all([
+      supabase.from('customer_favorites').select('company_id'),
+      supabase.from('customer_follows').select('company_id'),
+    ]);
+    return { fav: (f.data || []).map(r => r.company_id as string), follows: (w.data || []).map(r => r.company_id as string) };
+  },
+};
+
+/* ───────────── Writes (only when Supabase is configured) ─────────────
+ * Favorites and follows need a signed-in customer (the store asks them to sign in first);
+ * activity events are logged with or without an account. Failures are reported to the
+ * caller, but the local state stays authoritative for the UI. */
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- result shape varies per call
 async function run(label: string, fn: (sb: SupabaseClient) => PromiseLike<{ error: unknown; data?: any }>) {
-  if (!supabase || !(await ensureUser())) return null;
+  if (!supabase) return null;
   const { data, error } = await fn(supabase);
   if (error) { console.warn('[mujeeb] ' + label + ' failed:', error); throw error; }
   return data;

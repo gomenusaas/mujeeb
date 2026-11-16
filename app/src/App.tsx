@@ -12,6 +12,7 @@ import { StoryViewer } from './screens/Stories';
 import { PhotoViewer } from './screens/Photo';
 import { STORIES } from './data/stories';
 import { Bookings, Favorites, Notifications, Profile } from './screens/Account';
+import { AuthSheet } from './screens/Auth';
 
 const TABS: { id: RootTab; icon: string }[] = [
   { id: 'home', icon: 'house' }, { id: 'categories', icon: 'layout-grid' }, { id: 'explore', icon: 'compass' },
@@ -85,6 +86,7 @@ function Phone() {
         {reachCo && <CompanySheet co={reachCo} />}
         {reachCo && <ReachSheets co={reachCo} />}
         {top.s === 'listing' && <SortSheet />}
+        <AuthSheet />
         {toast && (
           <div style={{ position: 'absolute', insetInline: 16, bottom: showTabs ? 'calc(88px + var(--safe-bottom))' : 'calc(104px + var(--safe-bottom))', zIndex: 60 }}>
             <Toast message={toast.msg} tone={toast.tone} />
