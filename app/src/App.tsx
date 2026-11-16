@@ -6,7 +6,7 @@ import type { Catalog, CustomerSeed } from './data/types';
 import { STR } from './i18n/strings';
 import { useDragScroll } from './app/useDragScroll';
 import { Categories, Explore, Home } from './screens/Discover';
-import { AlbumPage, CompanyPage, CompanySheet, Listing, ServicePage, SortSheet } from './screens/Provider';
+import { AlbumPage, CompanyPage, CompanySheet, Listing, ReachSheets, ServicePage, SortSheet } from './screens/Provider';
 import { BookingPage, DonePage } from './screens/Flows';
 import { StoryViewer } from './screens/Stories';
 import { STORIES } from './data/stories';
@@ -61,6 +61,8 @@ function Phone() {
   const unread = Object.values(chats).reduce((n, c) => n + (c.unread || 0), 0);
   const showTabs = stack.length === 1 && TABS.some(x => x.id === top.s);
   const company = top.s === 'company' ? a.idx.co.get(top.id!) : undefined;
+  // Company behind the Contact / Directions buttons on the company or service page.
+  const reachCo = company || (top.s === 'service' ? a.idx.co.get(a.idx.svc.get(top.id!)?.co || '') : undefined);
 
   return (
     <div className="mj-root">
@@ -79,6 +81,7 @@ function Phone() {
           </div>
         )}
         {company && <CompanySheet co={company} />}
+        {reachCo && <ReachSheets co={reachCo} />}
         {top.s === 'listing' && <SortSheet />}
         {toast && (
           <div style={{ position: 'absolute', insetInline: 16, bottom: showTabs ? 'calc(88px + var(--safe-bottom))' : 'calc(104px + var(--safe-bottom))', zIndex: 60 }}>

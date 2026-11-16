@@ -37,7 +37,8 @@ export const STR = {
   autoReply: ['شكرًا، وصلت رسالتك. سنرد عليك بالتفاصيل قريبًا.', 'Thanks, got your message. We will get back to you with details shortly.'],
   loading: ['جارٍ التحميل…', 'Loading…'], loadError: ['تعذر تحميل البيانات', 'Could not load data'],
   stories: ['قصص الشركات', 'Company stories'], latestProjects: ['آخر المشاريع', 'Last projects'],
-  viewAs: ['طريقة العرض', 'View as'], sortBy: ['ترتيب حسب', 'Sort by'], follow: ['متابعة', 'Follow'], readMore: ['اقرأ المزيد', 'Read more'], following: ['تمت المتابعة', 'Following'],
+  viewAs: ['طريقة العرض', 'View as'], sortBy: ['ترتيب حسب', 'Sort by'], follow: ['متابعة', 'Follow'], readMore: ['اقرأ المزيد', 'Read more'],
+  reach: ['تواصل', 'Contact'], reachTitle: ['تواصل مع الشركة', 'Contact the company'], directions: ['الاتجاهات', 'Directions'], chooseBranch: ['اختر الفرع', 'Choose a branch'], openingMaps: ['جارٍ فتح الخرائط…', 'Opening Maps…'], following: ['تمت المتابعة', 'Following'],
   followedT: ['تمت متابعة الشركة', 'You’re following this company'], unfollowedT: ['أُلغيت المتابعة', 'Unfollowed'], verifiedSort: ['موثّقة', 'Verified'], viewLarge: ['بطاقات كبيرة', 'Large cards'], viewGrid: ['بطاقتان في الصف', 'Two per row'], viewRows: ['قائمة مختصرة', 'Compact list'], close: ['إغلاق', 'Close'], hoursAgo: ['منذ {n} س', '{n}h'],
 } satisfies Record<string, Pair>;
 

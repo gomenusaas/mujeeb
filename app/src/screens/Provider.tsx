@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import { Avatar, Badge, BottomSheet, Button, EmptyState, Icon, IconButton, ImageSlot, ListItem, SearchBar, SectionHeader } from '../ds';
 import { useApp, type Filters, type ListView, type SheetKey } from '../app/store';
-import { ContactGrid, HScroll, Img, MetaLine, TopBar, callPhone, card, helpers, openWhatsApp, stop } from '../app/view';
+import { ContactGrid, HScroll, Img, MetaLine, TopBar, callPhone, card, helpers, openDirections, openWhatsApp, stop } from '../app/view';
 import { logoUrl, photo } from '../data/api';
 import type { Company } from '../data/types';
 
@@ -364,6 +364,34 @@ const MENU: [Exclude<SheetKey, null | 'menu'>, string, string, 'about' | 'branch
   ['coverage', 'route', 'green', 'svcAreas'], ['contact', 'phone', 'amber', 'contact'], ['website', 'globe', 'indigo', 'website'], ['social', 'at-sign', 'pink', 'social'],
 ];
 
+/** Sheets behind the Contact and Directions buttons (company and service pages). */
+export function ReachSheets({ co }: { co: Company }) {
+  const a = useApp();
+  const { t, ar, sheet, setSheet } = a;
+  const close = (fn: () => void) => () => { setSheet(null); fn(); };
+  return (
+    <div style={{ position: 'absolute', inset: 0, zIndex: 40, pointerEvents: 'none' }}>
+      <BottomSheet open={sheet === 'reach' || sheet === 'directions'} onClose={() => setSheet(null)} title={sheet === 'directions' ? t.chooseBranch : t.reachTitle}>
+        {sheet === 'reach' && (
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <ListItem icon="message-circle" color="green" title={t.whatsapp} subtitle={co.phone} onClick={close(() => openWhatsApp(a, co))} />
+            <ListItem icon="messages-square" color="violet" title={t.message} onClick={() => a.openChat(co.id)} />
+            <ListItem icon="phone" color="sky" title={t.call} subtitle={co.phone} onClick={close(() => callPhone(a, co.phone))} />
+          </div>
+        )}
+        {sheet === 'directions' && (
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {co.branches.map((b, k) => (
+              <ListItem key={k} icon="map-pin" color={b[2] ? 'teal' : 'sky'} title={ar ? b[0] : b[1]} subtitle={b[2] ? t.primary : t.branch}
+                trailing={<Icon name="navigation" size={18} color="var(--brand)" />} chevron={false} onClick={close(() => openDirections(a, co, b))} />
+            ))}
+          </div>
+        )}
+      </BottomSheet>
+    </div>
+  );
+}
+
 export function CompanySheet({ co }: { co: Company }) {
   const a = useApp();
   const { t, ar, sheet, setSheet, catalog } = a;
@@ -389,7 +417,7 @@ export function CompanySheet({ co }: { co: Company }) {
   const cov = co.cov.includes('all') ? [h.gname('all')] : co.cov.map(h.gname);
   return (
     <div style={{ position: 'absolute', inset: 0, zIndex: 40, pointerEvents: 'none' }}>
-      <BottomSheet open={!!sheet} onClose={() => setSheet(null)} title={cur ? t[cur[3]] : t.menu}>
+      <BottomSheet open={sheet === 'menu' || !!cur} onClose={() => setSheet(null)} title={cur ? t[cur[3]] : t.menu}>
         {cur && (
           <button type="button" onClick={() => setSheet('menu')} style={{ display: 'flex', alignItems: 'center', gap: 6, margin: '-4px 0 8px', padding: '6px 0', border: 'none', background: 'none', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 700, color: 'var(--brand)' }}>
             <Icon name="arrow-left" size={16} />{t.menu}

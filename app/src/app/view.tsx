@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { AppBar, Icon } from '../ds';
 import { logoUrl, photo } from '../data/api';
-import type { Album, Company, Service } from '../data/types';
+import type { Album, Branch, Company, Service } from '../data/types';
 import type { App } from './store';
 import { arDigits } from '../i18n/strings';
 
@@ -82,22 +82,22 @@ export const MetaLine = ({ icon, children, size = 13, style }: { icon: string; c
   </span>
 );
 
-/** The 3–4 contact buttons on company & service pages. */
+/** Contact, Directions and Follow on company & service pages. Contact and multi-branch directions open sheets (ReachSheets). */
 export function ContactGrid({ a, co }: { a: App; co: Company }) {
   const { t } = a;
   const items = [
-    { icon: 'message-circle', label: t.whatsapp, tone: 'green', go: () => openWhatsApp(a, co) },
-    { icon: 'messages-square', label: t.message, tone: 'violet', go: () => a.openChat(co.id) },
-    { icon: 'phone', label: t.call, tone: 'sky', go: () => callPhone(a, co.phone) },
+    { icon: 'headset', label: t.reach, tone: 'green', go: () => a.setSheet('reach') },
+    { icon: 'navigation', label: t.directions, tone: 'sky', go: () => (co.branches.length > 1 ? a.setSheet('directions') : openDirections(a, co, co.branches[0])) },
     { icon: a.follows[co.id] ? 'user-check' : 'user-plus', label: a.follows[co.id] ? t.following : t.follow, tone: 'amber', on: !!a.follows[co.id], go: () => a.toggleFollow(co.id) },
   ];
   return (
     <div style={{ display: 'grid', gridAutoFlow: 'column', gridAutoColumns: 'minmax(0,1fr)', gap: 8 }}>
       {items.map(x => (
         <button key={x.label} type="button" className="mj-press" onClick={x.go} aria-pressed={'on' in x ? x.on : undefined}
-          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '12px 4px', border: 'none', borderRadius: 'var(--radius-md)', background: 'var(--surface-card)', boxShadow: 'var(--shadow-xs)', cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'center' }}>
-          <span style={{ width: 40, height: 40, borderRadius: 12, background: 'on' in x && x.on ? 'var(--brand)' : 'var(--cat-' + x.tone + '-100)', color: 'on' in x && x.on ? '#fff' : 'var(--cat-' + x.tone + '-600)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background var(--dur-base)' }}><Icon name={x.icon} size={20} /></span>
-          <span style={{ font: 'var(--type-caption)', color: 'var(--text-primary)' }}>{x.label}</span>
+          style={{ minWidth: 0, height: 46, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '0 8px', border: 'none', borderRadius: 12, cursor: 'pointer', fontFamily: 'var(--font-sans)', font: 'var(--type-body-sm)', fontWeight: 700, whiteSpace: 'nowrap',
+            background: 'on' in x && x.on ? 'var(--brand)' : 'var(--cat-' + x.tone + '-100)', color: 'on' in x && x.on ? '#fff' : 'var(--cat-' + x.tone + '-800)', transition: 'background var(--dur-base), color var(--dur-base)' }}>
+          <Icon name={x.icon} size={18} style={{ flex: 'none' }} />
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{x.label}</span>
         </button>
       ))}
     </div>
@@ -109,6 +109,16 @@ const digits = (p: string) => p.replace(/[^\d]/g, '');
 export function openWhatsApp(a: App, co: Company) {
   a.showToast(a.t.opening, 'info');
   window.open('https://wa.me/' + digits(co.phone), '_blank', 'noopener');
+}
+/**
+ * Opens the phone's maps app with directions to a branch. Branches have no coordinates yet, so the
+ * destination is a search for "company, branch area, Oman". Apple Maps on iPhone/iPad, Google Maps elsewhere.
+ */
+export function openDirections(a: App, co: Company, branch?: Branch) {
+  const q = encodeURIComponent(co.en + ', ' + (branch ? branch[1] : co.cityEn) + ', Oman');
+  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  a.showToast(a.t.openingMaps, 'info');
+  window.open(ios ? 'https://maps.apple.com/?daddr=' + q + '&dirflg=d' : 'https://www.google.com/maps/dir/?api=1&destination=' + q, '_blank', 'noopener');
 }
 export function callPhone(a: App, phone: string) {
   a.showToast(a.t.calling + ' ' + phone, 'info');
