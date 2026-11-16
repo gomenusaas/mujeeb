@@ -194,10 +194,10 @@ export function CompanyPage() {
       <div style={{ position: 'relative', marginTop: -28, borderRadius: '28px 28px 0 0', background: 'var(--bg-app)', padding: '0 20px 28px', display: 'flex', flexDirection: 'column', gap: 18, flex: 1 }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 14, marginTop: -36 }}>
           <Avatar name={cv.name} src={cv.logo} size={84} verified={cv.verified} style={{ borderRadius: '50%', boxShadow: '0 0 0 4px var(--bg-app)' }} />
-          {/* Favorite: outline heart, filled red once saved. */}
+          {/* Favorite: white circle, grey outline heart, filled red once saved. */}
           <button type="button" className="mj-press" aria-label={t.favorites} title={t.favorites} aria-pressed={cv.fav} onClick={cv.onFav}
-            style={{ flex: 'none', alignSelf: 'center', width: 46, height: 46, borderRadius: '50%', border: 'none', background: 'var(--cat-pink-100)', color: cv.fav ? 'var(--danger)' : 'var(--cat-pink-600)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 4px var(--bg-app)', transition: 'color var(--dur-base)' }}>
-            <Icon name="heart" size={20} filled={cv.fav} />
+            style={{ flex: 'none', alignSelf: 'center', width: 46, height: 46, borderRadius: '50%', border: 'none', background: 'var(--surface-card)', color: cv.fav ? 'var(--danger)' : 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 4px var(--bg-app), var(--shadow-sm)', transition: 'color var(--dur-base)' }}>
+            <Icon name="heart" size={26} filled={cv.fav} />
           </button>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
