@@ -69,7 +69,8 @@ export const api = {
     const { error } = await client().auth.resetPasswordForEmail(email, { redirectTo: back });
     if (error) throw new ApiError(error.message);
   },
-  recovering: () => /type=recovery/.test(location.hash),
+  /** Arrived from a password-reset or admin-invite email: choose a password first. */
+  recovering: () => /type=(recovery|invite)/.test(location.hash),
   async setPassword(password: string) {
     const { error } = await client().auth.updateUser({ password });
     if (error) throw new ApiError(error.message);
@@ -111,5 +112,17 @@ export const api = {
   /* Admins */
   admins: () => rpc<AdminRow[]>('admin_list_admins'),
   addAdmin: (email: string) => rpc<void>('admin_add_admin', { p_email: email }),
+  /**
+   * Gives admin access by email. An existing account gets it right away; a new email gets an invite
+   * to set a password (Edge Function invite-admin, which holds the secret key on Supabase's side).
+   */
+  async inviteAdmin(email: string, name: string): Promise<{ invited: boolean }> {
+    const { data, error } = await client().functions.invoke('invite-admin', { body: { email, name, redirectTo: location.origin } });
+    if (error) {
+      const body = await (error as { context?: Response }).context?.json?.().catch(() => null);
+      throw new ApiError(body?.error || error.message);
+    }
+    return { invited: !!data?.invited };
+  },
   removeAdmin: (uid: string) => rpc<void>('admin_remove_admin', { uid }),
 };

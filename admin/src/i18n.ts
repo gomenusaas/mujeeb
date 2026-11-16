@@ -62,7 +62,11 @@ export const STR = {
   // Admins
   adminsSub: ['من يستطيع الدخول إلى لوحة الإدارة.', 'Who can sign in to the admin app.'], addAdmin: ['إضافة مشرف', 'Add admin'],
   addAdminHelp: ['يجب أن يكون للشخص حساب على مجيب أولًا (في تطبيق العملاء أو الشركات).', 'The person needs a MUJEEB account first (in the customer or provider app).'],
-  adminAdded: ['أُضيف المشرف', 'Admin added'], removeAdmin: ['إزالة صلاحية المشرف', 'Remove admin access'], adminRemoved: ['أُزيلت الصلاحية', 'Admin access removed'],
+  adminAdded: ['لهذا البريد حساب، وأصبح مشرفًا الآن', 'That email already had an account; it’s an admin now'],
+  inviteAdmin: ['دعوة مشرف', 'Invite an admin'], invite: ['إرسال الدعوة', 'Send invite'], adminName: ['الاسم (اختياري)', 'Name (optional)'],
+  inviteAdminHelp: ['نرسل إلى البريد رابطًا لتعيين كلمة مرور، ثم يدخل مباشرة إلى لوحة الإدارة. إن كان للبريد حساب على مجيب يصبح مشرفًا فورًا.', 'We email a link to set a password, then they land straight in the admin app. If the email already has a MUJEEB account, it becomes an admin right away.'],
+  inviteSent: ['أُرسلت الدعوة إلى', 'Invite sent to'], badEmail: ['البريد الإلكتروني غير صحيح.', 'That email address isn’t valid.'],
+  inviteNotAllowed: ['لا يمكن إرسال بريد إلى هذا العنوان بعد (يلزم ربط خدمة بريد).', 'Can’t email this address yet (an email service needs to be connected).'], removeAdmin: ['إزالة صلاحية المشرف', 'Remove admin access'], adminRemoved: ['أُزيلت الصلاحية', 'Admin access removed'],
   since: ['منذ', 'Since'],
 
   // Common

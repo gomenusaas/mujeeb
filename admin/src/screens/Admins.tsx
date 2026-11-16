@@ -11,13 +11,20 @@ export function Admins() {
   const { t } = a;
   const list = useLoad(() => api.admins(), []);
   const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
   const [busy, setBusy] = useState('');
   const [removing, setRemoving] = useState<AdminRow | null>(null);
   const add = async () => {
     if (!email.trim()) return;
     setBusy('add');
-    try { await api.addAdmin(email.trim()); setEmail(''); a.showToast(t.adminAdded); list.reload(); }
-    catch (e) { a.showToast(errText(e, t), 'error'); } finally { setBusy(''); }
+    try {
+      const r = await api.inviteAdmin(email.trim(), name.trim());
+      a.showToast(r.invited ? t.inviteSent + ' ' + email.trim() : t.adminAdded);
+      setEmail(''); setName(''); list.reload();
+    } catch (e) {
+      const m = String((e as Error)?.message || '');
+      a.showToast(m === 'email_not_allowed' ? t.inviteNotAllowed : m === 'bad_email' ? t.badEmail : errText(e, t), 'error');
+    } finally { setBusy(''); }
   };
   const remove = async () => {
     if (!removing) return;
@@ -47,10 +54,11 @@ export function Admins() {
           );
         })}
       </Card>
-      <Card title={t.addAdmin} subtitle={t.addAdminHelp}>
+      <Card title={t.inviteAdmin} subtitle={t.inviteAdminHelp}>
         <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          <Field label={t.adminName} value={name} onChange={setName} style={{ flex: '1 1 200px' }} />
           <Field label={t.email} type="email" dir="ltr" value={email} onChange={setEmail} style={{ flex: '1 1 260px' }} />
-          <Button iconLeft="user-plus" loading={busy === 'add'} onClick={add}>{t.add}</Button>
+          <Button iconLeft="send" loading={busy === 'add'} onClick={add}>{t.invite}</Button>
         </div>
       </Card>
       <ConfirmModal open={!!removing} title={t.removeAdmin + (removing ? ' · ' + removing.email : '')} body={t.adminsSub} confirm={t.remove} busy={busy === 'rm'}
