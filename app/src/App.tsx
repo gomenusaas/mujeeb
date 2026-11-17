@@ -77,7 +77,7 @@ function Phone() {
           <ScreenSwitch route={base} />
         </div>
         {top.s === 'story' && <StoryViewer key="story" />}
-        {top.s === 'photo' && <PhotoViewer key={top.src + '|' + top.id} />}
+        {top.s === 'photo' && <PhotoViewer key={top.src + '|' + (top.id ?? top.cat)} />}
         {showTabs && (
           <div style={{ position: 'absolute', insetInline: 0, bottom: 0, zIndex: 10 }}>
             <TabBar items={TABS.map(x => ({ ...x, label: t[x.id] }))} active={tab} onChange={a.setTab} />

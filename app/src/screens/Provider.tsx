@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { Avatar, Badge, BottomSheet, Button, EmptyState, Icon, IconButton, ImageSlot, ListItem, SearchBar, SectionHeader } from '../ds';
 import { useApp, type CoView, type Filters, type ListView, type SheetKey } from '../app/store';
-import { ContactGrid, HScroll, Img, MetaLine, TopBar, albumMedia, callPhone, card, companyGallery, helpers, openDirections, openWhatsApp, stop, type Media } from '../app/view';
+import { ContactGrid, HScroll, Img, MetaLine, TopBar, albumMedia, callPhone, card, categoryGallery, companyGallery, helpers, listingCompanies, openDirections, openWhatsApp, stop, type Media } from '../app/view';
 import { logoUrl, photo, remote } from '../data/api';
 import type { Company } from '../data/types';
 import { WEEK_ORDER, dayName, fmtTime, isOpenNow, muscatToday, shifts } from '../app/hours';
@@ -10,19 +10,22 @@ const VIEWS: { v: ListView; icon: string; label: 'viewLarge' | 'viewGrid' | 'vie
   { v: 'large', icon: 'gallery-vertical', label: 'viewLarge' }, { v: 'grid', icon: 'grid-2x2', label: 'viewGrid' }, { v: 'rows', icon: 'layout-list', label: 'viewRows' },
 ];
 
-const CO_TABS: { v: CoView; label: 'services' | 'gallery' }[] = [{ v: 'list', label: 'services' }, { v: 'gallery', label: 'gallery' }];
+type TabLabel = 'services' | 'gallery' | 'companiesTab';
+const CO_TABS: { v: CoView; label: TabLabel }[] = [{ v: 'list', label: 'services' }, { v: 'gallery', label: 'gallery' }];
+type CatView = 'companies' | 'gallery';
+const CAT_TABS: { v: CatView; label: TabLabel }[] = [{ v: 'companies', label: 'companiesTab' }, { v: 'gallery', label: 'gallery' }];
 
 /**
- * Company page tabs: «الخدمات» (services list) and «المعرض» (project photos and videos).
- * Only the purple underline moves, gliding slowly to the tab you pick.
+ * Two tabs with an underline: «الخدمات» / «المعرض» on a company page, «الشركات» / «المعرض» on a
+ * category page. Only the purple underline moves, gliding slowly to the tab you pick.
  */
-function CoTabs({ value, onPick }: { value: CoView; onPick: (v: CoView) => void }) {
+function UnderlineTabs<V extends string>({ tabs, value, onPick }: { tabs: { v: V; label: TabLabel }[]; value: V; onPick: (v: V) => void }) {
   const a = useApp();
-  const k = CO_TABS.findIndex(x => x.v === value);
+  const k = tabs.findIndex(x => x.v === value);
   const ease = '480ms cubic-bezier(0.65, 0, 0.35, 1)';
   return (
     <div role="tablist" aria-label={a.t.viewAs} style={{ position: 'relative', display: 'flex', boxShadow: 'inset 0 -1px 0 var(--border-subtle)' }}>
-      {CO_TABS.map(x => {
+      {tabs.map(x => {
         const on = value === x.v;
         return (
           <button key={x.v} type="button" role="tab" aria-selected={on} onClick={() => onPick(x.v)}
@@ -48,6 +51,31 @@ function scrollParent(el: HTMLElement | null): HTMLElement | null {
   return null;
 }
 
+/**
+ * Keeps the page still when a section switches between two views: the section's top stays put on
+ * screen, and the section keeps at least enough height below it that a shorter view can't pull the
+ * page up. Call `prepare()` just before switching; put `ref` and `minHeight` on the section.
+ */
+function useSteadySwitch(id: string, view: string) {
+  const ref = useRef<HTMLDivElement>(null);
+  const anchor = useRef<number | null>(null);
+  const [hold, setHold] = useState<{ id: string; h: number } | null>(null);
+  const prepare = () => {
+    const el = ref.current, sc = scrollParent(el);
+    if (!el || !sc) return;
+    const top = el.getBoundingClientRect().top - sc.getBoundingClientRect().top;
+    anchor.current = top;
+    setHold({ id, h: Math.max(0, sc.clientHeight - top) });
+  };
+  useLayoutEffect(() => {
+    const el = ref.current, sc = scrollParent(el), want = anchor.current;
+    if (!el || !sc || want == null) return;
+    anchor.current = null;
+    sc.scrollTop += el.getBoundingClientRect().top - sc.getBoundingClientRect().top - want;
+  }, [view]);
+  return { ref, minHeight: hold?.id === id ? hold.h : undefined, prepare };
+}
+
 /** A photo (cropped to `ratio`, or at its natural height) or a silent looping video with a play badge. */
 function MediaTile({ m, w, ratio, onOpen, style }: { m: Media; w: number; ratio?: string; onOpen: () => void; style?: CSSProperties }) {
   return (
@@ -68,17 +96,37 @@ function MediaTile({ m, w, ratio, onOpen, style }: { m: Media; w: number; ratio?
 /** Photo shapes down each gallery column, so the two columns stagger (Pinterest-style). Videos keep their own shape. */
 const MASONRY_RATIOS = ['3/4', '1/1', '4/5', '4/3', '3/4', '1/1', '4/5'];
 
-/** Two staggered columns of photos and videos. */
+/** How many gallery items load at a time; more load as the customer nears the end. */
+const GALLERY_BATCH = 30;
+
+/**
+ * Two staggered columns of photos and videos, loaded GALLERY_BATCH at a time.
+ * Tiles show only the work; the viewer names the company. Remount (change `key`) to start over.
+ */
 function Masonry({ items, onOpen }: { items: Media[]; onOpen: (k: number) => void }) {
-  const cols = [0, 1].map(c => items.map((m, k) => ({ m, k })).filter(x => x.k % 2 === c));
+  const [limit, setLimit] = useState(GALLERY_BATCH);
+  const end = useRef<HTMLDivElement>(null);
+  const more = items.length > limit;
+  useEffect(() => {
+    const el = end.current;
+    if (!el || !more) return;
+    const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) setLimit(n => n + GALLERY_BATCH); }, { rootMargin: '600px 0px' });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [more, limit]);
+  const shown = items.slice(0, limit);
+  const cols = [0, 1].map(c => shown.map((m, k) => ({ m, k })).filter(x => x.k % 2 === c));
   return (
-    <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-      {cols.map((col, c) => (
-        <div key={c} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {col.map(({ m, k }, j) => <MediaTile key={k} m={m} w={500} ratio={MASONRY_RATIOS[(j * 2 + c * 3) % MASONRY_RATIOS.length]} onOpen={() => onOpen(k)} />)}
-        </div>
-      ))}
-    </div>
+    <>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+        {cols.map((col, c) => (
+          <div key={c} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {col.map(({ m, k }, j) => <MediaTile key={k} m={m} w={500} ratio={MASONRY_RATIOS[(j * 2 + c * 3) % MASONRY_RATIOS.length]} onOpen={() => onOpen(k)} />)}
+          </div>
+        ))}
+      </div>
+      {more && <div ref={end} aria-hidden="true" style={{ height: 1 }} />}
+    </>
   );
 }
 
@@ -135,21 +183,21 @@ export function Listing() {
   const { t, catalog, f, setF, top } = a;
   const h = helpers(a);
   const c = top.cat;
-  const q = f.q.trim().toLowerCase();
   const set = (p: Partial<Filters>) => setF(x => ({ ...x, ...p }));
-  let res = catalog.companies.filter(co =>
-    (c == null || co.cats.includes(c)) &&
-    // Coverage, not branch location, decides whether a company appears for a governorate.
-    (f.gov === 'all' || co.cov.includes('all') || co.cov.includes(f.gov)) &&
-    (!f.verified || co.verified) &&
-    (!q || [co.ar, co.en, ...co.cats.map(i => catalog.cats[i].ar + ' ' + catalog.cats[i].en),
-      ...catalog.services.filter(s => s.co === co.id).map(s => s.ar + ' ' + s.en)].join(' ').toLowerCase().includes(q)));
-  if (f.sort === 'near') res = res.slice().sort((x, y) => Number(y.gov === 'muscat') - Number(x.gov === 'muscat'));
-  if (f.sort === 'recent') res = res.slice().reverse();
-  // Verified companies first; the rest keep their relevance order.
-  if (f.sort === 'verified') res = res.slice().sort((x, y) => Number(y.verified) - Number(x.verified));
+  const res = listingCompanies(a, c);
   const color = c == null ? 'violet' : catalog.cats[c].color;
   const results = res.map(h.coV);
+  // «المعرض» tab: shown when any company has media filed under this category (filters may still empty it).
+  const hasMedia = catalog.albums.some(al => (c == null || al.cat === c) && al.imgs.length + (al.vids?.length ?? 0) > (al.hide?.length ?? 0));
+  const view: CatView = hasMedia && top.tab === 'gallery' ? 'gallery' : 'companies';
+  const steady = useSteadySwitch('cat' + c, view);
+  // The tab lives in the route, so the back button and links return to it.
+  const pickView = (v: CatView) => {
+    if (v === view) return;
+    steady.prepare();
+    a.replace('listing', { cat: c, ...(v === 'gallery' ? { tab: 'gallery' as const } : {}) });
+  };
+  const gallery = view === 'gallery' ? categoryGallery(a, c) : [];
 
   return (
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column', paddingBottom: 40 }}>
@@ -172,7 +220,19 @@ export function Listing() {
           <SearchBar placeholder={t.search} value={f.q} onChange={e => set({ q: e.target.value })} onFilter={null} elevated />
         </div>
       </div>
-      <div style={{ padding: '8px 20px 0', display: 'flex', gap: 8, alignItems: 'center' }}>
+      <div ref={steady.ref} style={{ display: 'flex', flexDirection: 'column', minHeight: steady.minHeight }}>
+      {hasMedia && <div style={{ padding: '4px 20px 0' }}><UnderlineTabs tabs={CAT_TABS} value={view} onPick={pickView} /></div>}
+      {view === 'gallery' ? (
+        <div style={{ padding: '14px 20px 0' }}>
+          {gallery.length
+            ? <Masonry key={[c, f.q, f.gov, f.verified, f.sort].join('|')} items={gallery} onOpen={k => a.go('photo', { src: 'category', cat: c, i: k })} />
+            : <>
+                <EmptyState icon="images" color={color} title={t.noResults} body={t.noResultsBody} />
+                <div style={{ display: 'flex', justifyContent: 'center' }}><Button variant="secondary" onClick={() => set({ gov: 'all', verified: false, q: '' })}>{t.clear}</Button></div>
+              </>}
+        </div>
+      ) : (<>
+      <div style={{ padding: '14px 20px 0', display: 'flex', gap: 8, alignItems: 'center' }}>
         <ViewSwitch />
         <button type="button" aria-haspopup="dialog" aria-label={t.sortBy + ': ' + sortLabel(t, f.sort)} onClick={() => a.setSheet('sort')}
           style={{ marginInlineStart: 'auto', height: 46, display: 'flex', alignItems: 'center', gap: 8, padding: '0 16px', border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--neutral-100)', color: 'var(--text-primary)', font: 'var(--type-body-sm)', fontWeight: 700, fontFamily: 'var(--font-sans)', cursor: 'pointer' }}>
@@ -239,6 +299,8 @@ export function Listing() {
           ))}
         </div>
       )}
+      </>)}
+      </div>
     </div>
   );
 }
@@ -257,26 +319,12 @@ export function CompanyPage() {
   const view: CoView = gallery.length && picked.id === co.id ? picked.v : 'list';
   useEffect(() => { remote.track(co.id, 'profile_view'); }, [co.id]);
 
-  // Switching list ⇄ gallery keeps the page where it is: the section heading stays put on screen,
-  // and the section keeps at least enough height below it that a shorter view can't pull the page up.
-  const sec = useRef<HTMLDivElement>(null);
-  const anchor = useRef<number | null>(null);
-  const [hold, setHold] = useState<{ id: string; h: number } | null>(null);
+  // Switching list ⇄ gallery keeps the page where it is.
+  const steady = useSteadySwitch(co.id, view);
   const pickView = (v: CoView) => {
-    const el = sec.current, sc = scrollParent(el);
-    if (el && sc && v !== view) {
-      const top = el.getBoundingClientRect().top - sc.getBoundingClientRect().top;
-      anchor.current = top;
-      setHold({ id: co.id, h: Math.max(0, sc.clientHeight - top) });
-    }
+    if (v !== view) steady.prepare();
     setPicked({ id: co.id, v });
   };
-  useLayoutEffect(() => {
-    const el = sec.current, sc = scrollParent(el), want = anchor.current;
-    if (!el || !sc || want == null) return;
-    anchor.current = null;
-    sc.scrollTop += el.getBoundingClientRect().top - sc.getBoundingClientRect().top - want;
-  }, [view]);
   return (
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ position: 'relative', height: 250, background: cv.c100 }}>
@@ -306,9 +354,9 @@ export function CompanyPage() {
           {co.cats.map(i => <CatTag key={i} color={catalog.cats[i].color}>{h.cname(i)}</CatTag>)}
         </div>
         <ContactGrid a={a} co={co} />
-        <div ref={sec} style={{ display: 'flex', flexDirection: 'column', gap: 12, minHeight: hold?.id === co.id ? hold.h : undefined }}>
+        <div ref={steady.ref} style={{ display: 'flex', flexDirection: 'column', gap: 12, minHeight: steady.minHeight }}>
           {/* With project photos there are two tabs; otherwise just the services heading. */}
-          {gallery.length > 0 ? <CoTabs value={view} onPick={pickView} /> : <SectionHeader title={t.services} />}
+          {gallery.length > 0 ? <UnderlineTabs tabs={CO_TABS} value={view} onPick={pickView} /> : <SectionHeader title={t.services} />}
           {view === 'gallery'
             ? <Masonry items={gallery} onOpen={k => a.go('photo', { src: 'gallery', id: co.id, i: k })} />
             : services.map(s => <ServiceRow key={s.id} {...s} thumb={96} />)}

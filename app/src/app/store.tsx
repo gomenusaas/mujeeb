@@ -10,7 +10,9 @@ export type Screen = 'home' | 'categories' | 'explore' | 'profile' | 'listing' |
   | 'booking' | 'bkDone' | 'bookings' | 'favs' | 'notifs' | 'story' | 'photo';
 export type RootTab = 'home' | 'categories' | 'explore' | 'profile';
 /** `src` + `i`: which photo a `photo` route shows (of the album or service `id`). */
-export interface Route { s: Screen; id?: string; cat?: number; co?: string; src?: 'album' | 'service' | 'gallery'; i?: number }
+export interface Route { s: Screen; id?: string; cat?: number; co?: string; src?: 'album' | 'service' | 'gallery' | 'category'; i?: number;
+  /** Category page: which tab is open (missing = companies). */
+  tab?: 'gallery' }
 export interface Filters { gov: 'all' | GovId; verified: boolean; sort: 'rel' | 'near' | 'recent' | 'verified'; q: string }
 /** How the company list is laid out: big cards, two per row, or thin rows. */
 export type ListView = 'large' | 'grid' | 'rows';

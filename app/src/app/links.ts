@@ -8,16 +8,18 @@ import type { RootTab, Route } from './store';
  *   /service/s7           service page           /service/s7/photo/0     one photo of a service
  *   /album/a3             project (album)        /album/a3/photo/2       one photo of a project
  *   /story/<id>           a story (photo or video)   /company/c4/gallery/3   one item of a company's gallery
+ *   /category/1/gallery     a category's gallery tab   /category/1/gallery/4   one item of it (order is per customer and day)
  *   /categories /explore /profile               the other tabs
  */
 
 export function routeToPath(r: Route): string {
   switch (r.s) {
     case 'company': return '/company/' + r.id;
-    case 'listing': return r.cat != null ? '/category/' + r.cat : '/companies';
+    case 'listing': return (r.cat != null ? '/category/' + r.cat : '/companies') + (r.tab === 'gallery' ? '/gallery' : '');
     case 'service': return '/service/' + r.id;
     case 'album': return '/album/' + r.id;
     case 'photo': return r.src === 'gallery' ? '/company/' + r.id + '/gallery/' + (r.i ?? 0)
+      : r.src === 'category' ? (r.cat != null ? '/category/' + r.cat : '/companies') + '/gallery/' + (r.i ?? 0)
       : '/' + (r.src === 'service' ? 'service' : 'album') + '/' + r.id + '/photo/' + (r.i ?? 0);
     case 'story': return '/story/' + r.id;
     case 'categories': case 'explore': case 'profile': return '/' + r.s;
@@ -36,8 +38,13 @@ export function pathToStack(path: string, catalog: Catalog, stories: Story[]): {
     const base: Route[] = [home, { s: 'company', id: b }];
     return { stack: c === 'gallery' ? [...base, { s: 'photo', src: 'gallery', id: b, i: Number(d) || 0 }] : base, tab: 'home' };
   }
-  if (a === 'category' && b != null && catalog.cats.some(x => String(x.i) === b)) return { stack: [home, { s: 'listing', cat: Number(b) }], tab: 'home' };
-  if (a === 'companies') return { stack: [home, { s: 'listing' }], tab: 'home' };
+  // A category page (or all companies), optionally on its gallery tab or one item of that gallery.
+  const listing = (cat: number | undefined, rest: string[]) => {
+    const base: Route = { s: 'listing', cat, ...(rest[0] === 'gallery' ? { tab: 'gallery' as const } : {}) };
+    return { stack: rest[0] === 'gallery' && rest[1] != null ? [home, base, { s: 'photo' as const, src: 'category' as const, cat, i: Number(rest[1]) || 0 }] : [home, base], tab: 'home' as const };
+  };
+  if (a === 'category' && b != null && catalog.cats.some(x => String(x.i) === b)) return listing(Number(b), p.slice(2));
+  if (a === 'companies') return listing(undefined, p.slice(1));
   if (a === 'service' && b && has.svc(b)) {
     const base: Route[] = [home, { s: 'service', id: b }];
     return { stack: c === 'photo' ? [...base, { s: 'photo', src: 'service', id: b, i: Number(d) || 0 }] : base, tab: 'home' };

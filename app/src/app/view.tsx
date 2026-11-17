@@ -59,6 +59,91 @@ export function companyGallery(a: App, coId: string): Media[] {
     });
 }
 
+/**
+ * Companies on a category page (all categories when `c` is empty) after the customer's
+ * search and filters, in the chosen sort order. The category gallery uses the same companies.
+ */
+export function listingCompanies(a: App, c: number | undefined): Company[] {
+  const { catalog, f } = a;
+  const q = f.q.trim().toLowerCase();
+  let res = catalog.companies.filter(co =>
+    (c == null || co.cats.includes(c)) &&
+    // Coverage, not branch location, decides whether a company appears for a governorate.
+    (f.gov === 'all' || co.cov.includes('all') || co.cov.includes(f.gov)) &&
+    (!f.verified || co.verified) &&
+    (!q || [co.ar, co.en, ...co.cats.map(i => catalog.cats[i].ar + ' ' + catalog.cats[i].en),
+      ...catalog.services.filter(s => s.co === co.id).map(s => s.ar + ' ' + s.en)].join(' ').toLowerCase().includes(q)));
+  if (f.sort === 'near') res = res.slice().sort((x, y) => Number(y.gov === 'muscat') - Number(x.gov === 'muscat'));
+  if (f.sort === 'recent') res = res.slice().reverse();
+  // Verified companies first; the rest keep their relevance order.
+  if (f.sort === 'verified') res = res.slice().sort((x, y) => Number(y.verified) - Number(x.verified));
+  return res;
+}
+
+/** Projects added within this many days count as new and move toward the top of the category gallery. */
+const FRESH_DAYS = 14;
+
+/** A random id kept on this device, so each customer's gallery order differs a little from everyone else's. */
+let deviceSeed = '';
+function customerSeed(): string {
+  if (deviceSeed) return deviceSeed;
+  const K = 'mujeeb.seed';
+  try { deviceSeed = localStorage.getItem(K) || ''; } catch { /* storage unavailable */ }
+  if (!deviceSeed) {
+    deviceSeed = Math.random().toString(36).slice(2, 10);
+    try { localStorage.setItem(K, deviceSeed); } catch { /* storage unavailable */ }
+  }
+  return deviceSeed;
+}
+
+/** A repeatable random number in [0, 1) for a piece of text. */
+function rand(s: string): number {
+  let h = 2166136261;
+  for (let k = 0; k < s.length; k++) { h ^= s.charCodeAt(k); h = Math.imul(h, 16777619); }
+  h ^= h >>> 15; h = Math.imul(h, 0x2c1b3c6d); h ^= h >>> 12;
+  return (h >>> 0) / 4294967296;
+}
+
+/**
+ * The category gallery («المعرض» on a category page): photos and videos from the projects that
+ * companies filed under this category, for the companies the customer's filters leave on the page,
+ * minus anything a company hid from its galleries.
+ *
+ * Order (the company page gallery does NOT use this; it stays newest project first for everyone):
+ *  - shuffled once a day (Oman date), so it stays the same all day and changes the next;
+ *  - each customer's order differs a little (20% of the shuffle comes from a per-device seed);
+ *  - media from projects added in the last FRESH_DAYS days comes before older media;
+ *  - companies take turns (one item from each company per round) so none fills the screen.
+ * Paid "pinned" slots can later be inserted into the returned list at fixed positions.
+ */
+export function categoryGallery(a: App, c: number | undefined): Media[] {
+  const day = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Muscat' });
+  const me = customerSeed();
+  const score = (key: string) => 0.8 * rand(day + '|' + key) + 0.2 * rand(day + '|' + me + '|' + key);
+  const freshSince = Date.now() - FRESH_DAYS * 864e5;
+  const cos = new Set(listingCompanies(a, c).map(co => co.id));
+  const seen = new Set<string>(); // the same photo used in two projects shows once
+  const queues = new Map<string, { m: Media; s: number }[]>();
+  for (const al of a.catalog.albums) {
+    if ((c != null && al.cat !== c) || !cos.has(al.co)) continue;
+    const hide = new Set(al.hide || []);
+    const boost = Date.parse(al.added) > freshSince ? 1 : 0;
+    const q = queues.get(al.co) ?? [];
+    queues.set(al.co, q);
+    for (const m of al.imgs.map(src => ({ src, video: false, al })).concat((al.vids || []).map(src => ({ src, video: true, al })))) {
+      if (hide.has(m.src) || seen.has(m.src)) continue;
+      seen.add(m.src);
+      q.push({ m, s: boost + score(m.src) });
+    }
+  }
+  const qs = [...queues.values()].filter(q => q.length).map(q => q.sort((x, y) => y.s - x.s));
+  const out: Media[] = [];
+  for (let r = 0; qs.some(q => q.length > r); r++) {
+    qs.filter(q => q.length > r).map(q => q[r]).sort((x, y) => y.s - x.s).forEach(x => out.push(x.m));
+  }
+  return out;
+}
+
 export const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 
 /** Horizontal, snap-scrolling carousel row with hidden scrollbar (mouse-draggable, see useDragScroll). */
