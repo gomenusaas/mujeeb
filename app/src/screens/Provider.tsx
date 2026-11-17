@@ -10,28 +10,31 @@ const VIEWS: { v: ListView; icon: string; label: 'viewLarge' | 'viewGrid' | 'vie
   { v: 'large', icon: 'gallery-vertical', label: 'viewLarge' }, { v: 'grid', icon: 'grid-2x2', label: 'viewGrid' }, { v: 'rows', icon: 'layout-list', label: 'viewRows' },
 ];
 
-const CO_VIEWS: { v: CoView; icon: string; label: 'services' | 'gallery' }[] = [
-  { v: 'list', icon: 'layout-list', label: 'services' }, { v: 'gallery', icon: 'layout-dashboard', label: 'gallery' },
-];
+const CO_TABS: { v: CoView; label: 'services' | 'gallery' }[] = [{ v: 'list', label: 'services' }, { v: 'gallery', label: 'gallery' }];
 
 /**
- * Company page: services list or project gallery. The current view is an icon on purple; the
- * other one also shows its name, so it's clear what tapping it switches to.
+ * Company page tabs: «الخدمات» (services list) and «المعرض» (project photos and videos).
+ * Only the purple underline moves, gliding slowly to the tab you pick.
  */
-function CoViewSwitch({ value, onPick }: { value: CoView; onPick: (v: CoView) => void }) {
+function CoTabs({ value, onPick }: { value: CoView; onPick: (v: CoView) => void }) {
   const a = useApp();
+  const k = CO_TABS.findIndex(x => x.v === value);
+  const ease = '480ms cubic-bezier(0.65, 0, 0.35, 1)';
   return (
-    <div role="radiogroup" aria-label={a.t.viewAs} style={{ flex: 'none', display: 'flex', gap: 2, padding: 3, borderRadius: 'var(--radius-pill)', background: 'var(--neutral-100)' }}>
-      {CO_VIEWS.map(x => {
+    <div role="tablist" aria-label={a.t.viewAs} style={{ position: 'relative', display: 'flex', boxShadow: 'inset 0 -1px 0 var(--border-subtle)' }}>
+      {CO_TABS.map(x => {
         const on = value === x.v;
         return (
-          <button key={x.v} type="button" role="radio" aria-checked={on} aria-label={a.t[x.label]} title={a.t[x.label]} onClick={() => onPick(x.v)}
-            style={{ minWidth: 34, height: 34, padding: on ? 0 : '0 12px', gap: 6, border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: on ? 'var(--brand)' : 'transparent', color: on ? '#fff' : 'var(--text-secondary)', fontFamily: 'var(--font-sans)', font: 'var(--type-body-sm)', fontWeight: 700, whiteSpace: 'nowrap', transition: 'all var(--dur-base) var(--ease-out)' }}>
-            <Icon name={x.icon} size={17} />
-            {!on && <span>{a.t[x.label]}</span>}
+          <button key={x.v} type="button" role="tab" aria-selected={on} onClick={() => onPick(x.v)}
+            style={{ flex: 1, height: 46, padding: 0, border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', font: 'var(--type-title)', fontWeight: on ? 800 : 600,
+              color: on ? 'var(--text-primary)' : 'var(--text-tertiary)', transition: 'color ' + ease }}>
+            {a.t[x.label]}
           </button>
         );
       })}
+      <span aria-hidden="true" style={{ position: 'absolute', bottom: 0, insetInlineStart: k * 50 + '%', width: '50%', height: 3, display: 'flex', justifyContent: 'center', transition: 'inset-inline-start ' + ease, pointerEvents: 'none' }}>
+        <span style={{ width: '56%', height: '100%', borderRadius: 3, background: 'var(--brand)' }} />
+      </span>
     </div>
   );
 }
@@ -304,10 +307,8 @@ export function CompanyPage() {
         </div>
         <ContactGrid a={a} co={co} />
         <div ref={sec} style={{ display: 'flex', flexDirection: 'column', gap: 12, minHeight: hold?.id === co.id ? hold.h : undefined }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-            <SectionHeader title={view === 'gallery' ? t.gallery : t.services} />
-            {gallery.length > 0 && <CoViewSwitch value={view} onPick={pickView} />}
-          </div>
+          {/* With project photos there are two tabs; otherwise just the services heading. */}
+          {gallery.length > 0 ? <CoTabs value={view} onPick={pickView} /> : <SectionHeader title={t.services} />}
           {view === 'gallery'
             ? <Masonry items={gallery} onOpen={k => a.go('photo', { src: 'gallery', id: co.id, i: k })} />
             : services.map(s => <ServiceRow key={s.id} {...s} thumb={96} />)}
