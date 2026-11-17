@@ -11,10 +11,18 @@ export type Screen = 'home' | 'categories' | 'explore' | 'profile' | 'listing' |
 export type RootTab = 'home' | 'categories' | 'explore' | 'profile';
 /** `src` + `i`: which photo a `photo` route shows (of the album or service `id`). */
 export interface Route { s: Screen; id?: string; cat?: number; co?: string; src?: 'album' | 'service' | 'gallery' | 'category'; i?: number;
-  /** Category page: which tab is open (missing = companies). */
-  tab?: 'gallery' }
+  /** Category page / company page: the gallery tab is open (missing = companies / services). */
+  tab?: 'gallery';
+  /** Kept on a page while another page covers it, so Back returns to it as it was: */
+  y?: number;      // scroll position
+  f?: Filters }    // category page: search, filters and sort
+/** Pages that exist once in the back trail: opening one that's already there goes back to it. */
+const SINGLE: Screen[] = ['company', 'service', 'album', 'listing'];
+const samePage = (x: Route, y: Route) => x.s === y.s && (x.id ?? '') === (y.id ?? '') && (x.cat ?? '') === (y.cat ?? '');
+/** Story and full-screen photo open over the page they were tapped on. */
+export const isOverlay = (r: Route) => r.s === 'story' || r.s === 'photo';
 export interface Filters { gov: 'all' | GovId; verified: boolean; sort: 'rel' | 'near' | 'recent' | 'verified'; q: string }
-/** How the company list is laid out: big cards, two per row, or thin rows. */
+/** How the company list is laid out: big cards or thin rows. */
 export type ListView = 'large' | 'rows';
 /** Company page: its services as a list, or a gallery of its project photos and videos. */
 export type CoView = 'list' | 'gallery';
@@ -65,6 +73,12 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
   const ar = lang === 'ar';
   const t: T = useMemo(() => strings(ar), [ar]);
   const top = stack[stack.length - 1];
+  /** The page being shown (under a story or full-screen photo, the page it opened over). Screens read their route from here. */
+  const page = isOverlay(top) ? stack[stack.length - 2] ?? { s: 'home' as const } : top;
+  /** The screen's scroll area (set by the app shell); its position is saved when another page covers it. */
+  const scroller = useRef<HTMLDivElement | null>(null);
+  const fRef = useRef(f);
+  fRef.current = f;
 
   useEffect(() => {
     try { localStorage.setItem(LS, JSON.stringify({ lang, fav, bookings, seq, seen, listView, follows } satisfies Persisted)); } catch { /* storage unavailable */ }
@@ -103,7 +117,7 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
     }
     const onPop = () => {
       if (sheetRef.current) setSheet(null);
-      else if (stackRef.current.length > 1) setStack(st => st.slice(0, -1));
+      else if (stackRef.current.length > 1) popTo(stackRef.current.length - 2);
       else { history.back(); return; }
       history.pushState({ mj: 'guard' }, '');
     };
@@ -111,16 +125,39 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
     return () => window.removeEventListener('popstate', onPop);
   }, []);
 
+  /** The trail with the page now on screen remembering its scroll position (and a category page its filters). */
+  const remembered = (st: Route[]): Route[] => {
+    const k = st.length - 1 - (isOverlay(st[st.length - 1]) ? 1 : 0);
+    if (k < 0 || isOverlay(st[k])) return st;
+    const r: Route = { ...st[k], y: scroller.current?.scrollTop ?? 0, ...(st[k].s === 'listing' ? { f: fRef.current } : {}) };
+    return [...st.slice(0, k), r, ...st.slice(k + 1)];
+  };
+  /** Back to the page at index k of the trail, as it was left. */
+  function popTo(k: number) {
+    const st = stackRef.current.slice(0, k + 1);
+    const r = st[st.length - 1];
+    if (r.s === 'listing') setF(r.f ?? DEFAULT_F);
+    setStack(st);
+  }
   const go = useCallback((s: Screen, p: Omit<Route, 's'> & { q?: string } = {}) => {
     setSheet(null);
     const { q, ...rest } = p;
+    const next: Route = { s, ...rest };
+    const st = remembered(stackRef.current);
+    // Already in the trail (e.g. company → service → the company's logo): go back to it instead of adding a copy.
+    const k = SINGLE.includes(s) && q == null ? st.findIndex(r => samePage(r, next)) : -1;
+    if (k >= 0) {
+      stackRef.current = st;
+      popTo(k);
+      return;
+    }
     if (s === 'listing') setF({ ...DEFAULT_F, q: q || '' });
-    setStack(st => [...st, { s, ...rest }]);
+    setStack([...st, next]);
   }, []);
   const replace = useCallback((s: Screen, p: Omit<Route, 's'> = {}) => setStack(st => [...st.slice(0, -1), { s, ...p }]), []);
   const back = useCallback(() => {
     setSheet(null);
-    setStack(st => (st.length > 1 ? st.slice(0, -1) : st));
+    if (stackRef.current.length > 1) popTo(stackRef.current.length - 2);
   }, []);
   const reset = useCallback((routes: Route[], tb: RootTab) => {
     setSheet(null);
@@ -217,7 +254,7 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
   const coById = useCallback((id?: string): Company | undefined => (id ? idx.co.get(id) : undefined), [idx]);
 
   return {
-    catalog, idx, coById, sharePage, lang, setLang, ar, t, stack, top, tab, setTab, go, back, replace, reset, toast, showToast,
+    catalog, idx, coById, sharePage, lang, setLang, ar, t, stack, top, page, scroller, tab, setTab, go, back, replace, reset, toast, showToast,
     fav, toggleFav, f, setF, sheet, setSheet, exCat, setExCat,
     bookings, setBookings,
     bk, setBk, startBk, submitBooking, days, seen, markSeen, listView, setListView, follows, toggleFollow,

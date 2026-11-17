@@ -10,6 +10,9 @@ const VIEWS: { v: ListView; icon: string; label: 'viewLarge' | 'viewRows' }[] = 
   { v: 'large', icon: 'gallery-vertical', label: 'viewLarge' }, { v: 'rows', icon: 'layout-list', label: 'viewRows' },
 ];
 
+/** Height of the photo at the top of the company page and its service pages (kept the same on both). */
+const HERO_H = 250;
+
 type TabLabel = 'services' | 'gallery' | 'companiesTab';
 const CO_TABS: { v: CoView; label: TabLabel }[] = [{ v: 'list', label: 'services' }, { v: 'gallery', label: 'gallery' }];
 type CatView = 'companies' | 'gallery';
@@ -180,7 +183,7 @@ const CoName = ({ name, verified, size }: { name: string; verified: boolean; siz
 
 export function Listing() {
   const a = useApp();
-  const { t, catalog, f, setF, top } = a;
+  const { t, catalog, f, setF, page: top } = a;
   const h = helpers(a);
   const c = top.cat;
   const set = (p: Partial<Filters>) => setF(x => ({ ...x, ...p }));
@@ -291,27 +294,27 @@ export function Listing() {
 
 export function CompanyPage() {
   const a = useApp();
-  const { t, catalog, top } = a;
+  const { t, catalog, page: top } = a;
   const h = helpers(a);
   const co = a.idx.co.get(top.id!)!;
   const cv = h.coV(co);
   const services = catalog.services.filter(s => s.co === co.id).map(h.svcV);
   const gallery = companyGallery(a, co.id);
-  // Every visit opens on the services list; the gallery is a choice for this visit only (not remembered).
-  // Without gallery items there's nothing to switch to.
-  const [picked, setPicked] = useState<{ id: string; v: CoView }>({ id: co.id, v: 'list' });
-  const view: CoView = gallery.length && picked.id === co.id ? picked.v : 'list';
+  // Every visit opens on the services list; the gallery tab is kept only for this visit (in the route,
+  // so Back from a photo or project returns to it). Without gallery items there's nothing to switch to.
+  const view: CoView = gallery.length && top.tab === 'gallery' ? 'gallery' : 'list';
   useEffect(() => { remote.track(co.id, 'profile_view'); }, [co.id]);
 
   // Switching list ⇄ gallery keeps the page where it is.
   const steady = useSteadySwitch(co.id, view);
   const pickView = (v: CoView) => {
-    if (v !== view) steady.prepare();
-    setPicked({ id: co.id, v });
+    if (v === view) return;
+    steady.prepare();
+    a.replace('company', { id: co.id, ...(v === 'gallery' ? { tab: 'gallery' as const } : {}) });
   };
   return (
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ position: 'relative', height: 250, background: cv.c100 }}>
+      <div style={{ position: 'relative', height: HERO_H, background: cv.c100 }}>
         <img src={photo(co.img, 900)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
         <div style={{ position: 'absolute', top: 'calc(var(--top-inset) + 4px)', insetInline: 16, display: 'flex', justifyContent: 'space-between' }}>
           <IconButton icon="arrow-left" variant="glass" size={40} onClick={a.back} label="Back" />
@@ -454,7 +457,7 @@ function ServiceRow({ title, cat, img, open, thumb }: { title: string; cat?: str
 
 export function ServicePage() {
   const a = useApp();
-  const { t, ar, catalog, top } = a;
+  const { t, ar, catalog, page: top } = a;
   const h = helpers(a);
   const s = a.idx.svc.get(top.id!)!;
   const co = a.idx.co.get(s.co)!;
@@ -465,7 +468,7 @@ export function ServicePage() {
   return (
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ position: 'relative' }}>
-        <div className="mj-s" style={{ display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory', scrollbarWidth: 'none', aspectRatio: '4/3', background: 'var(--cat-' + color + '-100)' }}>
+        <div className="mj-s" style={{ display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory', scrollbarWidth: 'none', height: HERO_H, background: 'var(--cat-' + color + '-100)' }}>
           {s.imgs.map((im, k) => <img key={k} src={photo(im, 800)} alt="" onClick={() => a.go('photo', { src: 'service', id: s.id, i: k })} style={{ flex: 'none', width: '100%', height: '100%', objectFit: 'cover', scrollSnapAlign: 'start', display: 'block', cursor: 'zoom-in' }} />)}
         </div>
         <div style={{ position: 'absolute', top: 'calc(var(--top-inset) + 4px)', insetInline: 16, display: 'flex', justifyContent: 'space-between' }}>
@@ -529,7 +532,7 @@ export function ServicePage() {
 const ALB_RATIOS = ['4/5', '1/1', '3/4', '1/1', '4/5', '3/4'];
 export function AlbumPage() {
   const a = useApp();
-  const { t, ar, top } = a;
+  const { t, ar, page: top } = a;
   const h = helpers(a);
   const al = a.idx.alb.get(top.id!)!;
   const co = a.idx.co.get(al.co)!;

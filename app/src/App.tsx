@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import { Chip, Icon, SegmentedControl, TabBar, Toast } from './ds';
 import { AppProvider, useApp, useAppState, type RootTab, type Route } from './app/store';
 import { dataSource, loadCatalog, loadCustomerSeed } from './data/api';
@@ -50,16 +50,35 @@ function Shell({ catalog, seed }: { catalog: Catalog; seed: CustomerSeed }) {
 function Phone() {
   const a = useApp();
   const { t, ar, top, stack, tab, toast, lang } = a;
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollRef = a.scroller;
   useDragScroll();
 
   // A story or full-screen photo opens over the screen it was tapped on, which stays put underneath.
   const overlay = top.s === 'story' || top.s === 'photo';
-  const base = overlay ? stack[stack.length - 2] ?? { s: 'home' } : top;
+  const base = a.page;
 
-  // Every new screen (or wizard step) opens at the top.
-  const key = base.s + '|' + (base.id || '') + '|' + (base.cat ?? '') + '|' + tab + '|' + (a.bk?.step ?? '');
-  useLayoutEffect(() => { scrollRef.current?.scrollTo({ top: 0 }); }, [key]);
+  // A new screen (or wizard step) opens at the top; going Back returns to where that page was left.
+  // Content can still be loading (images, more gallery items), so keep nudging for up to a second
+  // unless the customer starts scrolling themselves.
+  const key = base.s + '|' + (base.id || '') + '|' + (base.cat ?? '') + '|' + tab + '|' + (a.bk?.step ?? '') + '|' + stack.length;
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const want = base.y ?? 0;
+    el.scrollTo({ top: want });
+    if (!want) return;
+    let n = 0, raf = 0;
+    const stop = () => cancelAnimationFrame(raf);
+    const tick = () => {
+      if (Math.abs(el.scrollTop - want) < 2 || ++n > 60) return;
+      el.scrollTop = want;
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    const evs = ['wheel', 'touchstart', 'pointerdown', 'keydown'] as const;
+    evs.forEach(e => el.addEventListener(e, stop, { once: true, passive: true }));
+    return () => { stop(); evs.forEach(e => el.removeEventListener(e, stop)); };
+  }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const showTabs = stack.length === 1 && TABS.some(x => x.id === top.s);
   const company = top.s === 'company' ? a.idx.co.get(top.id!) : undefined;

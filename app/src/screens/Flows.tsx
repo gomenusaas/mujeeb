@@ -110,7 +110,7 @@ export function BookingPage() {
 
 export function DonePage() {
   const a = useApp();
-  const { t, ar, top, bookings } = a;
+  const { t, ar, page: top, bookings } = a;
   const h = helpers(a);
   const co = a.idx.co.get(top.co!)!;
   const b = bookings.find(x => x.id === top.id);
