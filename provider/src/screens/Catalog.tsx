@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Button, EmptyState, Icon } from '../shared/ds';
-import { photoUrl, type Album, type Service } from '../data';
+import { logoOf, photoUrl, type Album, type Service } from '../data';
 import { useList, useP } from '../state';
-import { Confirm, Field, Modal, PageHeader, PhotoEditor, Pill, Select, Spinner, Toggle, VideoEditor, card } from '../ui';
+import { Confirm, Field, Modal, PageHeader, PhotoEditor, Pill, Select, ServiceCoverEditor, Spinner, Toggle, VideoEditor, card } from '../ui';
 
 /* Services and projects share one layout: a grid of cards and a bilingual editor. */
 
@@ -12,6 +12,8 @@ type Item = {
   a_ar: string; a_en: string;
   /** Projects only: videos, and the photos/videos kept out of the company gallery. */
   videos?: string[]; hidden?: string[];
+  /** Services only: the page header image (null = first photo). */
+  cover?: string | null;
 };
 
 function Tile({ item, sub, onEdit, onDelete }: { item: Item; sub: string; onEdit: () => void; onDelete: () => void }) {
@@ -20,8 +22,8 @@ function Tile({ item, sub, onEdit, onDelete }: { item: Item; sub: string; onEdit
   return (
     <div style={{ ...card, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <button type="button" onClick={onEdit} style={{ position: 'relative', aspectRatio: '4/3', padding: 0, border: 'none', background: 'var(--neutral-100)', cursor: 'pointer' }}>
-        {item.photos[0]
-          ? <img src={photoUrl(item.photos[0], 500)} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+        {item.cover || item.photos[0]
+          ? <img src={photoUrl(item.cover || item.photos[0], 500)} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
           : <Icon name="image" size={32} color="var(--text-tertiary)" />}
         <span style={{ position: 'absolute', top: 10, insetInlineStart: 10 }}><Pill tone={item.is_published ? 'green' : 'neutral'}>{item.is_published ? t.published : t.hidden}</Pill></span>
         <span style={{ position: 'absolute', bottom: 10, insetInlineEnd: 10, display: 'inline-flex', alignItems: 'center', gap: 4, height: 24, padding: '0 9px', borderRadius: 999, background: 'oklch(0.2 0.02 285 / 0.72)', color: '#fff', font: '700 12px var(--font-sans)' }}>
@@ -78,7 +80,11 @@ function Editor({ title, initial, isProject, onClose, onSave }: {
         <Select label={t.category} value={x.category_id} onChange={v => set({ category_id: v })}
           options={company.categories.map(id => ({ value: id, label: p.pick(p.cat(id)?.name_ar || '', p.cat(id)?.name_en || '') }))} />
       </div>
-      <PhotoEditor photos={x.photos} onChange={photos => set({ photos })} error={tried && !x.photos.length ? t.needPhoto : undefined}
+      {!isProject && (
+        <ServiceCoverEditor value={x.cover ?? null} fallback={x.photos[0] || company.cover_photo} logo={logoOf(company)} name={p.pick(company.name_ar, company.name_en)}
+          onChange={cover => set({ cover })} />
+      )}
+      <PhotoEditor photos={x.photos} onChange={photos => set({ photos })} error={tried && !x.photos.length ? t.needPhoto : undefined} noCover={!isProject}
         hidden={isProject ? x.hidden || [] : undefined} onHidden={hidden => set({ hidden })} />
       {isProject && (
         <>
@@ -95,7 +101,7 @@ function Editor({ title, initial, isProject, onClose, onSave }: {
 
 /* ───────────────────────── Services ───────────────────────── */
 
-const svcToItem = (s: Service): Item => ({ id: s.id, title_ar: s.title_ar, title_en: s.title_en, category_id: s.category_id, photos: s.photos, is_published: s.is_published, a_ar: s.description_ar, a_en: s.description_en });
+const svcToItem = (s: Service): Item => ({ id: s.id, title_ar: s.title_ar, title_en: s.title_en, category_id: s.category_id, photos: s.photos, is_published: s.is_published, a_ar: s.description_ar, a_en: s.description_en, cover: s.cover_url });
 
 export function Services() {
   const p = useP();
@@ -107,7 +113,7 @@ export function Services() {
   const blank: Item = { title_ar: '', title_en: '', category_id: company.categories[0], photos: [], is_published: true, a_ar: '', a_en: '' };
   const save = async (x: Item) => {
     const base = edit && edit !== 'new' ? edit : { company_id: company.id, position: items?.length || 0 };
-    await repo.saveService({ ...base, id: x.id, company_id: company.id, category_id: x.category_id, title_ar: x.title_ar, title_en: x.title_en, description_ar: x.a_ar.trim(), description_en: x.a_en.trim(), photos: x.photos, is_published: x.is_published } as Service);
+    await repo.saveService({ ...base, id: x.id, company_id: company.id, category_id: x.category_id, title_ar: x.title_ar, title_en: x.title_en, description_ar: x.a_ar.trim(), description_en: x.a_en.trim(), photos: x.photos, is_published: x.is_published, cover_url: x.cover ?? null } as Service);
     p.showToast(t.saved); setEdit(null); reload();
   };
   const remove = async () => {

@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
-import { Avatar, Badge, BottomSheet, Button, EmptyState, Icon, IconButton, ImageSlot, ListItem, SearchBar, SectionHeader } from '../ds';
+import { Avatar, Badge, BottomSheet, Button, EmptyState, Icon, IconButton, ListItem, SearchBar, SectionHeader } from '../ds';
 import { useApp, type CoView, type Filters, type ListView, type SheetKey } from '../app/store';
 import { ContactGrid, HScroll, Img, MetaLine, TopBar, albumMedia, callPhone, card, categoryGallery, companyGallery, helpers, listingCompanies, openDirections, openWhatsApp, stop, type Media } from '../app/view';
 import { logoUrl, photo, remote } from '../data/api';
@@ -467,10 +467,9 @@ export function ServicePage() {
   useEffect(() => { remote.track(co.id, 'service_view', s.id); }, [co.id, s.id]);
   return (
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ position: 'relative' }}>
-        <div className="mj-s" style={{ display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory', scrollbarWidth: 'none', height: HERO_H, background: 'var(--cat-' + color + '-100)' }}>
-          {s.imgs.map((im, k) => <img key={k} src={photo(im, 800)} alt="" onClick={() => a.go('photo', { src: 'service', id: s.id, i: k })} style={{ flex: 'none', width: '100%', height: '100%', objectFit: 'cover', scrollSnapAlign: 'start', display: 'block', cursor: 'zoom-in' }} />)}
-        </div>
+      {/* The service's cover: a still picture (no swiping or tapping); its photos are in a row further down. */}
+      <div style={{ position: 'relative', height: HERO_H, background: 'var(--cat-' + color + '-100)' }}>
+        <img src={photo(s.cover || s.imgs[0] || co.img, 900)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
         <div style={{ position: 'absolute', top: 'calc(var(--top-inset) + 4px)', insetInline: 16, display: 'flex', justifyContent: 'space-between' }}>
           <IconButton icon="arrow-left" variant="glass" size={40} onClick={a.back} label="Back" />
           <div style={{ display: 'flex', gap: 8 }}>
@@ -480,7 +479,6 @@ export function ServicePage() {
             <IconButton icon="menu" variant="glass" size={40} onClick={() => a.setSheet('menu')} label={t.menu} />
           </div>
         </div>
-        <span style={{ position: 'absolute', bottom: 40, insetInlineEnd: 16 }}><Badge tone="dark" icon="images">{s.imgs.length + ' ' + t.photos}</Badge></span>
       </div>
       <div style={{ position: 'relative', marginTop: -28, borderRadius: '28px 28px 0 0', background: 'var(--bg-app)', padding: '0 20px 28px', display: 'flex', flexDirection: 'column', gap: 20, flex: 1 }}>
         {/* Company logo overlapping the photo, as on the company page. */}
@@ -497,13 +495,19 @@ export function ServicePage() {
           <span style={{ font: 'var(--type-body)', color: 'var(--text-secondary)', textWrap: 'pretty' }}>{ar ? s.dar : s.den}</span>
         </div>
         <ContactGrid a={a} co={co} />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <span style={{ font: 'var(--type-h3)' }}>{t.video}</span>
-          <div style={{ position: 'relative', aspectRatio: '16/9', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
-            <ImageSlot label="service video · 0:48" tone={color} />
-            <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IconButton icon="play" variant="glass" size={56} label={t.video} /></span>
+        {s.imgs.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, margin: '0 -20px' }}>
+            <div style={{ padding: '0 20px' }}><SectionHeader title={t.svcPhotos} action={null} /></div>
+            <HScroll>
+              {s.imgs.map((im, k) => (
+                <button key={k} type="button" aria-label={t.svcPhotos + ' ' + h.num(k + 1)} onClick={() => a.go('photo', { src: 'service', id: s.id, i: k })}
+                  style={{ flex: 'none', width: 132, aspectRatio: '4/3', padding: 0, border: 'none', borderRadius: 'var(--radius-md)', overflow: 'hidden', background: 'var(--cat-' + color + '-100)', scrollSnapAlign: 'start', cursor: 'zoom-in' }}>
+                  <Img src={photo(im, 300)} />
+                </button>
+              ))}
+            </HScroll>
           </div>
-        </div>
+        )}
         {albums.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, margin: '0 -20px' }}>
             <div style={{ padding: '0 20px' }}><SectionHeader title={t.related} action={null} /></div>

@@ -163,7 +163,80 @@ function GalleryMark({ src, hidden, onHidden }: { src: string } & GalleryProps) 
 }
 
 /** Ordered photo list: first is the cover. Add (upload), remove, make cover; on projects, show or hide each in the gallery. */
-export function PhotoEditor({ photos, onChange, error, hidden, onHidden }: { photos: string[]; onChange: (p: string[]) => void; error?: string } & GalleryProps) {
+/** Service page header in the customer app: 390 × 250 on the phone. */
+export const SERVICE_COVER = { w: 390, h: 250 };
+
+/** Center-crops an image file to the service header shape and returns a JPEG (3× the phone size). */
+export async function cropToServiceCover(file: File): Promise<Blob> {
+  const img = await createImageBitmap(file);
+  const want = SERVICE_COVER.w / SERVICE_COVER.h;
+  let sw = img.width, sh = img.height;
+  if (sw / sh > want) sw = Math.round(sh * want); else sh = Math.round(sw / want);
+  const W = Math.min(SERVICE_COVER.w * 3, sw), H = Math.round(W / want);
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  c.getContext('2d')!.drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, 0, 0, W, H);
+  img.close();
+  return new Promise((ok, no) => c.toBlob(b => (b ? ok(b) : no(new Error('crop'))), 'image/jpeg', 0.86));
+}
+
+/**
+ * The service's cover image, with a preview of the top of the service page in the customer app:
+ * the photo under the back/share/directions/menu buttons, the company logo and the heart.
+ * Without a cover, the preview shows what customers see instead (`fallback`).
+ */
+export function ServiceCoverEditor({ value, fallback, logo, name, onChange }: {
+  value: string | null; fallback: string; logo: string; name: string; onChange: (url: string | null) => void;
+}) {
+  const { t, repo, company, showToast } = useP();
+  const [busy, setBusy] = useState(false);
+  const add = async (files: File[]) => {
+    if (!files[0]) return;
+    setBusy(true);
+    try { onChange(await repo.upload(company.id, await cropToServiceCover(files[0]), 'service-cover.jpg')); }
+    catch { showToast(t.uploadFailed, 'error'); } finally { setBusy(false); }
+  };
+  const shown = value || fallback;
+  // Phone geometry (px): header 250 tall, then 40 px of the page so the logo shows; buttons 40 at y 48.
+  const W = SERVICE_COVER.w, H = 290;
+  const x = (px: number) => (px / W) * 100 + '%', y = (px: number) => (px / H) * 100 + '%';
+  const dot = (start: number | null, end: number | null): CSSProperties => ({
+    position: 'absolute', top: y(48), width: x(40), aspectRatio: '1', borderRadius: '50%', background: 'oklch(1 0 0 / 0.85)',
+    ...(start != null ? { insetInlineStart: x(start) } : { insetInlineEnd: x(end!) }),
+  });
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+        <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0, flex: '1 1 260px' }}>
+          <span style={{ font: 'var(--type-body-sm)', fontWeight: 600 }}>{t.svcCover}</span>
+          <span style={{ font: 'var(--type-caption)', fontWeight: 500, color: 'var(--text-tertiary)' }}>{value ? t.svcCoverHelp : t.svcCoverNone}</span>
+        </span>
+        <span style={{ display: 'flex', gap: 6 }}>
+          {value && <Button size="sm" variant="outline" iconLeft="trash-2" onClick={() => onChange(null)}>{t.remove}</Button>}
+          <FileButton accept="image/jpeg,image/png,image/webp" onFiles={add} icon="image-plus" loading={busy}>{value ? t.change : t.svcCoverAdd}</FileButton>
+        </span>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center' }}>
+        <div aria-label={t.svcCoverPreview} role="img"
+          style={{ position: 'relative', width: '100%', maxWidth: W, aspectRatio: W + ' / ' + H, borderRadius: 18, overflow: 'hidden', background: 'var(--neutral-100)', boxShadow: 'inset 0 0 0 1px var(--border-subtle)' }}>
+          {shown && <img src={photoUrl(shown, 1200)} alt="" style={{ position: 'absolute', insetInline: 0, top: 0, height: y(250), width: '100%', objectFit: 'cover', display: 'block', opacity: value ? 1 : 0.55 }} />}
+          <span style={dot(16, null)} />
+          {[16, 64, 112].map(e => <span key={e} style={dot(null, e)} />)}
+          <span style={{ position: 'absolute', insetInline: 0, top: y(222), bottom: 0, borderRadius: '18px 18px 0 0', background: 'var(--bg-app)' }} />
+          <span style={{ position: 'absolute', top: y(186), insetInlineStart: x(20), width: x(84), aspectRatio: '1', borderRadius: '50%', overflow: 'hidden', boxShadow: '0 0 0 3px var(--bg-app)', background: 'var(--neutral-200)', display: 'flex', alignItems: 'center', justifyContent: 'center', font: '700 13px var(--font-sans)', color: 'var(--text-secondary)' }}>
+            {logo ? <img src={logo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : name.slice(0, 2)}
+          </span>
+          <span style={{ position: 'absolute', top: y(205), insetInlineStart: x(118), width: x(46), aspectRatio: '1', borderRadius: '50%', background: 'var(--surface-card)', boxShadow: '0 0 0 3px var(--bg-app)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
+            <Icon name="heart" size={16} />
+          </span>
+        </div>
+        <span style={{ font: 'var(--type-caption)', fontWeight: 500, color: 'var(--text-tertiary)' }}>{t.svcCoverPreview}</span>
+      </div>
+    </div>
+  );
+}
+
+export function PhotoEditor({ photos, onChange, error, hidden, onHidden, noCover }: { photos: string[]; onChange: (p: string[]) => void; error?: string; noCover?: boolean } & GalleryProps) {
   const { t, repo, company, showToast } = useP();
   const [busy, setBusy] = useState(false);
   const add = async (files: File[]) => {
@@ -178,7 +251,7 @@ export function PhotoEditor({ photos, onChange, error, hidden, onHidden }: { pho
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
         <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <span style={{ font: 'var(--type-body-sm)', fontWeight: 600 }}>{t.photos}</span>
-          <span style={{ font: 'var(--type-caption)', fontWeight: 500, color: error ? 'var(--danger)' : 'var(--text-tertiary)' }}>{error || t.photosHelp}</span>
+          <span style={{ font: 'var(--type-caption)', fontWeight: 500, color: error ? 'var(--danger)' : 'var(--text-tertiary)' }}>{error || (noCover ? t.svcPhotosHelp : t.photosHelp)}</span>
         </span>
         <FileButton accept="image/jpeg,image/png,image/webp" multiple onFiles={add} icon="image-plus" loading={busy}>{t.addPhotos}</FileButton>
       </div>
@@ -188,10 +261,10 @@ export function PhotoEditor({ photos, onChange, error, hidden, onHidden }: { pho
             <div key={p + k} style={{ position: 'relative', aspectRatio: '4/3', borderRadius: 12, overflow: 'hidden', background: 'var(--neutral-100)' }}>
               <img src={photoUrl(p, 300)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
               <HiddenVeil src={p} hidden={hidden} />
-              {k === 0 && <span style={{ position: 'absolute', top: 6, insetInlineStart: 6, padding: '2px 8px', borderRadius: 999, background: 'var(--brand)', color: '#fff', font: '700 11px/18px var(--font-sans)' }}>{t.coverTag}</span>}
+              {k === 0 && !noCover && <span style={{ position: 'absolute', top: 6, insetInlineStart: 6, padding: '2px 8px', borderRadius: 999, background: 'var(--brand)', color: '#fff', font: '700 11px/18px var(--font-sans)' }}>{t.coverTag}</span>}
               <span style={{ position: 'absolute', insetInline: 6, bottom: 6, display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                 <GalleryMark src={p} hidden={hidden} onHidden={onHidden} />
-                {k > 0 && <MiniBtn icon="star" label={t.makeCover} onClick={() => onChange([p, ...photos.filter((_, j) => j !== k)])} />}
+                {k > 0 && !noCover && <MiniBtn icon="star" label={t.makeCover} onClick={() => onChange([p, ...photos.filter((_, j) => j !== k)])} />}
                 <MiniBtn icon="trash-2" label={t.remove} onClick={() => onChange(photos.filter((_, j) => j !== k))} />
               </span>
             </div>

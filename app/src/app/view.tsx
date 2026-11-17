@@ -28,7 +28,7 @@ export function helpers(a: App) {
       img: photo(al.img, 600), c100: 'var(--cat-' + cat(al.cat).color + '-100)', open: () => a.go('album', { id: al.id }),
     };
   };
-  const svcV = (s: Service) => ({ id: s.id, title: ar ? s.ar : s.en, cat: cname(s.cat), img: photo(s.imgs[0], 400), n: s.imgs.length, open: () => a.go('service', { id: s.id }) });
+  const svcV = (s: Service) => ({ id: s.id, title: ar ? s.ar : s.en, cat: cname(s.cat), img: photo(s.cover || s.imgs[0], 400), n: s.imgs.length, open: () => a.go('service', { id: s.id }) });
   return { cat, cname, cshort, gname, covText, num, coName, city, coV, albV, svcV };
 }
 

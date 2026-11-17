@@ -22,7 +22,11 @@ export interface Company {
   hrs?: WeekHours;
 }
 
-export interface Service { id: string; co: string; cat: number; ar: string; en: string; imgs: string[]; dar: string; den: string }
+export interface Service {
+  id: string; co: string; cat: number; ar: string; en: string; imgs: string[]; dar: string; den: string;
+  /** Header image of the service page (uploaded by the company). Missing = first photo, then the company cover. */
+  cover?: string;
+}
 
 export interface Album {
   id: string; co: string; cat: number; ar: string; en: string; pAr: string; pEn: string; n: number; img: string; imgs: string[];
