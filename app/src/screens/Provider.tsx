@@ -14,7 +14,10 @@ const CO_VIEWS: { v: CoView; icon: string; label: 'services' | 'gallery' }[] = [
   { v: 'list', icon: 'layout-list', label: 'services' }, { v: 'gallery', icon: 'layout-dashboard', label: 'gallery' },
 ];
 
-/** Company page: services list or project gallery. */
+/**
+ * Company page: services list or project gallery. The current view is an icon on purple; the
+ * other one also shows its name, so it's clear what tapping it switches to.
+ */
 function CoViewSwitch({ value, onPick }: { value: CoView; onPick: (v: CoView) => void }) {
   const a = useApp();
   return (
@@ -23,8 +26,9 @@ function CoViewSwitch({ value, onPick }: { value: CoView; onPick: (v: CoView) =>
         const on = value === x.v;
         return (
           <button key={x.v} type="button" role="radio" aria-checked={on} aria-label={a.t[x.label]} title={a.t[x.label]} onClick={() => onPick(x.v)}
-            style={{ width: 34, height: 34, border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: on ? 'var(--brand)' : 'transparent', color: on ? '#fff' : 'var(--text-secondary)', transition: 'all var(--dur-base) var(--ease-out)' }}>
+            style={{ minWidth: 34, height: 34, padding: on ? 0 : '0 12px', gap: 6, border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: on ? 'var(--brand)' : 'transparent', color: on ? '#fff' : 'var(--text-secondary)', fontFamily: 'var(--font-sans)', font: 'var(--type-body-sm)', fontWeight: 700, whiteSpace: 'nowrap', transition: 'all var(--dur-base) var(--ease-out)' }}>
             <Icon name={x.icon} size={17} />
+            {!on && <span>{a.t[x.label]}</span>}
           </button>
         );
       })}
