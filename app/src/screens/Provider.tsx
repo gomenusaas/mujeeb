@@ -6,8 +6,8 @@ import { logoUrl, photo, remote } from '../data/api';
 import type { Company } from '../data/types';
 import { WEEK_ORDER, dayName, fmtTime, isOpenNow, muscatToday, shifts } from '../app/hours';
 
-const VIEWS: { v: ListView; icon: string; label: 'viewLarge' | 'viewGrid' | 'viewRows' }[] = [
-  { v: 'large', icon: 'gallery-vertical', label: 'viewLarge' }, { v: 'grid', icon: 'grid-2x2', label: 'viewGrid' }, { v: 'rows', icon: 'layout-list', label: 'viewRows' },
+const VIEWS: { v: ListView; icon: string; label: 'viewLarge' | 'viewRows' }[] = [
+  { v: 'large', icon: 'gallery-vertical', label: 'viewLarge' }, { v: 'rows', icon: 'layout-list', label: 'viewRows' },
 ];
 
 type TabLabel = 'services' | 'gallery' | 'companiesTab';
@@ -130,7 +130,7 @@ function Masonry({ items, onOpen }: { items: Media[]; onOpen: (k: number) => voi
   );
 }
 
-/** Three-icon switch for the company list layout; sits beside the sort control and matches its height. */
+/** Two-icon switch for the company list layout (large cards or compact rows); sits beside the sort control and matches its height. */
 function ViewSwitch() {
   const a = useApp();
   return (
@@ -261,22 +261,6 @@ export function Listing() {
                   <MetaLine icon="map-pin">{co.city}</MetaLine>
                   <MetaLine icon="route">{co.covers}</MetaLine>
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-      {a.listView === 'grid' && (
-        <div style={{ padding: '14px 20px 0', display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
-          {results.map(co => (
-            <div key={co.id} onClick={co.open} style={{ ...card, overflow: 'hidden', cursor: 'pointer' }}>
-              <div style={{ aspectRatio: '1', background: co.c100 }}><Img src={co.cover} /></div>
-              <div style={{ padding: '10px 10px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Avatar name={co.name} src={co.logo} size={24} />
-                  <CoName name={co.name} verified={co.verified} size={13} />
-                </span>
-                <MetaLine icon="map-pin" size={12}>{co.city}</MetaLine>
               </div>
             </div>
           ))}

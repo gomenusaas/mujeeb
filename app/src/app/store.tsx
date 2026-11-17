@@ -15,7 +15,7 @@ export interface Route { s: Screen; id?: string; cat?: number; co?: string; src?
   tab?: 'gallery' }
 export interface Filters { gov: 'all' | GovId; verified: boolean; sort: 'rel' | 'near' | 'recent' | 'verified'; q: string }
 /** How the company list is laid out: big cards, two per row, or thin rows. */
-export type ListView = 'large' | 'grid' | 'rows';
+export type ListView = 'large' | 'rows';
 /** Company page: its services as a list, or a gallery of its project photos and videos. */
 export type CoView = 'list' | 'gallery';
 export type SheetKey = null | 'menu' | 'about' | 'hours' | 'branches' | 'address' | 'coverage' | 'contact' | 'website' | 'social' | 'sort' | 'directions';
@@ -50,7 +50,7 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
   const [seq, setSeq] = useState({ bk: saved.seq?.bk ?? 57 });
   /** Story ids the customer has opened. */
   const [seen, setSeen] = useState<Record<string, boolean>>(saved.seen || {});
-  const [listView, setListView] = useState<ListView>(saved.listView || 'large');
+  const [listView, setListView] = useState<ListView>(saved.listView === 'rows' ? 'rows' : 'large'); // an old saved 'grid' becomes large cards
   /** Companies the customer follows (also sent to Supabase when it's configured). */
   const [follows, setFollows] = useState<Record<string, boolean>>(auth.enabled ? {} : saved.follows || {});
   /** The signed-in customer (null when signed out, and always in demo mode). */

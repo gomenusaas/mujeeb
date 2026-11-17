@@ -57,7 +57,7 @@ export const STR = {
   errFields: ['أكمل الحقول المطلوبة.', 'Fill in the required fields.'],
   viewAs: ['طريقة العرض', 'View as'], sortBy: ['ترتيب حسب', 'Sort by'], follow: ['متابعة', 'Follow'], readMore: ['اقرأ المزيد', 'Read more'], share: ['مشاركة', 'Share'], linkCopied: ['تم نسخ الرابط', 'Link copied'],
   directions: ['الاتجاهات', 'Directions'], chooseBranch: ['اختر الفرع', 'Choose a branch'], openingMaps: ['جارٍ فتح الخرائط…', 'Opening Maps…'], following: ['تمت المتابعة', 'Following'],
-  followedT: ['تمت متابعة الشركة', 'You’re following this company'], unfollowedT: ['أُلغيت المتابعة', 'Unfollowed'], verifiedSort: ['موثّقة', 'Verified'], viewLarge: ['بطاقات كبيرة', 'Large cards'], viewGrid: ['بطاقتان في الصف', 'Two per row'], viewRows: ['قائمة مختصرة', 'Compact list'], close: ['إغلاق', 'Close'], hoursAgo: ['منذ {n} س', '{n}h'],
+  followedT: ['تمت متابعة الشركة', 'You’re following this company'], unfollowedT: ['أُلغيت المتابعة', 'Unfollowed'], verifiedSort: ['موثّقة', 'Verified'], viewLarge: ['بطاقات كبيرة', 'Large cards'], viewRows: ['قائمة مختصرة', 'Compact list'], close: ['إغلاق', 'Close'], hoursAgo: ['منذ {n} س', '{n}h'],
 } satisfies Record<string, Pair>;
 
 export type StrKey = keyof typeof STR;
