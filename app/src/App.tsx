@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useState } from 'react';
-import { Chip, Icon, SegmentedControl, TabBar, Toast } from './ds';
+import { Chip, Icon, IconButton, SegmentedControl, TabBar, Toast } from './ds';
 import { AppProvider, useApp, useAppState, type RootTab, type Route } from './app/store';
 import { dataSource, loadCatalog, loadCustomerSeed } from './data/api';
 import type { Catalog, CustomerSeed } from './data/types';
@@ -45,6 +45,36 @@ function Splash({ children }: { children: React.ReactNode }) {
 function Shell({ catalog, seed }: { catalog: Catalog; seed: CustomerSeed }) {
   const app = useAppState(catalog, seed);
   return <AppProvider value={app}><Phone /></AppProvider>;
+}
+
+/**
+ * Round ↑ button at the bottom corner. Shows after about two screens of scrolling and fades out
+ * near the top. Jumps most of the way at once, then glides the last screen (smooth-scrolling
+ * through hundreds of photos would be slow).
+ */
+function BackToTop({ el }: { el: React.RefObject<HTMLDivElement | null> }) {
+  const a = useApp();
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const s = el.current;
+    if (!s) return;
+    const on = () => setShow(s.scrollTop > s.clientHeight * 2);
+    on();
+    s.addEventListener('scroll', on, { passive: true });
+    return () => s.removeEventListener('scroll', on);
+  }, [el]);
+  const up = () => {
+    const s = el.current;
+    if (!s) return;
+    if (s.scrollTop > s.clientHeight) s.scrollTop = s.clientHeight;
+    s.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  return (
+    <div style={{ position: 'absolute', bottom: 'calc(24px + var(--safe-bottom))', insetInlineEnd: 16, zIndex: 9, borderRadius: 'var(--radius-pill)', boxShadow: 'var(--shadow-md)',
+      opacity: show ? 1 : 0, transform: show ? 'none' : 'translateY(12px) scale(0.9)', transition: 'opacity 220ms var(--ease-out), transform 220ms var(--ease-out)', pointerEvents: show ? 'auto' : 'none' }}>
+      <IconButton icon="arrow-up" variant="glass" size={44} label={a.t.toTop} onClick={up} />
+    </div>
+  );
 }
 
 function Phone() {
@@ -95,6 +125,8 @@ function Phone() {
         <div className="mj-s mj-scroll" ref={scrollRef}>
           <ScreenSwitch route={base} />
         </div>
+        {/* Long pages (category list and gallery, company page) get a back-to-top button. */}
+        {!overlay && (base.s === 'listing' || base.s === 'company') && <BackToTop key={key} el={scrollRef} />}
         {top.s === 'story' && <StoryViewer key="story" />}
         {top.s === 'photo' && <PhotoViewer key={top.src + '|' + (top.id ?? top.cat)} />}
         {showTabs && (

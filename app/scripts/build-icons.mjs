@@ -5,7 +5,7 @@ chevron-right chevron-left calendar-off file-text play image-plus file-plus imag
 calendar-check scan-search ruler messages-square wrench calendar clock calendar-clock message-circle link paperclip log-out hourglass download info
 check house layout-grid compass search-x building-2 globe at-sign mail instagram twitter facebook linkedin languages settings life-buoy circle-alert star
 lamp frame zap droplets chef-hat trees snowflake cctv fire-extinguisher drafting-compass gallery-vertical grid-2x2 layout-list arrow-down-up user-plus user-check headset navigation
-layout-dashboard circle-play briefcase eye trending-up trending-down plus pencil trash-2 upload locate-fixed refresh-cw eye-off video lock`.split(/\s+/).filter(Boolean);
+layout-dashboard circle-play briefcase eye trending-up trending-down plus pencil trash-2 upload locate-fixed refresh-cw eye-off video lock arrow-up`.split(/\s+/).filter(Boolean);
 const dir = new URL('../node_modules/lucide-static/icons/', import.meta.url);
 const map = {};
 for (const n of NAMES) {
