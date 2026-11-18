@@ -1,9 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { Avatar, Badge, BottomSheet, Button, EmptyState, Icon, IconButton, ListItem, SearchBar, SectionHeader } from '../ds';
 import { useApp, type Filters, type ListView, type SheetKey } from '../app/store';
-import { ContactGrid, HScroll, Img, MetaLine, TopBar, albumMedia, callPhone, card, companyGallery, helpers, listingCompanies, openDirections, openWhatsApp, serviceGallery, serviceImage, type Media } from '../app/view';
+import { ContactGrid, Img, MetaLine, TopBar, albumMedia, callPhone, card, companyGallery, helpers, listingCompanies, openDirections, openWhatsApp, serviceGallery, serviceImage, type Media } from '../app/view';
 import { logoUrl, photo, remote } from '../data/api';
-import type { Company } from '../data/types';
+import type { Album, Company } from '../data/types';
 import { WEEK_ORDER, dayName, fmtTime, isOpenNow, muscatToday, shifts } from '../app/hours';
 
 const VIEWS: { v: ListView; icon: string; label: 'viewLarge' | 'viewRows' }[] = [
@@ -547,6 +547,64 @@ function PillDivider({ children, onClick }: { children: React.ReactNode; onClick
   );
 }
 
+/** «مشاريع منجزة» on a service page: a two-column grid or large cards (the choice is kept while the app is open). */
+type ProjView = 'grid' | 'large';
+let projViewMemo: ProjView = 'grid';
+function ProjectsBlock({ albums }: { albums: Album[] }) {
+  const a = useApp();
+  const { t, ar } = a;
+  const h = helpers(a);
+  const [view, setView] = useState<ProjView>(projViewMemo);
+  const pick = (v: ProjView) => { projViewMemo = v; setView(v); };
+  const month = (al: Album) => al.done ? new Date(al.done + 'T12:00:00').toLocaleDateString(ar ? 'ar-OM' : 'en-GB', { month: 'long', year: 'numeric' }) : '';
+  const opts: { v: ProjView; icon: string; label: string }[] = [{ v: 'grid', icon: 'layout-grid', label: t.viewGrid }, { v: 'large', icon: 'gallery-vertical', label: t.viewLarge }];
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <span style={{ font: 'var(--type-h3)' }}>{t.related}</span>
+        <div role="radiogroup" aria-label={t.viewAs} style={{ display: 'flex', gap: 2, padding: 3, borderRadius: 'var(--radius-pill)', background: 'var(--neutral-100)' }}>
+          {opts.map(o => (
+            <button key={o.v} type="button" role="radio" aria-checked={view === o.v} aria-label={o.label} title={o.label} onClick={() => pick(o.v)}
+              style={{ width: 32, height: 32, border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', display: 'grid', placeItems: 'center', background: view === o.v ? 'var(--brand)' : 'transparent', color: view === o.v ? '#fff' : 'var(--text-secondary)', transition: 'all var(--dur-base) var(--ease-out)' }}>
+              <Icon name={o.icon} size={16} />
+            </button>
+          ))}
+        </div>
+      </div>
+      {view === 'grid' ? (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 10px' }}>
+          {albums.map(al => {
+            const v = h.albV(al);
+            return (
+              <div key={al.id} onClick={v.open} style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6, cursor: 'pointer' }}>
+                <div style={{ aspectRatio: '4/3', borderRadius: 'var(--radius-md)', overflow: 'hidden', background: v.c100 }}><Img src={v.img} /></div>
+                <span style={{ font: 'var(--type-body-sm)', fontWeight: 700, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{v.title}</span>
+                {v.place && <MetaLine icon="map-pin" size={12}>{v.place}</MetaLine>}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {albums.map(al => {
+            const v = h.albV(al);
+            return (
+              <div key={al.id} onClick={v.open} style={{ ...card, overflow: 'hidden', cursor: 'pointer' }}>
+                <div style={{ aspectRatio: '4/3', maxHeight: 200, width: '100%', background: v.c100 }}><Img src={v.img} /></div>
+                <div style={{ padding: '14px 16px 16px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <span style={{ font: 'var(--type-title)' }}>{v.title}</span>
+                  {v.place && <MetaLine icon="map-pin">{v.place}</MetaLine>}
+                  {al.done && <MetaLine icon="calendar-check">{t.completedIn} {month(al)}</MetaLine>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function ServicePage() {
   const a = useApp();
   const { t, ar, catalog, page: top } = a;
@@ -555,7 +613,7 @@ export function ServicePage() {
   const co = a.idx.co.get(s.co)!;
   const color = catalog.cats[s.cat].color;
   // «مشاريع منجزة»: the projects linked to this service, newest first.
-  const albums = catalog.albums.filter(al => al.svc === s.id).sort((x, y) => (y.added || '').localeCompare(x.added || '')).map(h.albV);
+  const albums = catalog.albums.filter(al => al.svc === s.id).sort((x, y) => (y.added || '').localeCompare(x.added || ''));
   // «خدمات ذات صلة»: the company's other services in this service's category.
   const more = catalog.services.filter(x => x.co === co.id && x.id !== s.id && x.cat === s.cat).map(h.svcV);
   useEffect(() => { remote.track(co.id, 'service_view', s.id); }, [co.id, s.id]);
@@ -598,19 +656,7 @@ export function ServicePage() {
             <button type="button" onClick={() => setFull(m => !m)} style={{ alignSelf: 'flex-start', border: 'none', padding: 0, background: 'none', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 700, fontFamily: 'var(--font-sans)', color: 'var(--brand)' }}>{full ? t.showLess : t.readMore}</button>
           )}
         </div>
-        {albums.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, margin: '0 -20px' }}>
-            <div style={{ padding: '0 20px' }}><SectionHeader title={t.related} action={null} /></div>
-            <HScroll>
-              {albums.map(al => (
-                <div key={al.id} onClick={al.open} style={{ flex: 'none', width: 200, scrollSnapAlign: 'start', display: 'flex', flexDirection: 'column', gap: 6, cursor: 'pointer' }}>
-                  <div style={{ aspectRatio: '4/3', borderRadius: 'var(--radius-md)', overflow: 'hidden', background: al.c100 }}><Img src={al.img} /></div>
-                  <span style={{ font: 'var(--type-body-sm)', fontWeight: 700 }}>{al.title}</span>
-                </div>
-              ))}
-            </HScroll>
-          </div>
-        )}
+        {albums.length > 0 && <ProjectsBlock albums={albums} />}
         {/* «خدمات ذات صلة»: a plain list of the first 3 (small photo, name, arrow), «عرض الكل» opens the rest. */}
         {more.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
