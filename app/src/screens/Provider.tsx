@@ -238,9 +238,9 @@ function ActivityPicker({ co, act }: { co: Company; act: number | null }) {
   const inner = (
     <>
       <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.cname(cur)}</span>
-      {/* A round brand button so it reads as tappable at a glance. */}
+      {/* A round tinted button so it reads as tappable at a glance (solid purple is kept for "Followed"). */}
       {many && (
-        <span aria-hidden="true" style={{ flex: 'none', width: 26, height: 26, borderRadius: '50%', background: 'var(--brand)', color: '#fff', display: 'grid', placeItems: 'center' }}>
+        <span aria-hidden="true" style={{ flex: 'none', width: 26, height: 26, borderRadius: '50%', background: 'var(--brand-tint-strong)', color: 'var(--brand)', display: 'grid', placeItems: 'center' }}>
           <Icon name="chevron-down" size={16} />
         </span>
       )}
