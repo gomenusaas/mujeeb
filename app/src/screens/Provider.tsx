@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { Avatar, Badge, BottomSheet, Button, EmptyState, Icon, IconButton, ListItem, SearchBar, SectionHeader } from '../ds';
 import { useApp, type Filters, type ListView, type SheetKey } from '../app/store';
-import { ContactGrid, Img, MetaLine, albumMedia, callPhone, card, companyGallery, helpers, listingCompanies, openDirections, openWhatsApp, serviceImage, type Media } from '../app/view';
+import { ContactGrid, HScroll, Img, MetaLine, albumMedia, callPhone, card, companyGallery, helpers, listingCompanies, openDirections, openWhatsApp, serviceImage, type Media } from '../app/view';
 import { logoUrl, photo, remote } from '../data/api';
 import type { Album, Company } from '../data/types';
 import { WEEK_ORDER, dayName, fmtTime, isOpenNow, muscatToday, shifts } from '../app/hours';
@@ -321,6 +321,8 @@ export function CompanyPage() {
   const services = catalog.services.filter(s => s.co === co.id && (act == null || s.cat === act)).map(h.svcV);
   const allMedia = companyGallery(a, co.id);
   const gallery = act == null ? allMedia : companyGallery(a, co.id, act);
+  const featured = catalog.albums.filter(al => al.co === co.id && (act == null || al.cat === act))
+    .sort((x, y) => (y.done || y.added || '').localeCompare(x.done || x.added || '')).slice(0, 6);
   // Services show 6 at first; «كل الخدمات» opens the rest in place.
   const [allSvc, setAllSvc] = useState(false);
   useEffect(() => setAllSvc(false), [act]);
@@ -371,6 +373,30 @@ export function CompanyPage() {
               )}
             </div>
           : <EmptyLine>{t.actNoSvc}</EmptyLine>}
+        {/* «مشاريع مميزة»: the activity's newest completed projects as a sideways row of cards (until companies can pick their own). */}
+        {featured.length > 0 && <div aria-hidden="true" style={{ height: 1, background: 'var(--border-default)', margin: '0 -20px' }} />}
+        {featured.length > 0 && (
+          <section aria-label={t.featuredPr} style={{ display: 'flex', flexDirection: 'column', gap: 12, margin: '0 -20px' }}>
+            <div style={{ padding: '0 20px' }}><SectionHeader title={t.featuredPr} action={null} /></div>
+            <HScroll>
+              {featured.map(al => {
+                const v = h.albV(al);
+                return (
+                  <div key={al.id} onClick={v.open} style={{ flex: 'none', width: 232, scrollSnapAlign: 'start', border: '1px solid var(--border-default)', borderRadius: 14, overflow: 'hidden', background: 'var(--surface-card)', cursor: 'pointer' }}>
+                    <div style={{ position: 'relative', aspectRatio: '4/3', background: v.c100 }}>
+                      <Img src={v.img} />
+                      <span style={{ position: 'absolute', top: 10, insetInlineStart: 10 }}><Badge tone="dark" size="sm" icon="images">{h.num(albumMedia(al).length)}</Badge></span>
+                    </div>
+                    <div style={{ padding: '10px 12px 12px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <span style={{ font: 'var(--type-body-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.title}</span>
+                      {v.place && <MetaLine icon="map-pin">{v.place}</MetaLine>}
+                    </div>
+                  </div>
+                );
+              })}
+            </HScroll>
+          </section>
+        )}
         {allMedia.length > 0 && <div aria-hidden="true" style={{ height: 1, background: 'var(--border-default)', margin: '0 -20px' }} />}
         {allMedia.length > 0 && (
             <section aria-label={t.gallery} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
