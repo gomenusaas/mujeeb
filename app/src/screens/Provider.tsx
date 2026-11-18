@@ -274,7 +274,7 @@ function ActivityPicker({ co, act }: { co: Company; act: number | null }) {
   const inner = (
     <>
       <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.cname(cur)}</span>
-      {/* A round tinted button so it reads as tappable at a glance (solid purple is kept for "Followed"). */}
+      {/* A round tinted button so it reads as tappable at a glance. */}
       {many && (
         <span aria-hidden="true" style={{ flex: 'none', width: 26, height: 26, borderRadius: '50%', background: 'var(--brand-tint-strong)', color: 'var(--brand)', display: 'grid', placeItems: 'center' }}>
           <Icon name="chevron-down" size={16} />
@@ -443,17 +443,16 @@ export function CompanyPage() {
   );
 }
 
-/** A service card: small landscape photo, name (up to two lines) and project count, and an arrow; opens the service page. */
+/** A service card: small landscape photo, then name (up to two lines) and project count; opens the service page. */
 function ServiceNavCard({ title, img, open, sub }: { title: string; img: string; open: () => void; sub: string }) {
   return (
     <button type="button" className="mj-press-sm" onClick={open}
-      style={{ minWidth: 0, minHeight: 64, display: 'flex', alignItems: 'center', gap: 10, padding: 8, paddingInlineEnd: 10, border: '1px solid var(--border-default)', borderRadius: 12, background: 'var(--surface-card)', cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'start', scrollSnapAlign: 'start' }}>
+      style={{ minWidth: 0, minHeight: 64, display: 'flex', alignItems: 'center', gap: 10, padding: 8, paddingInlineEnd: 12, border: '1px solid var(--border-default)', borderRadius: 12, background: 'var(--surface-card)', cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'start', scrollSnapAlign: 'start' }}>
       <span style={{ position: 'relative', flex: 'none', width: 72, height: 50, borderRadius: 8, overflow: 'hidden', background: 'var(--neutral-100)' }}><Img src={img} style={{ position: 'absolute', inset: 0 }} /></span>
       <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
         <span style={{ font: 'var(--type-body-sm)', fontWeight: 700, lineHeight: 1.35, color: 'var(--text-primary)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{title}</span>
         <span style={{ font: 'var(--type-caption)', color: 'var(--text-secondary)' }}>{sub}</span>
       </span>
-      <Icon name="chevron-right" size={16} color="var(--text-tertiary)" />
     </button>
   );
 }
@@ -629,6 +628,17 @@ function PillDivider({ children, onClick }: { children: React.ReactNode; onClick
   );
 }
 
+/** A small amber star on a project photo: the company features this project («مشاريع مميزة»). */
+function FeatStar() {
+  const { t } = useApp();
+  return (
+    <span role="img" aria-label={t.featuredPr} title={t.featuredPr}
+      style={{ position: 'absolute', top: 8, insetInlineStart: 8, width: 26, height: 26, borderRadius: '50%', background: 'oklch(0.8 0.16 80)', color: '#fff', display: 'grid', placeItems: 'center', boxShadow: '0 1px 4px oklch(0 0 0 / 0.25)' }}>
+      <Icon name="star" size={14} filled />
+    </span>
+  );
+}
+
 /** «مشاريع منجزة» on a service page: a two-column grid or large cards (the choice is kept while the app is open). */
 type ProjView = 'grid' | 'large';
 let projViewMemo: ProjView = 'grid';
@@ -659,7 +669,7 @@ function ProjectsBlock({ albums }: { albums: Album[] }) {
             const v = h.albV(al);
             return (
               <div key={al.id} onClick={v.open} style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6, cursor: 'pointer' }}>
-                <div style={{ aspectRatio: '4/3', borderRadius: 'var(--radius-md)', overflow: 'hidden', background: v.c100 }}><Img src={v.img} /></div>
+                <div style={{ position: 'relative', aspectRatio: '4/3', borderRadius: 'var(--radius-md)', overflow: 'hidden', background: v.c100 }}><Img src={v.img} />{al.feat && <FeatStar />}</div>
                 <span style={{ font: 'var(--type-body-sm)', fontWeight: 700, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{v.title}</span>
                 {v.place && <MetaLine icon="map-pin" size={12}>{v.place}</MetaLine>}
               </div>
@@ -672,7 +682,7 @@ function ProjectsBlock({ albums }: { albums: Album[] }) {
             const v = h.albV(al);
             return (
               <div key={al.id} onClick={v.open} style={{ ...card, overflow: 'hidden', cursor: 'pointer' }}>
-                <div style={{ aspectRatio: '4/3', maxHeight: 200, width: '100%', background: v.c100 }}><Img src={v.img} /></div>
+                <div style={{ position: 'relative', aspectRatio: '4/3', maxHeight: 200, width: '100%', background: v.c100 }}><Img src={v.img} />{al.feat && <FeatStar />}</div>
                 <div style={{ padding: '14px 16px 16px', display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <span style={{ font: 'var(--type-title)' }}>{v.title}</span>
                   {v.place && <MetaLine icon="map-pin">{v.place}</MetaLine>}

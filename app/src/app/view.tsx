@@ -234,7 +234,7 @@ export const MetaLine = ({ icon, children, size = 13, style }: { icon: string; c
   </span>
 );
 
-/** WhatsApp, Call and Follow on company & service pages. Directions live in the company page's top bar. */
+/** WhatsApp, Call and Follow on company & service pages (Followed: light purple, so contacting stays the main action). Directions live in the company page's top bar. */
 export function ContactGrid({ a, co, waText, follow = true }: { a: App; co: Company; waText?: string; follow?: boolean }) {
   const { t } = a;
   const items = [
@@ -247,7 +247,7 @@ export function ContactGrid({ a, co, waText, follow = true }: { a: App; co: Comp
       {items.map(x => (
         <button key={x.label} type="button" className="mj-press" onClick={x.go} aria-pressed={'on' in x ? x.on : undefined}
           style={{ minWidth: 0, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, padding: '0 8px', border: 'none', borderRadius: 10, cursor: 'pointer', fontFamily: 'var(--font-sans)', font: 'var(--type-body-sm)', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap',
-            background: 'on' in x && x.on ? 'var(--brand)' : 'var(--cat-' + x.tone + '-100)', color: 'on' in x && x.on ? '#fff' : 'var(--cat-' + x.tone + '-800)', transition: 'background var(--dur-base), color var(--dur-base)' }}>
+            background: 'on' in x && x.on ? 'var(--brand-tint-strong)' : 'var(--cat-' + x.tone + '-100)', color: 'on' in x && x.on ? 'var(--brand)' : 'var(--cat-' + x.tone + '-800)', transition: 'background var(--dur-base), color var(--dur-base)' }}>
           <Icon name={x.icon} size={15} style={{ flex: 'none' }} />
           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{x.label}</span>
         </button>
