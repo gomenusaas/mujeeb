@@ -236,7 +236,7 @@ export function ServiceCoverEditor({ value, fallback, logo, name, onChange }: {
   );
 }
 
-export function PhotoEditor({ photos, onChange, error, hidden, onHidden, noCover }: { photos: string[]; onChange: (p: string[]) => void; error?: string; noCover?: boolean } & GalleryProps) {
+export function PhotoEditor({ photos, onChange, error, hidden, onHidden, noCover, noAdd, help }: { photos: string[]; onChange: (p: string[]) => void; error?: string; noCover?: boolean; noAdd?: boolean; help?: string } & GalleryProps) {
   const { t, repo, company, showToast } = useP();
   const [busy, setBusy] = useState(false);
   const add = async (files: File[]) => {
@@ -251,9 +251,9 @@ export function PhotoEditor({ photos, onChange, error, hidden, onHidden, noCover
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
         <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <span style={{ font: 'var(--type-body-sm)', fontWeight: 600 }}>{t.photos}</span>
-          <span style={{ font: 'var(--type-caption)', fontWeight: 500, color: error ? 'var(--danger)' : 'var(--text-tertiary)' }}>{error || (noCover ? t.svcPhotosHelp : t.photosHelp)}</span>
+          <span style={{ font: 'var(--type-caption)', fontWeight: 500, color: error ? 'var(--danger)' : 'var(--text-tertiary)' }}>{error || help || (noCover ? t.svcPhotosHelp : t.photosHelp)}</span>
         </span>
-        <FileButton accept="image/jpeg,image/png,image/webp" multiple onFiles={add} icon="image-plus" loading={busy}>{t.addPhotos}</FileButton>
+        {!noAdd && <FileButton accept="image/jpeg,image/png,image/webp" multiple onFiles={add} icon="image-plus" loading={busy}>{t.addPhotos}</FileButton>}
       </div>
       {photos.length > 0 && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10 }}>

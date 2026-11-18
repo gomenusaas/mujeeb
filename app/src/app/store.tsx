@@ -7,27 +7,23 @@ import { pathToStack, routeToPath, shareLink } from './links';
 import { STORIES } from '../data/stories';
 
 export type Screen = 'home' | 'categories' | 'explore' | 'profile' | 'listing' | 'company' | 'service' | 'album'
-  | 'booking' | 'bkDone' | 'bookings' | 'favs' | 'notifs' | 'story' | 'photo';
+  | 'booking' | 'bkDone' | 'bookings' | 'favs' | 'notifs' | 'story' | 'photo' | 'svcGallery' | 'svcList';
 export type RootTab = 'home' | 'categories' | 'explore' | 'profile';
 /** `src` + `i`: which photo a `photo` route shows (of the album or service `id`). */
-export interface Route { s: Screen; id?: string; cat?: number; co?: string; src?: 'album' | 'service' | 'gallery' | 'category'; i?: number;
-  /** Category page / company page: the gallery tab is open (missing = companies / services). */
-  tab?: 'gallery';
+export interface Route { s: Screen; id?: string; cat?: number; co?: string; src?: 'album' | 'service' | 'gallery' | 'explore'; i?: number;
   /** Company page (and its gallery viewer): the activity (category) shown; missing = all activities. */
   act?: number;
   /** Kept on a page while another page covers it, so Back returns to it as it was: */
   y?: number;      // scroll position
   f?: Filters }    // category page: search, filters and sort
 /** Pages that exist once in the back trail: opening one that's already there goes back to it. */
-const SINGLE: Screen[] = ['company', 'service', 'album', 'listing'];
+const SINGLE: Screen[] = ['company', 'service', 'album', 'listing', 'svcGallery', 'svcList'];
 const samePage = (x: Route, y: Route) => x.s === y.s && (x.id ?? '') === (y.id ?? '') && (x.cat ?? '') === (y.cat ?? '');
 /** Story and full-screen photo open over the page they were tapped on. */
 export const isOverlay = (r: Route) => r.s === 'story' || r.s === 'photo';
 export interface Filters { gov: 'all' | GovId; verified: boolean; sort: 'rel' | 'near' | 'recent' | 'verified'; q: string }
 /** How the company list is laid out: big cards or thin rows. */
 export type ListView = 'large' | 'rows';
-/** Company page: its services as a list, or a gallery of its project photos and videos. */
-export type CoView = 'list' | 'gallery';
 export type SheetKey = null | 'menu' | 'about' | 'hours' | 'branches' | 'address' | 'coverage' | 'contact' | 'website' | 'social' | 'sort' | 'directions' | 'activity';
 /** Sign-in sheet steps: sign in, create account, forgot password, choose a new password (from the reset email). */
 export type AuthStep = 'signin' | 'signup' | 'reset' | 'newpw';

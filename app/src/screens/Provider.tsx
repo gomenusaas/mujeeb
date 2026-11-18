@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { Avatar, Badge, BottomSheet, Button, EmptyState, Icon, IconButton, ListItem, SearchBar, SectionHeader } from '../ds';
-import { useApp, type CoView, type Filters, type ListView, type SheetKey } from '../app/store';
-import { ContactGrid, HScroll, Img, MetaLine, TopBar, albumMedia, callPhone, card, categoryGallery, companyGallery, helpers, listingCompanies, openDirections, openWhatsApp, stop, type Media } from '../app/view';
+import { useApp, type Filters, type ListView, type SheetKey } from '../app/store';
+import { ContactGrid, HScroll, Img, MetaLine, TopBar, albumMedia, callPhone, card, companyGallery, helpers, listingCompanies, openDirections, openWhatsApp, serviceGallery, serviceImage, stop, type Media } from '../app/view';
 import { logoUrl, photo, remote } from '../data/api';
 import type { Company } from '../data/types';
 import { WEEK_ORDER, dayName, fmtTime, isOpenNow, muscatToday, shifts } from '../app/hours';
@@ -13,74 +13,8 @@ const VIEWS: { v: ListView; icon: string; label: 'viewLarge' | 'viewRows' }[] = 
 /** Height of the photo at the top of the company page and its service pages (kept the same on both). */
 const HERO_H = 250;
 
-type TabLabel = 'services' | 'gallery' | 'companiesTab';
-const CO_TABS: { v: CoView; label: TabLabel }[] = [{ v: 'list', label: 'services' }, { v: 'gallery', label: 'gallery' }];
-type CatView = 'companies' | 'gallery';
-const CAT_TABS: { v: CatView; label: TabLabel }[] = [{ v: 'companies', label: 'companiesTab' }, { v: 'gallery', label: 'gallery' }];
-
-/**
- * Two tabs with an underline: «الخدمات» / «المعرض» on a company page, «الشركات» / «المعرض» on a
- * category page. Only the purple underline moves, gliding slowly to the tab you pick.
- */
-function UnderlineTabs<V extends string>({ tabs, value, onPick }: { tabs: { v: V; label: TabLabel }[]; value: V; onPick: (v: V) => void }) {
-  const a = useApp();
-  const k = tabs.findIndex(x => x.v === value);
-  const ease = '480ms cubic-bezier(0.65, 0, 0.35, 1)';
-  return (
-    <div role="tablist" aria-label={a.t.viewAs} style={{ position: 'relative', display: 'flex', boxShadow: 'inset 0 -1px 0 var(--border-subtle)' }}>
-      {tabs.map(x => {
-        const on = value === x.v;
-        return (
-          <button key={x.v} type="button" role="tab" aria-selected={on} onClick={() => onPick(x.v)}
-            style={{ flex: 1, height: 46, padding: 0, border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', font: 'var(--type-title)', fontWeight: on ? 800 : 600,
-              color: on ? 'var(--text-primary)' : 'var(--text-tertiary)', transition: 'color ' + ease }}>
-            {a.t[x.label]}
-          </button>
-        );
-      })}
-      <span aria-hidden="true" style={{ position: 'absolute', bottom: 0, insetInlineStart: k * 50 + '%', width: '50%', height: 3, display: 'flex', justifyContent: 'center', transition: 'inset-inline-start ' + ease, pointerEvents: 'none' }}>
-        <span style={{ width: '56%', height: '100%', borderRadius: 3, background: 'var(--brand)' }} />
-      </span>
-    </div>
-  );
-}
-
-/** The nearest scrolling ancestor (the screen's scroll area). */
-function scrollParent(el: HTMLElement | null): HTMLElement | null {
-  for (let p = el?.parentElement; p; p = p.parentElement) {
-    const o = getComputedStyle(p).overflowY;
-    if ((o === 'auto' || o === 'scroll') && p.scrollHeight > p.clientHeight) return p;
-  }
-  return null;
-}
-
-/**
- * Keeps the page still when a section switches between two views: the section's top stays put on
- * screen, and the section keeps at least enough height below it that a shorter view can't pull the
- * page up. Call `prepare()` just before switching; put `ref` and `minHeight` on the section.
- */
-function useSteadySwitch(id: string, view: string) {
-  const ref = useRef<HTMLDivElement>(null);
-  const anchor = useRef<number | null>(null);
-  const [hold, setHold] = useState<{ id: string; h: number } | null>(null);
-  const prepare = () => {
-    const el = ref.current, sc = scrollParent(el);
-    if (!el || !sc) return;
-    const top = el.getBoundingClientRect().top - sc.getBoundingClientRect().top;
-    anchor.current = top;
-    setHold({ id, h: Math.max(0, sc.clientHeight - top) });
-  };
-  useLayoutEffect(() => {
-    const el = ref.current, sc = scrollParent(el), want = anchor.current;
-    if (!el || !sc || want == null) return;
-    anchor.current = null;
-    sc.scrollTop += el.getBoundingClientRect().top - sc.getBoundingClientRect().top - want;
-  }, [view]);
-  return { ref, minHeight: hold?.id === id ? hold.h : undefined, prepare };
-}
-
 /** A photo (cropped to `ratio`, or at its natural height) or a silent looping video with a play badge. */
-function MediaTile({ m, w, ratio, onOpen, style }: { m: Media; w: number; ratio?: string; onOpen: () => void; style?: CSSProperties }) {
+function MediaTile({ m, w, ratio, onOpen, style, small }: { m: Media; w: number; ratio?: string; onOpen: () => void; style?: CSSProperties; small?: boolean }) {
   return (
     <button type="button" onClick={onOpen} aria-label={m.video ? 'video' : 'photo'}
       style={{ position: 'relative', display: 'block', width: '100%', padding: 0, border: 'none', borderRadius: 'var(--radius-md)', overflow: 'hidden', background: 'var(--neutral-100)', cursor: 'zoom-in', ...style }}>
@@ -88,8 +22,8 @@ function MediaTile({ m, w, ratio, onOpen, style }: { m: Media; w: number; ratio?
         ? <video src={m.src + '#t=0.1'} muted loop playsInline autoPlay preload="metadata" style={{ width: '100%', display: 'block', minHeight: 120, objectFit: 'cover' }} />
         : <img src={photo(m.src, w)} alt="" loading="lazy" decoding="async" style={{ width: '100%', display: 'block', minHeight: 80, ...(ratio ? { aspectRatio: ratio, objectFit: 'cover' } : {}) }} />}
       {m.video && (
-        <span style={{ position: 'absolute', top: 8, insetInlineEnd: 8, width: 26, height: 26, borderRadius: '50%', background: 'oklch(0 0 0 / 0.5)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Icon name="play" size={13} />
+        <span style={{ position: 'absolute', top: small ? 5 : 8, insetInlineEnd: small ? 5 : 8, width: small ? 20 : 26, height: small ? 20 : 26, borderRadius: '50%', background: 'oklch(0 0 0 / 0.5)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name="play" size={small ? 10 : 13} />
         </span>
       )}
     </button>
@@ -106,7 +40,7 @@ const GALLERY_BATCH = 30;
  * Two staggered columns of photos and videos, loaded GALLERY_BATCH at a time.
  * Tiles show only the work; the viewer names the company. Remount (change `key`) to start over.
  */
-function Masonry({ items, onOpen }: { items: Media[]; onOpen: (k: number) => void }) {
+export function Masonry({ items, onOpen, cols = 2 }: { items: Media[]; onOpen: (k: number) => void; cols?: number }) {
   const [limit, setLimit] = useState(GALLERY_BATCH);
   const end = useRef<HTMLDivElement>(null);
   const more = items.length > limit;
@@ -118,13 +52,16 @@ function Masonry({ items, onOpen }: { items: Media[]; onOpen: (k: number) => voi
     return () => io.disconnect();
   }, [more, limit]);
   const shown = items.slice(0, limit);
-  const cols = [0, 1].map(c => shown.map((m, k) => ({ m, k })).filter(x => x.k % 2 === c));
+  // Three columns (company page) are tighter: smaller gaps, corners and play badges.
+  const small = cols > 2, gap = small ? 6 : 8;
+  const columns = Array.from({ length: cols }, (_, c) => shown.map((m, k) => ({ m, k })).filter(x => x.k % cols === c));
   return (
     <>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-        {cols.map((col, c) => (
-          <div key={c} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {col.map(({ m, k }, j) => <MediaTile key={k} m={m} w={500} ratio={MASONRY_RATIOS[(j * 2 + c * 3) % MASONRY_RATIOS.length]} onOpen={() => onOpen(k)} />)}
+      <div style={{ display: 'flex', gap, alignItems: 'flex-start' }}>
+        {columns.map((col, c) => (
+          <div key={c} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap }}>
+            {col.map(({ m, k }, j) => <MediaTile key={k} m={m} w={small ? 360 : 500} small={small} style={small ? { borderRadius: 12 } : undefined}
+              ratio={MASONRY_RATIOS[(j * 2 + c * 3) % MASONRY_RATIOS.length]} onOpen={() => onOpen(k)} />)}
           </div>
         ))}
       </div>
@@ -191,17 +128,6 @@ export function Listing() {
   const color = c == null ? 'violet' : catalog.cats[c].color;
   // Opening a company from here lands on this category's activity.
   const results = res.map(co => ({ ...h.coV(co), open: () => a.go('company', { id: co.id, ...(c != null ? { act: c } : {}) }) }));
-  // «المعرض» tab: shown when any company has media filed under this category (filters may still empty it).
-  const hasMedia = catalog.albums.some(al => (c == null || al.cat === c) && al.imgs.length + (al.vids?.length ?? 0) > (al.hide?.length ?? 0));
-  const view: CatView = hasMedia && top.tab === 'gallery' ? 'gallery' : 'companies';
-  const steady = useSteadySwitch('cat' + c, view);
-  // The tab lives in the route, so the back button and links return to it.
-  const pickView = (v: CatView) => {
-    if (v === view) return;
-    steady.prepare();
-    a.replace('listing', { cat: c, ...(v === 'gallery' ? { tab: 'gallery' as const } : {}) });
-  };
-  const gallery = view === 'gallery' ? categoryGallery(a, c) : [];
 
   return (
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column', paddingBottom: 40 }}>
@@ -224,19 +150,7 @@ export function Listing() {
           <SearchBar placeholder={t.search} value={f.q} onChange={e => set({ q: e.target.value })} onFilter={null} elevated />
         </div>
       </div>
-      <div ref={steady.ref} style={{ display: 'flex', flexDirection: 'column', minHeight: steady.minHeight }}>
-      {hasMedia && <div style={{ padding: '4px 20px 0' }}><UnderlineTabs tabs={CAT_TABS} value={view} onPick={pickView} /></div>}
-      {view === 'gallery' ? (
-        <div style={{ padding: '14px 20px 0' }}>
-          {gallery.length
-            ? <Masonry key={[c, f.q, f.gov, f.verified, f.sort].join('|')} items={gallery} onOpen={k => a.go('photo', { src: 'category', cat: c, i: k })} />
-            : <>
-                <EmptyState icon="images" color={color} title={t.noResults} body={t.noResultsBody} />
-                <div style={{ display: 'flex', justifyContent: 'center' }}><Button variant="secondary" onClick={() => set({ gov: 'all', verified: false, q: '' })}>{t.clear}</Button></div>
-              </>}
-        </div>
-      ) : (<>
-      <div style={{ padding: '14px 20px 0', display: 'flex', gap: 8, alignItems: 'center' }}>
+      <div style={{ padding: '8px 20px 0', display: 'flex', gap: 8, alignItems: 'center' }}>
         <ViewSwitch />
         <button type="button" aria-haspopup="dialog" aria-label={t.sortBy + ': ' + sortLabel(t, f.sort)} onClick={() => a.setSheet('sort')}
           style={{ marginInlineStart: 'auto', height: 46, display: 'flex', alignItems: 'center', gap: 8, padding: '0 16px', border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--neutral-100)', color: 'var(--text-primary)', font: 'var(--type-body-sm)', fontWeight: 700, fontFamily: 'var(--font-sans)', cursor: 'pointer' }}>
@@ -287,8 +201,6 @@ export function Listing() {
           ))}
         </div>
       )}
-      </>)}
-      </div>
     </div>
   );
 }
@@ -366,7 +278,7 @@ export function ActivitySheet() {
   };
   const pick = (v: number) => {
     setSheet(null);
-    if (v !== cur) a.replace('company', { id: co.id, ...(page.tab ? { tab: page.tab } : {}), act: v });
+    if (v !== cur) a.replace('company', { id: co.id, act: v });
   };
   const check = (on: boolean) => (on ? <Icon name="check" size={20} color="var(--brand)" /> : null);
   return (
@@ -375,6 +287,46 @@ export function ActivitySheet() {
         <ListItem key={c} icon={catalog.cats[c].icon} color={catalog.cats[c].color} title={h.cname(c)} subtitle={counts(c)} chevron={false} trailing={check(cur === c)} onClick={() => pick(c)} />
       ))}
     </BottomSheet>
+  );
+}
+
+/**
+ * A company's services as cards in a sideways strip, like the categories on the home page: two rows
+ * that scroll together (one row for 1–3 services), the next column peeking in.
+ */
+function ServiceStrip({ items }: { items: ReturnType<ReturnType<typeof helpers>['svcV']>[] }) {
+  const rows = items.length > 3 ? 2 : 1;
+  return (
+    <div className="mj-s" style={{ display: 'grid', gridTemplateRows: 'repeat(' + rows + ', auto)', gridAutoFlow: 'column', gridAutoColumns: 'calc(100% - 64px)', gap: 10, overflowX: 'auto', scrollSnapType: 'x mandatory', scrollPaddingInline: 20, padding: '4px 20px 12px', margin: '-4px 0 -12px', scrollbarWidth: 'none' }}>
+      {items.map(s => (
+        <button key={s.id} type="button" className="mj-press-sm" onClick={s.open}
+          style={{ ...card, overflow: 'hidden', height: 92, border: 'none', padding: 0, cursor: 'pointer', scrollSnapAlign: 'start', display: 'flex', alignItems: 'stretch', fontFamily: 'var(--font-sans)', textAlign: 'start' }}>
+          <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 4, padding: '0 16px' }}>
+            <span style={{ font: 'var(--type-title)', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</span>
+            <span style={{ font: 'var(--type-caption)', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.cat}</span>
+          </span>
+          <img src={s.img} alt="" loading="lazy" style={{ flex: 'none', width: '38%', height: '100%', objectFit: 'cover' }} />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** «عرض الكل» from the company page: all of its services (in the chosen activity) as a plain list. */
+export function ServiceList() {
+  const a = useApp();
+  const { t, catalog, page } = a;
+  const h = helpers(a);
+  const co = a.idx.co.get(page.id!)!;
+  const act = activeAct(co, page);
+  const services = catalog.services.filter(s => s.co === co.id && (act == null || s.cat === act)).map(h.svcV);
+  return (
+    <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column', paddingBottom: 40 }}>
+      <TopBar title={t.services + ' · ' + h.num(services.length)} subtitle={h.coName(co) + (act != null ? ' · ' + h.cname(act) : '')} onBack={a.back} />
+      <div style={{ padding: '8px 20px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {services.map(s => <ServiceRow key={s.id} {...s} thumb={96} />)}
+      </div>
+    </div>
   );
 }
 
@@ -389,18 +341,7 @@ export function CompanyPage() {
   const services = catalog.services.filter(s => s.co === co.id && (act == null || s.cat === act)).map(h.svcV);
   const allMedia = companyGallery(a, co.id);
   const gallery = act == null ? allMedia : companyGallery(a, co.id, act);
-  // Every visit opens on the services list; the gallery tab is kept only for this visit (in the route,
-  // so Back from a photo or project returns to it). Without gallery items there's nothing to switch to.
-  const view: CoView = allMedia.length && top.tab === 'gallery' ? 'gallery' : 'list';
   useEffect(() => { remote.track(co.id, 'profile_view'); }, [co.id]);
-
-  // Switching list ⇄ gallery keeps the page where it is.
-  const steady = useSteadySwitch(co.id, view);
-  const pickView = (v: CoView) => {
-    if (v === view) return;
-    steady.prepare();
-    a.replace('company', { id: co.id, ...(v === 'gallery' ? { tab: 'gallery' as const } : {}), ...(act != null ? { act } : {}) });
-  };
   return (
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ position: 'relative', height: HERO_H, background: cv.c100 }}>
@@ -432,16 +373,24 @@ export function CompanyPage() {
         </div>
         <ActivityPicker co={co} act={act} />
         <ContactGrid a={a} co={co} />
-        <div ref={steady.ref} style={{ display: 'flex', flexDirection: 'column', gap: 12, minHeight: steady.minHeight }}>
-          {/* With project photos there are two tabs; otherwise just the services heading. */}
-          {allMedia.length > 0 ? <UnderlineTabs tabs={CO_TABS} value={view} onPick={pickView} /> : <SectionHeader title={t.services} />}
-          {view === 'gallery'
-            ? (gallery.length
-              ? <Masonry key={act ?? 'all'} items={gallery} onOpen={k => a.go('photo', { src: 'gallery', id: co.id, i: k, ...(act != null ? { act } : {}) })} />
-              : <EmptyLine>{t.actNoMedia}</EmptyLine>)
-            : !services.length ? <EmptyLine>{t.actNoSvc}</EmptyLine>
-            : services.map(s => <ServiceRow key={s.id} {...s} thumb={96} />)}
+        {/* Services as a sideways strip (two rows from 4 services), then the gallery below; no tabs. */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, margin: '0 -20px' }}>
+          <div style={{ padding: '0 20px' }}>
+            <SectionHeader title={<>{t.services}{services.length > 0 && <span style={{ color: 'var(--text-tertiary)' }}> · {h.num(services.length)}</span>}</>}
+              action={services.length > 3 ? t.seeAll : null} onAction={() => a.go('svcList', { id: co.id, ...(act != null ? { act } : {}) })} />
+          </div>
+          {services.length
+            ? <ServiceStrip items={services} />
+            : <div style={{ padding: '0 20px' }}><EmptyLine>{t.actNoSvc}</EmptyLine></div>}
         </div>
+        {allMedia.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <SectionHeader title={t.gallery} />
+            {gallery.length
+              ? <Masonry key={act ?? 'all'} cols={3} items={gallery} onOpen={k => a.go('photo', { src: 'gallery', id: co.id, i: k, ...(act != null ? { act } : {}) })} />
+              : <EmptyLine>{t.actNoMedia}</EmptyLine>}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -549,6 +498,55 @@ function ServiceRow({ title, cat, img, open, thumb }: { title: string; cat?: str
   );
 }
 
+/** The service page strip shows at most this many items; «عرض الكل» opens all of them. */
+const STRIP_MAX = 27;
+
+/**
+ * Three rows of square tiles that scroll sideways together: three columns (9 tiles) fit on screen
+ * and the next column peeks in. Videos show their first frame with a play badge.
+ */
+function MediaStrip({ items, color, onOpen }: { items: Media[]; color: string; onOpen: (k: number) => void }) {
+  const a = useApp();
+  const rows = Math.min(3, items.length);
+  return (
+    <div className="mj-s" style={{ display: 'grid', gridTemplateRows: 'repeat(' + rows + ', 104px)', gridAutoFlow: 'column', gridAutoColumns: '104px', gap: 8, overflowX: 'auto', scrollSnapType: 'x mandatory', scrollPaddingInline: 20, padding: '4px 20px 12px', margin: '-4px 0 -12px', scrollbarWidth: 'none' }}>
+      {items.map((m, k) => (
+        <button key={k} type="button" aria-label={(m.video ? 'video' : 'photo') + ' ' + helpers(a).num(k + 1)} onClick={() => onOpen(k)}
+          style={{ position: 'relative', padding: 0, border: 'none', borderRadius: 'var(--radius-md)', overflow: 'hidden', background: 'var(--cat-' + color + '-100)', scrollSnapAlign: k % 3 === 0 ? 'start' : undefined, cursor: 'zoom-in' }}>
+          {m.video
+            ? <video src={m.src + '#t=0.1'} muted playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            : <Img src={photo(m.src, 260)} />}
+          {m.video && (
+            <span style={{ position: 'absolute', top: 6, insetInlineEnd: 6, width: 22, height: 22, borderRadius: '50%', background: 'oklch(0 0 0 / 0.5)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Icon name="play" size={11} />
+            </span>
+          )}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** «عرض الكل» from a service page: all of the service's photos and videos in the two-column gallery. */
+export function ServiceGallery() {
+  const a = useApp();
+  const { t, ar, page } = a;
+  const h = helpers(a);
+  const s = a.idx.svc.get(page.id!)!;
+  const co = a.idx.co.get(s.co)!;
+  const items = serviceGallery(a, s.id);
+  return (
+    <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column', paddingBottom: 40 }}>
+      <TopBar title={(ar ? s.ar : s.en)} subtitle={t.svcPhotos + ' · ' + h.coName(co)} onBack={a.back} />
+      <div style={{ padding: '8px 20px 0' }}>
+        {items.length
+          ? <Masonry items={items} onOpen={k => a.go('photo', { src: 'service', id: s.id, i: k })} />
+          : <EmptyLine>{t.actNoMedia}</EmptyLine>}
+      </div>
+    </div>
+  );
+}
+
 export function ServicePage() {
   const a = useApp();
   const { t, ar, catalog, page: top } = a;
@@ -556,7 +554,10 @@ export function ServicePage() {
   const s = a.idx.svc.get(top.id!)!;
   const co = a.idx.co.get(s.co)!;
   const color = catalog.cats[s.cat].color;
-  const albums = catalog.albums.filter(al => al.co === co.id).map(h.albV);
+  // «مشاريع منجزة»: the projects linked to this service, newest first.
+  const albums = catalog.albums.filter(al => al.svc === s.id).sort((x, y) => (y.added || '').localeCompare(x.added || '')).map(h.albV);
+  // Photos and videos from the projects linked to this service (minus what the company hid).
+  const media = serviceGallery(a, s.id);
   // «خدمات ذات صلة»: the company's other services in this service's category.
   const more = catalog.services.filter(x => x.co === co.id && x.id !== s.id && x.cat === s.cat).map(h.svcV);
   useEffect(() => { remote.track(co.id, 'service_view', s.id); }, [co.id, s.id]);
@@ -564,7 +565,7 @@ export function ServicePage() {
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* The service's cover: a still picture (no swiping or tapping); its photos are in a row further down. */}
       <div style={{ position: 'relative', height: HERO_H, background: 'var(--cat-' + color + '-100)' }}>
-        <img src={photo(s.cover || s.imgs[0] || co.img, 900)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+        <img src={photo(serviceImage(a, s), 900)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
         <div style={{ position: 'absolute', top: 'calc(var(--top-inset) + 4px)', insetInline: 16, display: 'flex', justifyContent: 'space-between' }}>
           <IconButton icon="arrow-left" variant="glass" size={40} onClick={a.back} label="Back" />
           <div style={{ display: 'flex', gap: 8 }}>
@@ -590,17 +591,10 @@ export function ServicePage() {
           <span style={{ font: 'var(--type-body)', color: 'var(--text-secondary)', textWrap: 'pretty' }}>{ar ? s.dar : s.den}</span>
         </div>
         <ContactGrid a={a} co={co} />
-        {s.imgs.length > 0 && (
+        {media.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, margin: '0 -20px' }}>
-            <div style={{ padding: '0 20px' }}><SectionHeader title={t.svcPhotos} action={null} /></div>
-            <HScroll>
-              {s.imgs.map((im, k) => (
-                <button key={k} type="button" aria-label={t.svcPhotos + ' ' + h.num(k + 1)} onClick={() => a.go('photo', { src: 'service', id: s.id, i: k })}
-                  style={{ flex: 'none', width: 132, aspectRatio: '4/3', padding: 0, border: 'none', borderRadius: 'var(--radius-md)', overflow: 'hidden', background: 'var(--cat-' + color + '-100)', scrollSnapAlign: 'start', cursor: 'zoom-in' }}>
-                  <Img src={photo(im, 300)} />
-                </button>
-              ))}
-            </HScroll>
+            <div style={{ padding: '0 20px' }}><SectionHeader title={t.svcPhotos} action={t.seeAll} onAction={() => a.go('svcGallery', { id: s.id })} /></div>
+            <MediaStrip items={media.slice(0, STRIP_MAX)} color={color} onOpen={k => a.go('photo', { src: 'service', id: s.id, i: k })} />
           </div>
         )}
         {albums.length > 0 && (

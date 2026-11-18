@@ -1,8 +1,9 @@
 import { Avatar, Badge, CategoryCard, Chip, Icon, IconButton, SectionHeader } from '../ds';
 import { useApp } from '../app/store';
-import { HScroll, Img, MetaLine, card, helpers, stop } from '../app/view';
+import { HScroll, Img, MetaLine, card, exploreMedia, helpers, stop } from '../app/view';
 import { logoUrl, photo } from '../data/api';
 import { StoryRow } from './Stories';
+import { Masonry } from './Provider';
 
 const ROOT_PAD = { padding: 'calc(var(--top-inset) + 8px) 20px 100px' };
 
@@ -162,33 +163,36 @@ export function Categories() {
   );
 }
 
-const RATIOS = ['3/4', '1/1', '4/5', '1/1', '3/4', '4/5', '1/1', '3/4', '4/5', '1/1'];
 
+/**
+ * «استكشف الأعمال»: photos and videos from inside companies' projects (minus what they hid), in the
+ * daily mix, as a 3-column masonry that loads 30 at a time. A tap opens the full-screen viewer,
+ * which links to the project.
+ */
 export function Explore() {
   const a = useApp();
   const { t, catalog, exCat, setExCat } = a;
   const h = helpers(a);
-  // Quick filters: construction, interiors, kitchens, gardens, electrical.
-  const chips = [0, 4, 9, 8, 2].filter(i => catalog.cats[i]);
-  const feed = catalog.albums.filter(al => exCat < 0 || al.cat === exCat).map(h.albV);
+  // A chip for every category that has published projects.
+  const chips = catalog.cats.map(c => c.i).filter(i => catalog.albums.some(al => al.cat === i));
+  const cat = exCat < 0 ? undefined : exCat;
+  const items = exploreMedia(a, cat);
   return (
     <div style={{ padding: 'calc(var(--top-inset) + 8px) 0 100px', display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 2 }}>
         <span style={{ font: 'var(--type-h1)' }}>{t.exploreTitle}</span>
-        <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }}>{t.exploreSub}</span>
+        {/* The service location from the home header (fixed for now; it will follow the customer's choice). */}
+        <span style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4, font: 'var(--type-body-sm)', fontWeight: 700, color: 'var(--text-primary)' }}>
+          <Icon name="map-pin" size={15} color="var(--brand)" />{t.loc}
+        </span>
       </div>
       <div className="mj-s" style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '0 20px', scrollbarWidth: 'none' }}>
         <Chip selected={exCat < 0} onClick={() => setExCat(-1)}>{t.all}</Chip>
         {chips.map(i => <Chip key={i} selected={exCat === i} onClick={() => setExCat(i)}>{h.cshort(i)}</Chip>)}
       </div>
-      <div style={{ padding: '0 20px', columns: 2, columnGap: 12 }}>
-        {feed.map((p, k) => (
-          <div key={p.id} onClick={p.open} style={{ breakInside: 'avoid', marginBottom: 14, display: 'flex', flexDirection: 'column', gap: 6, cursor: 'pointer' }}>
-            <div style={{ aspectRatio: RATIOS[k % 10], borderRadius: 'var(--radius-md)', overflow: 'hidden', background: p.c100 }}><Img src={p.img} /></div>
-            <span style={{ font: 'var(--type-body-sm)', fontWeight: 700, color: 'var(--text-primary)' }}>{p.title}</span>
-            <span style={{ font: 'var(--type-caption)', fontWeight: 500, color: 'var(--text-secondary)', marginTop: -3 }}>{p.company}</span>
-          </div>
-        ))}
+      {/* Narrow side margins (same as the gap between tiles) so the pictures get the width. */}
+      <div style={{ padding: '0 6px' }}>
+        <Masonry key={exCat} cols={3} items={items} onOpen={k => a.go('photo', { src: 'explore', i: k, ...(cat != null ? { cat } : {}) })} />
       </div>
     </div>
   );

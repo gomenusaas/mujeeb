@@ -14,20 +14,22 @@ type Item = {
   videos?: string[]; hidden?: string[];
   /** Services only: the page header image (null = first photo). */
   cover?: string | null;
+  /** Projects only: the service it shows under. */
+  service_id?: string | null;
 };
 
-function Tile({ item, sub, onEdit, onDelete }: { item: Item; sub: string; onEdit: () => void; onDelete: () => void }) {
+function Tile({ item, sub, onEdit, onDelete, n, thumb }: { item: Item; sub: string; onEdit: () => void; onDelete: () => void; n?: number; thumb?: string }) {
   const p = useP();
   const { t } = p;
   return (
     <div style={{ ...card, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <button type="button" onClick={onEdit} style={{ position: 'relative', aspectRatio: '4/3', padding: 0, border: 'none', background: 'var(--neutral-100)', cursor: 'pointer' }}>
-        {item.cover || item.photos[0]
-          ? <img src={photoUrl(item.cover || item.photos[0], 500)} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+        {thumb || item.cover || item.photos[0]
+          ? <img src={photoUrl(thumb || item.cover || item.photos[0], 500)} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
           : <Icon name="image" size={32} color="var(--text-tertiary)" />}
         <span style={{ position: 'absolute', top: 10, insetInlineStart: 10 }}><Pill tone={item.is_published ? 'green' : 'neutral'}>{item.is_published ? t.published : t.hidden}</Pill></span>
         <span style={{ position: 'absolute', bottom: 10, insetInlineEnd: 10, display: 'inline-flex', alignItems: 'center', gap: 4, height: 24, padding: '0 9px', borderRadius: 999, background: 'oklch(0.2 0.02 285 / 0.72)', color: '#fff', font: '700 12px var(--font-sans)' }}>
-          <Icon name="images" size={13} />{p.num(item.photos.length)}
+          <Icon name="images" size={13} />{p.num(n ?? item.photos.length)}
           {!!item.videos?.length && <><Icon name="play" size={12} style={{ marginInlineStart: 4 }} />{p.num(item.videos.length)}</>}
         </span>
       </button>
@@ -43,8 +45,12 @@ function Tile({ item, sub, onEdit, onDelete }: { item: Item; sub: string; onEdit
   );
 }
 
-function Editor({ title, initial, isProject, onClose, onSave }: {
+function Editor({ title, initial, isProject, onClose, onSave, services, linked }: {
   title: string; initial: Item; isProject: boolean; onClose: () => void; onSave: (x: Item) => Promise<void>;
+  /** Projects: the company's services (for the «الخدمة» picker). */
+  services?: Service[];
+  /** Services: the projects linked to it (their photos fill its page). */
+  linked?: Album[];
 }) {
   const p = useP();
   const { t, company } = p;
@@ -52,7 +58,14 @@ function Editor({ title, initial, isProject, onClose, onSave }: {
   const [busy, setBusy] = useState(false);
   const [tried, setTried] = useState(false);
   const set = (v: Partial<Item>) => setX(o => ({ ...o, ...v }));
-  const bad = !x.title_ar.trim() || !x.title_en.trim() || !x.photos.length;
+  // Services get their photos from linked projects, so only projects must have a photo.
+  const bad = !x.title_ar.trim() || !x.title_en.trim() || (isProject && !x.photos.length);
+  // Projects: the services in the chosen category. With just one, it's picked for the company.
+  const inCat = (cat: number) => (services || []).filter(s => s.category_id === cat);
+  const svcFor = (cat: number, cur?: string | null) => {
+    const list = inCat(cat);
+    return list.some(s => s.id === cur) ? cur! : list.length === 1 ? list[0].id! : null;
+  };
   const save = async () => {
     setTried(true);
     if (bad) return;
@@ -77,15 +90,42 @@ function Editor({ title, initial, isProject, onClose, onSave }: {
             <Field label={t.descEn} dir="ltr" multiline value={x.a_en} onChange={v => set({ a_en: v })} />
           </>
         )}
-        <Select label={t.category} value={x.category_id} onChange={v => set({ category_id: v })}
+        <Select label={t.category} value={x.category_id} onChange={v => set({ category_id: v, ...(isProject ? { service_id: svcFor(v, x.service_id) } : {}) })}
           options={company.categories.map(id => ({ value: id, label: p.pick(p.cat(id)?.name_ar || '', p.cat(id)?.name_en || '') }))} />
+        {isProject && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <Select label={t.projService} value={x.service_id || ''} onChange={v => set({ service_id: v || null })}
+              options={[{ value: '', label: t.noService }, ...inCat(x.category_id).map(s => ({ value: s.id!, label: p.pick(s.title_ar, s.title_en) }))]} />
+            <span style={{ font: 'var(--type-caption)', fontWeight: 500, color: 'var(--text-tertiary)' }}>{t.projServiceHelp}</span>
+          </div>
+        )}
       </div>
       {!isProject && (
         <ServiceCoverEditor value={x.cover ?? null} fallback={x.photos[0] || company.cover_photo} logo={logoOf(company)} name={p.pick(company.name_ar, company.name_en)}
           onChange={cover => set({ cover })} />
       )}
-      <PhotoEditor photos={x.photos} onChange={photos => set({ photos })} error={tried && !x.photos.length ? t.needPhoto : undefined} noCover={!isProject}
-        hidden={isProject ? x.hidden || [] : undefined} onHidden={hidden => set({ hidden })} />
+      {isProject
+        ? <PhotoEditor photos={x.photos} onChange={photos => set({ photos })} error={tried && !x.photos.length ? t.needPhoto : undefined}
+            hidden={x.hidden || []} onHidden={hidden => set({ hidden })} />
+        : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <span style={{ display: 'flex', gap: 8, alignItems: 'flex-start', font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }}>
+              <Icon name="info" size={16} style={{ flex: 'none', marginTop: 2 }} />{t.svcFromProjects}
+            </span>
+            <span style={{ font: 'var(--type-body-sm)', fontWeight: 600 }}>{t.svcLinked}</span>
+            {linked?.length
+              ? <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {linked.map(al => (
+                    <span key={al.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '4px 10px 4px 4px', borderRadius: 999, background: 'var(--neutral-100)', font: 'var(--type-caption)', fontWeight: 600 }}>
+                      <img src={photoUrl(al.photos[0] || al.cover_photo, 80)} alt="" style={{ width: 26, height: 26, borderRadius: '50%', objectFit: 'cover' }} />
+                      {p.pick(al.title_ar, al.title_en)} · {p.num(al.photos.length + (al.videos?.length || 0))}
+                    </span>
+                  ))}
+                </div>
+              : <span style={{ font: 'var(--type-caption)', fontWeight: 500, color: 'var(--text-tertiary)' }}>{t.svcNoLinked}</span>}
+            {x.photos.length > 0 && <PhotoEditor photos={x.photos} onChange={photos => set({ photos })} noCover noAdd help={t.svcOldPhotos} />}
+          </div>
+        )}
       {isProject && (
         <>
           <VideoEditor videos={x.videos || []} onChange={videos => set({ videos })} hidden={x.hidden || []} onHidden={hidden => set({ hidden })} />
@@ -107,6 +147,9 @@ export function Services() {
   const p = useP();
   const { t, repo, company } = p;
   const { items, reload } = useList(() => repo.services(company.id), [repo, company.id]);
+  const projects = useList(() => repo.albums(company.id), [repo, company.id]).items || [];
+  const linkedTo = (id?: string) => projects.filter(al => id && al.service_id === id);
+  const media = (id?: string) => linkedTo(id).reduce((n, al) => n + al.photos.filter(x => !al.gallery_hidden?.includes(x)).length + (al.videos || []).filter(x => !al.gallery_hidden?.includes(x)).length, 0);
   const [edit, setEdit] = useState<Service | 'new' | null>(null);
   const [del, setDel] = useState<Service | null>(null);
   const [busy, setBusy] = useState(false);
@@ -128,10 +171,10 @@ export function Services() {
         ? <EmptyState icon="briefcase" title={t.noServices} body={t.noServicesBody} action={<Button iconLeft="plus" onClick={() => setEdit('new')}>{t.newService}</Button>} />
         : (
           <div className="pv-tiles">
-            {items.map(s => <Tile key={s.id} item={svcToItem(s)} sub={p.pick(p.cat(s.category_id)?.name_ar || '', p.cat(s.category_id)?.name_en || '')} onEdit={() => setEdit(s)} onDelete={() => setDel(s)} />)}
+            {items.map(s => <Tile key={s.id} item={svcToItem(s)} n={media(s.id) + s.photos.length} thumb={s.cover_url || linkedTo(s.id)[0]?.photos[0]} sub={p.pick(p.cat(s.category_id)?.name_ar || '', p.cat(s.category_id)?.name_en || '')} onEdit={() => setEdit(s)} onDelete={() => setDel(s)} />)}
           </div>
         )}
-      {edit && <Editor title={edit === 'new' ? t.newService : t.editService} isProject={false} initial={edit === 'new' ? blank : svcToItem(edit)} onClose={() => setEdit(null)} onSave={save} />}
+      {edit && <Editor title={edit === 'new' ? t.newService : t.editService} isProject={false} linked={edit === 'new' ? [] : linkedTo(edit.id)} initial={edit === 'new' ? blank : svcToItem(edit)} onClose={() => setEdit(null)} onSave={save} />}
       <Confirm open={!!del} busy={busy} onCancel={() => setDel(null)} onConfirm={remove} />
     </>
   );
@@ -139,20 +182,24 @@ export function Services() {
 
 /* ───────────────────────── Projects (portfolio albums) ───────────────────────── */
 
-const albToItem = (a: Album): Item => ({ id: a.id, title_ar: a.title_ar, title_en: a.title_en, category_id: a.category_id, photos: a.photos, is_published: a.is_published, a_ar: a.place_ar || '', a_en: a.place_en || '', videos: a.videos || [], hidden: a.gallery_hidden || [] });
+const albToItem = (a: Album): Item => ({ id: a.id, title_ar: a.title_ar, title_en: a.title_en, category_id: a.category_id, photos: a.photos, is_published: a.is_published, a_ar: a.place_ar || '', a_en: a.place_en || '', videos: a.videos || [], hidden: a.gallery_hidden || [], service_id: a.service_id ?? null });
 
 export function Projects() {
   const p = useP();
   const { t, repo, company } = p;
   const { items, reload } = useList(() => repo.albums(company.id), [repo, company.id]);
+  const services = useList(() => repo.services(company.id), [repo, company.id]).items || [];
   const [edit, setEdit] = useState<Album | 'new' | null>(null);
   const [del, setDel] = useState<Album | null>(null);
   const [busy, setBusy] = useState(false);
-  const blank: Item = { title_ar: '', title_en: '', category_id: company.categories[0], photos: [], is_published: true, a_ar: '', a_en: '', videos: [], hidden: [] };
+  const cat0 = company.categories[0];
+  const only = services.filter(s => s.category_id === cat0);
+  const blank: Item = { title_ar: '', title_en: '', category_id: cat0, photos: [], is_published: true, a_ar: '', a_en: '', videos: [], hidden: [], service_id: only.length === 1 ? only[0].id! : null };
+  const svcName = (id?: string | null) => { const s = services.find(x => x.id === id); return s ? p.pick(s.title_ar, s.title_en) : ''; };
   const save = async (x: Item) => {
     const base = edit && edit !== 'new' ? edit : { company_id: company.id, position: 0 };
     await repo.saveAlbum({ ...base, id: x.id, company_id: company.id, category_id: x.category_id, title_ar: x.title_ar, title_en: x.title_en, place_ar: x.a_ar.trim() || null, place_en: x.a_en.trim() || null, photos: x.photos, cover_photo: x.photos[0], is_published: x.is_published,
-      videos: x.videos || [], gallery_hidden: (x.hidden || []).filter(h => x.photos.includes(h) || (x.videos || []).includes(h)) } as Album);
+      videos: x.videos || [], gallery_hidden: (x.hidden || []).filter(h => x.photos.includes(h) || (x.videos || []).includes(h)), service_id: x.service_id ?? null } as Album);
     p.showToast(t.saved); setEdit(null); reload();
   };
   const remove = async () => {
@@ -167,10 +214,10 @@ export function Projects() {
         ? <EmptyState icon="images" title={t.noProjects} body={t.noProjectsBody} action={<Button iconLeft="plus" onClick={() => setEdit('new')}>{t.newProject}</Button>} />
         : (
           <div className="pv-tiles">
-            {items.map(a => <Tile key={a.id} item={albToItem(a)} sub={p.pick(a.place_ar || '', a.place_en || '') || p.pick(p.cat(a.category_id)?.name_ar || '', p.cat(a.category_id)?.name_en || '')} onEdit={() => setEdit(a)} onDelete={() => setDel(a)} />)}
+            {items.map(a => <Tile key={a.id} item={albToItem(a)} sub={[svcName(a.service_id), p.pick(a.place_ar || '', a.place_en || '')].filter(Boolean).join(' · ') || p.pick(p.cat(a.category_id)?.name_ar || '', p.cat(a.category_id)?.name_en || '')} onEdit={() => setEdit(a)} onDelete={() => setDel(a)} />)}
           </div>
         )}
-      {edit && <Editor title={edit === 'new' ? t.newProject : t.editProject} isProject initial={edit === 'new' ? blank : albToItem(edit)} onClose={() => setEdit(null)} onSave={save} />}
+      {edit && <Editor title={edit === 'new' ? t.newProject : t.editProject} isProject services={services} initial={edit === 'new' ? blank : albToItem(edit)} onClose={() => setEdit(null)} onSave={save} />}
       <Confirm open={!!del} busy={busy} onCancel={() => setDel(null)} onConfirm={remove} />
     </>
   );

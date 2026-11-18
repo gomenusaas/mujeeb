@@ -154,7 +154,8 @@ export function BottomSheet({ open, onClose, title, children, footer, style }: {
   open: boolean; onClose: () => void; title?: ReactNode; children?: ReactNode; footer?: ReactNode; style?: Style;
 }) {
   return (
-    <div style={{ position: 'absolute', inset: 0, zIndex: 50, pointerEvents: open ? 'auto' : 'none', fontFamily: 'var(--font-sans)' }}>
+    // Closed sheets stay parked below the screen; `inert` keeps keyboard focus and screen readers out of them.
+    <div inert={!open} style={{ position: 'absolute', inset: 0, zIndex: 50, pointerEvents: open ? 'auto' : 'none', fontFamily: 'var(--font-sans)' }}>
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'var(--surface-scrim)', opacity: open ? 1 : 0, transition: 'opacity var(--dur-slow) var(--ease-out)' }} />
       <div role="dialog" aria-modal="true" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, maxHeight: '88%', display: 'flex', flexDirection: 'column', borderRadius: 'var(--radius-sheet) var(--radius-sheet) 0 0', background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)', transform: open ? 'none' : 'translateY(105%)', transition: 'transform var(--dur-slow) var(--ease-out)', ...style }}>
         <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0 4px' }}><span style={{ width: 40, height: 5, borderRadius: 5, background: 'var(--neutral-200)' }} /></div>

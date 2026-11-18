@@ -6,7 +6,7 @@ import type { Catalog, CustomerSeed } from './data/types';
 import { STR } from './i18n/strings';
 import { useDragScroll } from './app/useDragScroll';
 import { Categories, Explore, Home } from './screens/Discover';
-import { ActivitySheet, AlbumPage, CompanyPage, CompanySheet, Listing, ReachSheets, ServicePage, SortSheet } from './screens/Provider';
+import { ActivitySheet, AlbumPage, CompanyPage, CompanySheet, Listing, ReachSheets, ServiceGallery, ServiceList, ServicePage, SortSheet } from './screens/Provider';
 import { BookingPage, DonePage } from './screens/Flows';
 import { StoryViewer } from './screens/Stories';
 import { PhotoViewer } from './screens/Photo';
@@ -52,7 +52,7 @@ function Shell({ catalog, seed }: { catalog: Catalog; seed: CustomerSeed }) {
  * near the top. Jumps most of the way at once, then glides the last screen (smooth-scrolling
  * through hundreds of photos would be slow).
  */
-function BackToTop({ el }: { el: React.RefObject<HTMLDivElement | null> }) {
+function BackToTop({ el, aboveTabs }: { el: React.RefObject<HTMLDivElement | null>; aboveTabs?: boolean }) {
   const a = useApp();
   const [show, setShow] = useState(false);
   useEffect(() => {
@@ -70,7 +70,7 @@ function BackToTop({ el }: { el: React.RefObject<HTMLDivElement | null> }) {
     s.scrollTo({ top: 0, behavior: 'smooth' });
   };
   return (
-    <div style={{ position: 'absolute', bottom: 'calc(24px + var(--safe-bottom))', insetInlineEnd: 16, zIndex: 9, borderRadius: 'var(--radius-pill)', boxShadow: 'var(--shadow-md)',
+    <div style={{ position: 'absolute', bottom: aboveTabs ? 'calc(100px + var(--safe-bottom))' : 'calc(24px + var(--safe-bottom))', insetInlineEnd: 16, zIndex: 9, borderRadius: 'var(--radius-pill)', boxShadow: 'var(--shadow-md)',
       opacity: show ? 1 : 0, transform: show ? 'none' : 'translateY(12px) scale(0.9)', transition: 'opacity 220ms var(--ease-out), transform 220ms var(--ease-out)', pointerEvents: show ? 'auto' : 'none' }}>
       <IconButton icon="arrow-up" variant="glass" size={44} label={a.t.toTop} onClick={up} />
     </div>
@@ -125,8 +125,8 @@ function Phone() {
         <div className="mj-s mj-scroll" ref={scrollRef}>
           <ScreenSwitch route={base} />
         </div>
-        {/* Long pages (category list and gallery, company page) get a back-to-top button. */}
-        {!overlay && (base.s === 'listing' || base.s === 'company') && <BackToTop key={key} el={scrollRef} />}
+        {/* Long pages (category list and gallery, company page, service gallery, Explore) get a back-to-top button. */}
+        {!overlay && (base.s === 'listing' || base.s === 'company' || base.s === 'svcGallery' || base.s === 'explore') && <BackToTop key={key} el={scrollRef} aboveTabs={showTabs} />}
         {top.s === 'story' && <StoryViewer key="story" />}
         {top.s === 'photo' && <PhotoViewer key={top.src + '|' + (top.id ?? top.cat)} />}
         {showTabs && (
@@ -160,6 +160,8 @@ function ScreenSwitch({ route }: { route: Route }) {
     case 'company': return <CompanyPage />;
     case 'service': return <ServicePage />;
     case 'album': return <AlbumPage />;
+    case 'svcGallery': return <ServiceGallery />;
+    case 'svcList': return <ServiceList />;
     case 'booking': return <BookingPage />;
     case 'bkDone': return <DonePage />;
     case 'bookings': return <Bookings />;

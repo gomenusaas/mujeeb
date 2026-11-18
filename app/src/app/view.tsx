@@ -28,7 +28,7 @@ export function helpers(a: App) {
       img: photo(al.img, 600), c100: 'var(--cat-' + cat(al.cat).color + '-100)', open: () => a.go('album', { id: al.id }),
     };
   };
-  const svcV = (s: Service) => ({ id: s.id, title: ar ? s.ar : s.en, cat: cname(s.cat), img: photo(s.cover || s.imgs[0], 400), n: s.imgs.length, open: () => a.go('service', { id: s.id }) });
+  const svcV = (s: Service) => ({ id: s.id, title: ar ? s.ar : s.en, cat: cname(s.cat), img: photo(serviceImage(a, s), 400), n: s.imgs.length, open: () => a.go('service', { id: s.id }) });
   return { cat, cname, cshort, gname, covText, num, coName, city, coV, albV, svcV };
 }
 
@@ -61,7 +61,7 @@ export function companyGallery(a: App, coId: string, cat?: number): Media[] {
 
 /**
  * Companies on a category page (all categories when `c` is empty) after the customer's
- * search and filters, in the chosen sort order. The category gallery uses the same companies.
+ * search and filters, in the chosen sort order.
  */
 export function listingCompanies(a: App, c: number | undefined): Company[] {
   const { catalog, f } = a;
@@ -80,7 +80,7 @@ export function listingCompanies(a: App, c: number | undefined): Company[] {
   return res;
 }
 
-/** Projects added within this many days count as new and move toward the top of the category gallery. */
+/** Projects added within this many days count as new and move toward the top of Explore. */
 const FRESH_DAYS = 14;
 
 /** A random id kept on this device, so each customer's gallery order differs a little from everyone else's. */
@@ -105,43 +105,75 @@ function rand(s: string): number {
 }
 
 /**
- * The category gallery («المعرض» on a category page): photos and videos from the projects that
- * companies filed under this category, for the companies the customer's filters leave on the page,
- * minus anything a company hid from its galleries.
- *
- * Order (the company page gallery does NOT use this; it stays newest project first for everyone):
- *  - shuffled once a day (Oman date), so it stays the same all day and changes the next;
- *  - each customer's order differs a little (20% of the shuffle comes from a per-device seed);
- *  - media from projects added in the last FRESH_DAYS days comes before older media;
- *  - companies take turns (one item from each company per round) so none fills the screen.
- * Paid "pinned" slots can later be inserted into the returned list at fixed positions.
+ * «استكشف الأعمال» (Explore): photos and videos from inside every published project (or one
+ * category's), minus what companies hid from their galleries, in the daily mix order.
  */
-export function categoryGallery(a: App, c: number | undefined): Media[] {
+export function exploreMedia(a: App, cat: number | null | undefined): Media[] {
+  return mixedMedia(a.catalog.albums.filter(al => cat == null || al.cat === cat));
+}
+
+/** The photos and videos of these projects (each once, minus hidden ones) in the daily mix order. */
+function mixedMedia(albums: Album[]): Media[] {
+  const seen = new Set<string>(); // the same photo used in two projects shows once
+  const entries: MixEntry<Media>[] = [];
+  for (const al of albums) {
+    const hide = new Set(al.hide || []);
+    for (const m of al.imgs.map(src => ({ src, video: false, al })).concat((al.vids || []).map(src => ({ src, video: true, al })))) {
+      if (hide.has(m.src) || seen.has(m.src)) continue;
+      seen.add(m.src);
+      entries.push({ item: m, key: m.src, company: al.co, added: al.added });
+    }
+  }
+  return dailyMix(entries);
+}
+
+/** One thing to order with `dailyMix`: a stable `key`, its company, and when its project was added. */
+interface MixEntry<T> { item: T; key: string; company: string; added: string }
+
+/**
+ * The "daily mix" order (Explore): shuffled once a day (Oman date) with a
+ * 20% per-customer twist, things from projects added in the last FRESH_DAYS days first, and companies
+ * taking turns (one item from each company per round) so none fills the screen.
+ */
+function dailyMix<T>(entries: MixEntry<T>[]): T[] {
   const day = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Muscat' });
   const me = customerSeed();
   const score = (key: string) => 0.8 * rand(day + '|' + key) + 0.2 * rand(day + '|' + me + '|' + key);
   const freshSince = Date.now() - FRESH_DAYS * 864e5;
-  const cos = new Set(listingCompanies(a, c).map(co => co.id));
-  const seen = new Set<string>(); // the same photo used in two projects shows once
-  const queues = new Map<string, { m: Media; s: number }[]>();
-  for (const al of a.catalog.albums) {
-    if ((c != null && al.cat !== c) || !cos.has(al.co)) continue;
-    const hide = new Set(al.hide || []);
-    const boost = Date.parse(al.added) > freshSince ? 1 : 0;
-    const q = queues.get(al.co) ?? [];
-    queues.set(al.co, q);
-    for (const m of al.imgs.map(src => ({ src, video: false, al })).concat((al.vids || []).map(src => ({ src, video: true, al })))) {
-      if (hide.has(m.src) || seen.has(m.src)) continue;
-      seen.add(m.src);
-      q.push({ m, s: boost + score(m.src) });
-    }
+  const queues = new Map<string, { item: T; s: number }[]>();
+  for (const e of entries) {
+    const q = queues.get(e.company) ?? [];
+    queues.set(e.company, q);
+    q.push({ item: e.item, s: (Date.parse(e.added) > freshSince ? 1 : 0) + score(e.key) });
   }
-  const qs = [...queues.values()].filter(q => q.length).map(q => q.sort((x, y) => y.s - x.s));
-  const out: Media[] = [];
+  const qs = [...queues.values()].map(q => q.sort((x, y) => y.s - x.s));
+  const out: T[] = [];
   for (let r = 0; qs.some(q => q.length > r); r++) {
-    qs.filter(q => q.length > r).map(q => q[r]).sort((x, y) => y.s - x.s).forEach(x => out.push(x.m));
+    qs.filter(q => q.length > r).map(q => q[r]).sort((x, y) => y.s - x.s).forEach(x => out.push(x.item));
   }
   return out;
+}
+
+/**
+ * A service's photos and videos: everything in the projects linked to it (newest project first),
+ * minus what the company hid from its galleries, then any photos uploaded on the service itself
+ * before projects were linked (those don't belong to a project).
+ */
+export function serviceGallery(a: App, svcId: string): Media[] {
+  const seen = new Set<string>();
+  const fromProjects = a.catalog.albums.filter(al => al.svc === svcId).sort((x, y) => (y.added || '').localeCompare(x.added || ''))
+    .flatMap(al => {
+      const hide = new Set(al.hide || []);
+      return al.imgs.map(src => ({ src, video: false, al } as Media)).concat((al.vids || []).map(src => ({ src, video: true, al })))
+        .filter(m => !hide.has(m.src) && !seen.has(m.src) && !!seen.add(m.src));
+    });
+  const own = (a.idx.svc.get(svcId)?.imgs || []).filter(src => !seen.has(src) && !!seen.add(src)).map(src => ({ src, video: false }));
+  return fromProjects.concat(own);
+}
+
+/** A service's picture: its cover, else its first photo (own or from a project), else the company cover. */
+export function serviceImage(a: App, s: Service): string {
+  return s.cover || s.imgs[0] || serviceGallery(a, s.id).find(m => !m.video)?.src || a.idx.co.get(s.co)?.img || '';
 }
 
 export const stop = (e: React.SyntheticEvent) => e.stopPropagation();
