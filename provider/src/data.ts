@@ -28,6 +28,8 @@ export interface Service {
   description_ar: string; description_en: string; photos: string[]; is_published: boolean; position: number;
   /** Header image of the service page, already cropped to the header shape. Null = first photo, then the company cover. */
   cover_url: string | null;
+  /** Search keywords (up to 7, each up to 30 characters; the database enforces it). Customers don't see them. */
+  keywords: string[];
 }
 export interface Album {
   id?: string; company_id: string; category_id: number; title_ar: string; title_en: string; place_ar: string | null; place_en: string | null;
@@ -226,7 +228,7 @@ type DemoData = {
   cats: { i: number; ar: string; en: string; color: string; icon: string }[];
   gov: Record<string, [string, string]>;
   companies: { id: string; ar: string; en: string; cats: number[]; hrs?: (string[] | null)[]; cityAr: string; cityEn: string; gov: string; img: string; verified: boolean; phone: string; since: number; dar: string; den: string; branches: [string, string, boolean][] }[];
-  services: { id: string; co: string; cat: number; ar: string; en: string; imgs: string[]; dar: string; den: string; cover?: string }[];
+  services: { id: string; co: string; cat: number; ar: string; en: string; imgs: string[]; dar: string; den: string; cover?: string; kw?: string[] }[];
   albums: { svc?: string; dAr?: string; dEn?: string; done?: string; area?: number; weeks?: number; feat?: boolean; id: string; co: string; cat: number; ar: string; en: string; pAr: string; pEn: string; img: string; imgs: string[]; vids?: string[]; added: string }[];
 };
 
@@ -246,7 +248,7 @@ async function demoRepo(): Promise<Repo> {
     lat: k === 0 ? 23.6143 : null, lng: k === 0 ? 58.4734 : null, is_primary: b[2], position: k,
   }));
   let services: Service[] = d.services.filter(s => s.co === CID).map((s, k) => ({
-    id: s.id, company_id: CID, category_id: s.cat, title_ar: s.ar, title_en: s.en, description_ar: s.dar, description_en: s.den, photos: s.imgs, is_published: true, position: k, cover_url: s.cover ?? null,
+    id: s.id, company_id: CID, category_id: s.cat, title_ar: s.ar, title_en: s.en, description_ar: s.dar, description_en: s.den, photos: s.imgs, is_published: true, position: k, cover_url: s.cover ?? null, keywords: s.kw || [],
   }));
   let albums: Album[] = d.albums.filter(a => a.co === CID).map((a, k) => ({
     id: a.id, company_id: CID, category_id: a.cat, title_ar: a.ar, title_en: a.en, place_ar: a.pAr, place_en: a.pEn, photos: a.imgs, cover_photo: a.img, is_published: true, position: k, created_at: a.added,

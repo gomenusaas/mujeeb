@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button, EmptyState, Icon } from '../shared/ds';
 import { FEATURED_MAX, isFeaturedLimit, logoOf, photoUrl, type Album, type Service } from '../data';
 import { useList, useP } from '../state';
-import { Confirm, Field, Modal, PageHeader, PhotoEditor, Pill, Select, ServiceCoverEditor, Spinner, Toggle, VideoEditor, card } from '../ui';
+import { Confirm, Field, KeywordsField, Modal, PageHeader, PhotoEditor, Pill, Select, ServiceCoverEditor, Spinner, Toggle, VideoEditor, card } from '../ui';
 
 /* Services and projects share one layout: a grid of cards and a bilingual editor. */
 
@@ -14,6 +14,8 @@ type Item = {
   videos?: string[]; hidden?: string[];
   /** Services only: the page header image (null = first photo). */
   cover?: string | null;
+  /** Services only: search keywords (up to 7). */
+  kw?: string[];
   /** Projects only: the service it shows under. */
   service_id?: string | null;
   /** Projects only: page details. done = "YYYY-MM"; area and weeks as typed. */
@@ -104,6 +106,9 @@ function Editor({ title, initial, isProject, onClose, onSave, services, linked, 
           <>
             <Field label={t.descAr} dir="rtl" multiline value={x.a_ar} onChange={v => set({ a_ar: v })} />
             <Field label={t.descEn} dir="ltr" multiline value={x.a_en} onChange={v => set({ a_en: v })} />
+            <div style={{ gridColumn: '1 / -1' }}>
+              <KeywordsField label={t.keywords} value={x.kw || []} onChange={kw => set({ kw })} placeholder={t.keywordsPh} help={t.keywordsHelp} />
+            </div>
           </>
         )}
         <Select label={t.category} value={x.category_id} onChange={v => set({ category_id: v, ...(isProject ? { service_id: svcFor(v, x.service_id) } : {}) })}
@@ -171,7 +176,7 @@ function Editor({ title, initial, isProject, onClose, onSave, services, linked, 
 
 /* ───────────────────────── Services ───────────────────────── */
 
-const svcToItem = (s: Service): Item => ({ id: s.id, title_ar: s.title_ar, title_en: s.title_en, category_id: s.category_id, photos: s.photos, is_published: s.is_published, a_ar: s.description_ar, a_en: s.description_en, cover: s.cover_url });
+const svcToItem = (s: Service): Item => ({ id: s.id, title_ar: s.title_ar, title_en: s.title_en, category_id: s.category_id, photos: s.photos, is_published: s.is_published, a_ar: s.description_ar, a_en: s.description_en, cover: s.cover_url, kw: s.keywords || [] });
 
 export function Services() {
   const p = useP();
@@ -186,7 +191,7 @@ export function Services() {
   const blank: Item = { title_ar: '', title_en: '', category_id: company.categories[0], photos: [], is_published: true, a_ar: '', a_en: '' };
   const save = async (x: Item) => {
     const base = edit && edit !== 'new' ? edit : { company_id: company.id, position: items?.length || 0 };
-    await repo.saveService({ ...base, id: x.id, company_id: company.id, category_id: x.category_id, title_ar: x.title_ar, title_en: x.title_en, description_ar: x.a_ar.trim(), description_en: x.a_en.trim(), photos: x.photos, is_published: x.is_published, cover_url: x.cover ?? null } as Service);
+    await repo.saveService({ ...base, id: x.id, company_id: company.id, category_id: x.category_id, title_ar: x.title_ar, title_en: x.title_en, description_ar: x.a_ar.trim(), description_en: x.a_en.trim(), photos: x.photos, is_published: x.is_published, cover_url: x.cover ?? null, keywords: x.kw || [] } as Service);
     p.showToast(t.saved); setEdit(null); reload();
   };
   const remove = async () => {

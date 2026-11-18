@@ -123,6 +123,36 @@ function SquareGrid({ items, onOpen, per = 12 }: { items: Media[]; onOpen: (k: n
   );
 }
 
+/**
+ * Photos for a company card's mosaic: its projects in the category (all categories when null), newest first,
+ * each project's main photo first, then more photos from the same projects. 5 or 3 of them (as many as
+ * there are); fewer than 3 gives none, and the card keeps its cover.
+ */
+function mosaicPhotos(a: ReturnType<typeof useApp>, co: Company, cat: number | null | undefined): string[] {
+  const works = a.catalog.albums.filter(al => al.co === co.id && (cat == null || al.cat === cat))
+    .sort((x, y) => (y.done || y.added || '').localeCompare(x.done || x.added || ''));
+  const out: string[] = [];
+  const add = (src: string, al: Album) => { if (out.length < 5 && !out.includes(src) && !al.hide?.includes(src)) out.push(src); };
+  works.forEach(al => add(al.img, al));
+  works.forEach(al => al.imgs.forEach(src => add(src, al)));
+  const n = out.length >= 5 ? 5 : out.length >= 3 ? 3 : 0;
+  return out.slice(0, n);
+}
+
+/** One large photo with 2 or 4 smaller ones beside it (in columns of two), all in the card's 200px band. */
+function Mosaic({ photos, bg }: { photos: string[]; bg: string }) {
+  const side = (photos.length - 1) / 2;
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '2fr' + ' 1fr'.repeat(side), gridTemplateRows: '1fr 1fr', gap: 2, height: 200, background: 'var(--surface-card)' }}>
+      {photos.map((src, k) => (
+        <div key={src} style={{ position: 'relative', overflow: 'hidden', background: bg, ...(k === 0 ? { gridRow: 'span 2' } : {}) }}>
+          <Img src={photo(src, k === 0 ? 600 : 240)} style={{ position: 'absolute', inset: 0 }} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 type Sort = Filters['sort'];
 const SORTS: { v: Sort; icon: string }[] = [{ v: 'rel', icon: 'star' }, { v: 'near', icon: 'map-pin' }, { v: 'recent', icon: 'clock' }, { v: 'verified', icon: 'badge-check' }];
 const sortLabel = (t: ReturnType<typeof useApp>['t'], v: Sort) => (v === 'near' ? t.nearest : v === 'recent' ? t.recent : v === 'verified' ? t.verifiedSort : t.relevance);
@@ -162,7 +192,7 @@ export function Listing() {
   const res = listingCompanies(a, c);
   const color = c == null ? 'violet' : catalog.cats[c].color;
   // Opening a company from here lands on this category's activity.
-  const results = res.map(co => ({ ...h.coV(co), open: () => a.go('company', { id: co.id, ...(c != null ? { act: c } : {}) }) }));
+  const results = res.map(co => ({ ...h.coV(co), mosaic: mosaicPhotos(a, co, c), open: () => a.go('company', { id: co.id, ...(c != null ? { act: c } : {}) }) }));
 
   return (
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column', paddingBottom: 40 }}>
@@ -202,9 +232,13 @@ export function Listing() {
         <div style={{ padding: '14px 20px 0', display: 'flex', flexDirection: 'column', gap: 14 }}>
           {results.map(co => (
             <div key={co.id} onClick={co.open} style={{ ...card, overflow: 'hidden', cursor: 'pointer' }}>
-              <div style={{ position: 'relative', aspectRatio: '4/3', maxHeight: 200, width: '100%', background: co.c100 }}>
-                <Img src={co.cover} />
-              </div>
+              {co.mosaic.length
+                ? <Mosaic photos={co.mosaic} bg={co.c100} />
+                : (
+                  <div style={{ position: 'relative', aspectRatio: '4/3', maxHeight: 200, width: '100%', background: co.c100 }}>
+                    <Img src={co.cover} />
+                  </div>
+                )}
               <div style={{ padding: '14px 16px 16px', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                 <Avatar name={co.name} src={co.logo} size={48} verified={co.verified} />
                 <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -458,15 +492,17 @@ function ServiceNavCard({ title, img, open, sub }: { title: string; img: string;
 }
 
 /**
- * A company's services as cards: up to 3 stacked; more than 3 become a sideways strip of 3-card columns
- * (three rows), the next column peeking in at the edge.
+ * A company's services as cards: up to 3 stacked in one column; more become a sideways strip of columns
+ * (2 cards each for 4 services, 3 each for 5 or more), the next column peeking in at the edge.
  */
 function ServiceStrip({ items }: { items: ReturnType<ReturnType<typeof helpers>['svcV']>[] }) {
   const a = useApp();
   const cards = items.map(x => <ServiceNavCard key={x.id} title={x.title} img={x.img} open={x.open} sub={svcProjects(a, x.id)} />);
   if (items.length <= 3) return <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{cards}</div>;
+  // 4 services: two columns of two. 5 or more: columns of three (5 = three and two).
+  const rows = items.length === 4 ? 2 : 3;
   return (
-    <div className="mj-s" style={{ display: 'grid', gridTemplateRows: 'repeat(3, auto)', gridAutoFlow: 'column', gridAutoColumns: 'calc(100% - 56px)', gap: '8px 10px', overflowX: 'auto', scrollSnapType: 'x mandatory', scrollPaddingInline: 20, margin: '0 -20px', padding: '0 20px', scrollbarWidth: 'none' }}>
+    <div className="mj-s" style={{ display: 'grid', gridTemplateRows: 'repeat(' + rows + ', auto)', gridAutoFlow: 'column', gridAutoColumns: 'calc(100% - 56px)', gap: '8px 10px', overflowX: 'auto', scrollSnapType: 'x mandatory', scrollPaddingInline: 20, margin: '0 -20px', padding: '0 20px', scrollbarWidth: 'none' }}>
       {cards}
     </div>
   );

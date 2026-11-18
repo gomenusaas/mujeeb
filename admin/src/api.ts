@@ -35,6 +35,8 @@ export interface FeaturedProject { id: string; title_ar: string; title_en: strin
 /** Display URL for a photo: demo data stores Unsplash ids, uploads are full URLs. */
 export const photoUrl = (id: string, w = 200) => (/^(https?:|blob:|data:)/.test(id) ? id
   : 'https://images.unsplash.com/photo-' + id + '?w=' + w + '&q=70&auto=format&fit=crop');
+/** A company's service with its search keywords (customers don't see them). */
+export interface ServiceKeywords { id: string; title_ar: string; title_en: string; category_id: number; keywords: string[] }
 export interface Member { user_id: string; email: string; full_name: string; role: 'owner' | 'editor'; created_at: string }
 export interface AdminUser {
   id: string; email: string; full_name: string; kind: 'customer' | 'provider'; sign_in_with: string; created_at: string;
@@ -142,6 +144,7 @@ export const api = {
   deleteCompany: (cid: string) => rpc<void>('admin_delete_company', { cid }),
   members: (cid: string) => rpc<Member[]>('admin_company_members', { cid }),
   featured: (cid: string) => rpc<FeaturedProject[]>('admin_company_featured', { cid }),
+  keywords: (cid: string) => rpc<ServiceKeywords[]>('admin_company_keywords', { cid }),
   setFeatured: (aid: string, on: boolean) => rpc<void>('admin_set_featured', { aid, on_: on }),
   addMember: (cid: string, email: string, role: 'owner' | 'editor') => rpc<void>('admin_add_member', { cid, p_email: email, p_role: role }),
   removeMember: (cid: string, uid: string) => rpc<void>('admin_remove_member', { cid, uid }),

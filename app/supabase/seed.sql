@@ -1030,6 +1030,48 @@ insert into public.services (id, company_id, category_id, title_ar, title_en, de
   ('sg19-5-0', 'g19-5', 6, 'تركيب كاميرات المراقبة', 'CCTV installation', 'تقدّم الصفوة للأنظمة الأمنية خدمة «تركيب كاميرات المراقبة» لتغطية كل المداخل والمساحات الحساسة على مدار الساعة. تشمل الخدمة دراسة زوايا التصوير، وتركيب كاميرات عالية الدقة، وجهاز تسجيل، وإعداد المشاهدة عبر الهاتف. نبدأ بزيارة للموقع لفهم احتياجك، ثم نقدم تصورًا وعرض سعر واضحًا قبل البدء. اطلب عرض سعر عبر واتساب، وتصفّح مشاريعنا المنجزة في الأسفل.', 'Al Safwa Security Systems offers CCTV installation to cover every entrance and sensitive area around the clock. The service covers camera angles, high-resolution cameras, a recorder, and viewing from the phone. We start with a site visit to understand what you need, then share a plan and a clear quote before starting. Ask for a quote on WhatsApp, and browse our completed projects below.', array['1558002038-1055907df827','1557597774-9d273605dfa9']::text[], 142),
   ('sg19-5-1', 'g19-5', 6, 'أنظمة التحكم بالدخول', 'Access control', 'تقدّم الصفوة للأنظمة الأمنية خدمة «أنظمة التحكم بالدخول» لتنظيم الدخول ومعرفة من يدخل ومتى. تشمل الخدمة تركيب القارئات والأقفال، والربط بالبرنامج، وإعداد صلاحيات المستخدمين، وتدريب الموظفين. نلتزم بجدول زمني متفق عليه، ونطلعك على سير العمل في كل مرحلة. يسعدنا الرد على استفساراتك عبر واتساب أو الاتصال.', 'Al Safwa Security Systems offers access control to control who comes in and keep a record of when. The service covers readers and locks, software setup, user permissions and staff training. We keep to an agreed schedule and keep you updated at every stage. We are happy to answer your questions on WhatsApp or by phone.', array['1557597774-9d273605dfa9','1558002038-1055907df827']::text[], 143);
 
+-- Search keywords (up to 7 per service; customers don't see them).
+update public.services s set keywords = v.k from (values
+  ('sg1-1-0', array['صالة','غرفة معيشة','كنب','طاولة قهوة','ديكور حديث','living room']::text[]),
+  ('sg1-1-1', array['غرفة نوم رئيسية','سرير','تسريحة','خزانة','bedroom']::text[]),
+  ('sg1-1-2', array['مجلس رجال','مجلس نساء','جلسة عربية','كنب مجلس','سدو','majlis']::text[]),
+  ('sg1-1-3', array['مدخل','ممر','درج','بهو','ديكور مدخل','entrance']::text[]),
+  ('sg1-1-4', array['غرفة أطفال','سرير أطفال','غرفة بنات','غرفة أولاد','kids room']::text[]),
+  ('sg1-1-5', array['مكتب منزلي','غرفة دراسة','مكتبة','home office']::text[]),
+  ('sg1-1-6', array['ثريات','إضاءة مخفية','سبوت لايت','إضاءة LED','نجف','lighting']::text[]),
+  ('sg1-1-7', array['جبس بورد','أسقف جبسية','سقف معلق','بديل خشب','إضاءة مخفية','gypsum']::text[]),
+  ('sg1-1-8', array['ستائر','بلاك أوت','ستائر رول','مفروشات','سجاد','curtains']::text[]),
+  ('sg1-1-9', array['ورق جدران','دهان','صباغ','بديل رخام','بديل خشب','wallpaper','paint']::text[]),
+  ('sg1-1-10', array['حمام','مغسلة','دش','سيراميك','بانيو','bathroom']::text[]),
+  ('sg1-1-11', array['أثاث','إكسسوارات','تنسيق','لوحات جدارية','نباتات داخلية','furniture']::text[]),
+  ('sg1-1-12', array['تنسيق حدائق','لاندسكيب','حديقة منزل','ممرات حجرية','جلسة خارجية','landscaping']::text[]),
+  ('sg1-1-13', array['عشب صناعي','عشب طبيعي','نجيلة','ثيل','لاند سكيب','artificial grass']::text[]),
+  ('sg1-1-14', array['ري بالتنقيط','شبكة ري','رشاشات','ري أوتوماتيكي','مؤقت ري','irrigation']::text[]),
+  ('sg1-1-15', array['حديقة سطح','تراس','روف','سطح المنزل','أحواض زراعة','rooftop']::text[]),
+  ('sg1-1-16', array['إضاءة حدائق','إضاءة خارجية','إنارة ممرات','إضاءة أشجار','garden lights']::text[]),
+  ('sg1-1-17', array['مسبح','حوض سباحة','جلسة مسبح','نخيل','pool']::text[]),
+  ('sg1-1-18', array['نخيل','أشجار','زراعة نخيل','أشجار ظل','شتلات','palm trees']::text[]),
+  ('sg1-1-19', array['حديقة صحراوية','صبار','صخور','حصى','نباتات قليلة الماء','xeriscape']::text[]),
+  ('sg1-1-20', array['صيانة حدائق','قص عشب','تقليم أشجار','مكافحة حشرات','تسميد','garden maintenance']::text[]),
+  ('sg1-1-21', array['مطبخ','مطابخ ألمنيوم','مطابخ خشب','جزيرة مطبخ','مطبخ مفتوح','kitchen']::text[]),
+  ('sg1-1-22', array['تجديد مطبخ','واجهات مطبخ','مقابض','تغيير أبواب المطبخ','kitchen refacing']::text[]),
+  ('sg1-1-23', array['خزانة ملابس','دولاب','غرفة ملابس','أبواب سحاب','wardrobe']::text[]),
+  ('sg1-1-24', array['رخام','جرانيت','كوارتز','سطح مطبخ','كاونتر','worktop']::text[]),
+  ('sg1-1-25', array['أدوات صحية','مغاسل','مراحيض','خلاطات','سباك','plumber']::text[]),
+  ('sg1-1-26', array['تسريب مياه','كشف تسربات','رطوبة','تسرب خزان','leak detection']::text[]),
+  ('sg1-1-27', array['تمديدات صحية','مواسير','خزان مياه','سباكة','plumbing']::text[]),
+  ('sg1-1-28', array['سخان','مضخة ماء','دينمو','سخان شمسي','water heater']::text[]),
+  ('sg1-1-29', array['مقاول','بناء فيلا','بناء منزل','عظم','تسليم مفتاح','villa']::text[]),
+  ('sg1-1-30', array['ملحق','مجلس خارجي','غرفة سائق','توسعة منزل','annex']::text[]),
+  ('sg1-1-31', array['مهندس','إشراف','مخططات','استشارات هندسية','supervision']::text[]),
+  ('sg1-1-32', array['ترميم','صيانة منازل','تشققات','عزل','renovation']::text[]),
+  ('sg1-1-33', array['واجهات زجاج','زجاج عاكس','كرتن وول','glass facade']::text[]),
+  ('sg1-1-34', array['ألمنيوم','نوافذ','أبواب','سحاب','عزل حراري','aluminium']::text[]),
+  ('sg1-1-35', array['درابزين','زجاج سيكوريت','درج','بلكونة','railing']::text[]),
+  ('sg1-1-36', array['مظلات','برجولا','مظلات سيارات','مظلة حديقة','pergola']::text[]),
+  ('s7', array['مطبخ','مطابخ','خزائن مطبخ','جزيرة مطبخ','رخام','kitchen']::text[])
+) as v(id, k) where s.id = v.id;
+
 -- More decor services for g1-1, with their own covers.
 insert into public.services (id, company_id, category_id, title_ar, title_en, description_ar, description_en, photos, position, cover_url) values
   ('sg1-1-2', 'g1-1', 4, 'تصميم المجالس', 'Majlis design', 'تقدّم لمسات للديكور خدمة «تصميم المجالس» لتجهيز مساحة ضيافة مريحة تجمع بين الطابع العُماني واللمسات العصرية. تشمل الخدمة تصميم الجلسات، واختيار الأقمشة والسجاد، والإضاءة المخفية، والستائر المتناسقة مع الجدران. يتولى فريقنا العمل من الزيارة الأولى والقياس حتى التسليم، مع متابعة بعد التنفيذ. تواصل معنا عبر واتساب أو الاتصال لمناقشة مشروعك.', 'Lamasat Decor offers majlis design to create a welcoming space that blends Omani character with modern touches. The service covers the seating, fabrics and rugs, hidden lighting, and curtains matched to the walls. Our team handles it from the first visit and measurements to handover, with a follow-up afterwards. Message us on WhatsApp or call to discuss your project.', array[]::text[], 2, '1615529182904-14819c35db37'),

@@ -26,6 +26,8 @@ export interface Service {
   id: string; co: string; cat: number; ar: string; en: string; imgs: string[]; dar: string; den: string;
   /** Header image of the service page (uploaded by the company). Missing = first photo, then the company cover. */
   cover?: string;
+  /** Search keywords from the company (up to 7, Arabic or English). Only search uses them; customers don't see them. */
+  kw?: string[];
 }
 
 export interface Album {

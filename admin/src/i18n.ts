@@ -54,6 +54,8 @@ export const STR = {
   featuredT: ['مشاريع مميزة', 'Featured projects'], featuredHelp: ['تختارها الشركة (حتى ٧) لتظهر أولًا على صفحتها. أزل أي مشروع غير مناسب.', 'Picked by the company (up to 7) to show first on its page. Take off any that aren’t suitable.'],
   noFeatured: ['لم تختر الشركة مشاريع مميزة بعد؛ تظهر أحدث مشاريعها بدلًا منها.', 'The company hasn’t picked any yet; its newest projects show instead.'],
   unfeature: ['إزالة من المميزة', 'Take off'], unfeatured: ['أُزيل من المشاريع المميزة', 'Removed from featured projects'], hiddenProject: ['مخفي', 'Hidden'],
+  keywordsT: ['كلمات البحث', 'Search keywords'], keywordsHelp: ['تضيفها الشركة لكل خدمة (حتى ٧) ليجدها العملاء في البحث، ولا تظهر لهم. راجعها بحثًا عن كلمات لا علاقة لها بالخدمة.', 'Added by the company to each service (up to 7) so customers find it in search; customers don’t see them. Check for words unrelated to the service.'],
+  noKeywords: ['لم تُضف الشركة كلمات بحث بعد.', 'The company hasn’t added any search keywords yet.'], noKeywordsSvc: ['بلا كلمات', 'No keywords'],
   openInApp: ['فتح في تطبيق العملاء', 'Open in customer app'], deleteCompany: ['حذف الشركة', 'Delete company'],
   deleteCompanyBody: ['ستُحذف الشركة نهائيًا مع خدماتها ومشاريعها وقصصها وفروعها ومتابعيها. حسابات أعضائها تبقى.', 'The company is deleted for good with its services, projects, stories, branches and followers. Its members’ accounts stay.'],
   dangerZone: ['منطقة الخطر', 'Danger zone'], noCover: ['بلا غلاف', 'No cover'], noLogo: ['بلا شعار', 'No logo'],

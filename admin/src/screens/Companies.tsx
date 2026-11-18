@@ -126,6 +126,7 @@ function CompanyPanel({ co, onClose, onChanged }: { co: AdminCompany; onClose: (
       <Details c={c} onSaved={d => { setC(x => ({ ...x, ...d })); onChanged(); }} />
       <Categories c={c} onSaved={cats => { setC(x => ({ ...x, categories: cats })); onChanged(); }} />
       <Featured cid={c.id} />
+      <Keywords cid={c.id} />
       <Team cid={c.id} />
 
       <Section title={t.dangerZone}>
@@ -243,6 +244,28 @@ function Featured({ cid }: { cid: string }) {
             </span>
             {!x.is_published && <Pill tone="neutral">{t.hiddenProject}</Pill>}
             <Button size="sm" variant="outline" loading={busy === x.id} onClick={() => off(x.id)}>{t.unfeature}</Button>
+          </div>
+        ))}
+    </Section>
+  );
+}
+
+/** Each service's search keywords (read only), to spot words that have nothing to do with the service. */
+function Keywords({ cid }: { cid: string }) {
+  const a = useA();
+  const { t, pick } = a;
+  const k = useLoad(() => api.keywords(cid), [cid]);
+  const any = !!k.data?.some(s => s.keywords.length);
+  return (
+    <Section title={t.keywordsT} help={t.keywordsHelp}>
+      {k.error ? <LoadError onRetry={k.reload} /> : !k.data ? <Spinner size={22} /> : !any
+        ? <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }}>{t.noKeywords}</span>
+        : k.data.map(s => (
+          <div key={s.id} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span style={{ font: 'var(--type-body-sm)', fontWeight: 700 }}>{pick(s.title_ar, s.title_en)} <span style={{ fontWeight: 500, color: 'var(--text-tertiary)' }}>· {a.catName(s.category_id)}</span></span>
+            {s.keywords.length
+              ? <span style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>{s.keywords.map(w => <Pill key={w} tone="neutral">{w}</Pill>)}</span>
+              : <span style={{ font: 'var(--type-caption)', color: 'var(--text-tertiary)' }}>{t.noKeywordsSvc}</span>}
           </div>
         ))}
     </Section>

@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { AppBar, Icon } from '../ds';
 import { logoUrl, photo, remote } from '../data/api';
-import type { Album, Branch, Company, Service } from '../data/types';
+import type { Album, Branch, Catalog, Company, Service } from '../data/types';
 import type { App } from './store';
 import { arDigits } from '../i18n/strings';
 
@@ -68,19 +68,59 @@ export function companyGallery(a: App, coId: string, cat?: number): Media[] {
 }
 
 /**
+ * Text in one comparable form for search: lower case, no Arabic diacritics or tatweel, letter variants folded
+ * (أ إ آ ٱ → ا, ة → ه, ى → ي, ؤ → و, ئ → ي), Arabic digits as 0–9 and single spaces. So «الحدايق» finds «الحدائق».
+ */
+export const fold = (s: string) => s.toLowerCase()
+  .replace(/[\u064B-\u065F\u0670\u0640]/g, '')
+  .replace(/[أإآٱ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/ؤ/g, 'و').replace(/ئ/g, 'ي')
+  .replace(/[٠-٩]/g, d => String(d.charCodeAt(0) - 0x660)).replace(/\s+/g, ' ');
+
+/**
+ * Each company's searchable text, built once per catalog. `strong`: its names, categories, service titles and
+ * the services' keywords. `weak`: service descriptions and its projects' titles and descriptions.
+ */
+const searchIndexes = new WeakMap<Catalog, Map<string, { strong: string; weak: string }>>();
+function searchIndex(catalog: Catalog) {
+  let idx = searchIndexes.get(catalog);
+  if (idx) return idx;
+  idx = new Map();
+  for (const co of catalog.companies) {
+    const svcs = catalog.services.filter(s => s.co === co.id);
+    const albs = catalog.albums.filter(al => al.co === co.id);
+    idx.set(co.id, {
+      strong: fold([co.ar, co.en, ...co.cats.map(i => catalog.cats[i].ar + ' ' + catalog.cats[i].en), ...svcs.map(s => [s.ar, s.en, ...(s.kw || [])].join(' '))].join(' | ')),
+      weak: fold([...svcs.map(s => s.dar + ' ' + s.den), ...albs.map(al => [al.ar, al.en, al.dAr || '', al.dEn || ''].join(' '))].join(' | ')),
+    });
+  }
+  searchIndexes.set(catalog, idx);
+  return idx;
+}
+/** The words of a search, folded. A leading «ال» is dropped from longer words, so «المطابخ» also finds «مطابخ». */
+const searchWords = (q: string) => fold(q).trim().split(' ').filter(Boolean).map(w => (w.length > 4 && w.startsWith('ال') ? w.slice(2) : w));
+
+/**
  * Companies on a category page (all categories when `c` is empty) after the customer's
- * search and filters, in the chosen sort order.
+ * search and filters, in the chosen sort order. A search matches when every word appears in the company's
+ * text (see searchIndex); for «الأنسب», companies whose names, titles or keywords hold the words come first.
  */
 export function listingCompanies(a: App, c: number | undefined): Company[] {
   const { catalog, f } = a;
-  const q = f.q.trim().toLowerCase();
-  let res = catalog.companies.filter(co =>
-    (c == null || co.cats.includes(c)) &&
-    // Coverage, not branch location, decides whether a company appears for a governorate.
-    (f.gov === 'all' || co.cov.includes('all') || co.cov.includes(f.gov)) &&
-    (!f.verified || co.verified) &&
-    (!q || [co.ar, co.en, ...co.cats.map(i => catalog.cats[i].ar + ' ' + catalog.cats[i].en),
-      ...catalog.services.filter(s => s.co === co.id).map(s => s.ar + ' ' + s.en)].join(' ').toLowerCase().includes(q)));
+  const words = searchWords(f.q);
+  const idx = words.length ? searchIndex(catalog) : null;
+  const score = new Map<string, number>();
+  let res = catalog.companies.filter(co => {
+    if (!((c == null || co.cats.includes(c)) &&
+      // Coverage, not branch location, decides whether a company appears for a governorate.
+      (f.gov === 'all' || co.cov.includes('all') || co.cov.includes(f.gov)) &&
+      (!f.verified || co.verified))) return false;
+    if (!idx) return true;
+    const { strong, weak } = idx.get(co.id)!;
+    if (!words.every(w => strong.includes(w) || weak.includes(w))) return false;
+    score.set(co.id, words.filter(w => strong.includes(w)).length);
+    return true;
+  });
+  if (idx && f.sort === 'rel') res = res.slice().sort((x, y) => score.get(y.id)! - score.get(x.id)!);
   if (f.sort === 'near') res = res.slice().sort((x, y) => Number(y.gov === 'muscat') - Number(x.gov === 'muscat'));
   if (f.sort === 'recent') res = res.slice().reverse();
   // Verified companies first; the rest keep their relevance order.

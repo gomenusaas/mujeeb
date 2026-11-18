@@ -61,6 +61,56 @@ export function Field({ label, value, onChange, multiline, type = 'text', placeh
   );
 }
 
+/**
+ * Up to `max` short words or phrases as chips. Enter or a comma adds what's typed (leaving the field does too),
+ * × or Backspace on an empty box removes one. Duplicates are ignored.
+ */
+export function KeywordsField({ label, value, onChange, max = 7, maxLen = 30, placeholder, help }: {
+  label: ReactNode; value: string[]; onChange: (v: string[]) => void; max?: number; maxLen?: number; placeholder?: string; help?: ReactNode;
+}) {
+  const p = useP();
+  const [f, setF] = useState(false);
+  const [text, setText] = useState('');
+  const full = value.length >= max;
+  const add = (raw: string) => {
+    const words = raw.split(/[,،\n]/).map(w => w.trim().replace(/\s+/g, ' ').slice(0, maxLen)).filter(Boolean);
+    const next = [...value];
+    for (const w of words) if (next.length < max && !next.some(x => x.toLowerCase() === w.toLowerCase())) next.push(w);
+    if (next.length !== value.length) onChange(next);
+    setText('');
+  };
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
+      <span style={{ display: 'flex', justifyContent: 'space-between', gap: 8, font: 'var(--type-body-sm)', fontWeight: 600 }}>
+        <span>{label}</span>
+        <span style={{ color: full ? 'var(--brand)' : 'var(--text-tertiary)', fontWeight: 600 }}>{p.num(value.length)} / {p.num(max)}</span>
+      </span>
+      <label style={{ ...fieldBox(f), flexWrap: 'wrap', gap: 6, padding: '7px 10px', cursor: 'text' }}>
+        {value.map(w => (
+          <span key={w} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, height: 30, paddingInline: '10px 4px', borderRadius: 999, background: 'var(--brand-tint)', color: 'var(--brand)', font: '600 13px var(--font-sans)' }}>
+            {w}
+            <button type="button" aria-label={p.t.remove + ' ' + w} onClick={() => onChange(value.filter(x => x !== w))}
+              style={{ width: 22, height: 22, border: 'none', borderRadius: '50%', background: 'none', color: 'inherit', cursor: 'pointer', display: 'grid', placeItems: 'center', padding: 0 }}>
+              <Icon name="x" size={14} />
+            </button>
+          </span>
+        ))}
+        {!full && (
+          <input value={text} maxLength={maxLen} placeholder={value.length ? '' : placeholder} enterKeyHint="done"
+            onFocus={() => setF(true)} onBlur={() => { setF(false); if (text.trim()) add(text); }}
+            onChange={e => (/[,،]/.test(e.target.value) ? add(e.target.value) : setText(e.target.value))}
+            onKeyDown={e => {
+              if (e.key === 'Enter') { e.preventDefault(); add(text); }
+              else if (e.key === 'Backspace' && !text && value.length) onChange(value.slice(0, -1));
+            }}
+            style={{ ...inputCss, flex: '1 1 120px', height: 30 }} />
+        )}
+      </label>
+      {help && <span style={{ font: 'var(--type-caption)', fontWeight: 500, color: 'var(--text-tertiary)' }}>{help}</span>}
+    </div>
+  );
+}
+
 export function Select<V extends string | number>({ label, value, options, onChange }: {
   label: ReactNode; value: V; options: { value: V; label: string }[]; onChange: (v: V) => void;
 }) {
