@@ -329,6 +329,17 @@ function ServiceStrip({ items, all }: { items: ReturnType<ReturnType<typeof help
 }
 
 /** «عرض الكل» from the company page: all of its services (in the chosen activity) as a plain list. */
+/** A plain service row: small square photo, name, arrow; a hairline above every row but the first. */
+function ServiceLine({ title, img, open, first }: { title: string; img: string; open: () => void; first?: boolean }) {
+  return (
+    <div onClick={open} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderTop: first ? 'none' : '1px solid var(--border-default)', cursor: 'pointer' }}>
+      <span style={{ flex: 'none', width: 48, height: 48, borderRadius: 'var(--radius-md)', overflow: 'hidden', background: 'var(--neutral-100)' }}><Img src={img} /></span>
+      <span style={{ flex: 1, minWidth: 0, font: 'var(--type-body-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</span>
+      <Icon name="chevron-right" size={18} color="var(--text-tertiary)" />
+    </div>
+  );
+}
+
 export function ServiceList() {
   const a = useApp();
   const { t, catalog, page } = a;
@@ -339,8 +350,8 @@ export function ServiceList() {
   return (
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column', paddingBottom: 40 }}>
       <TopBar title={t.services + ' · ' + h.num(services.length)} subtitle={h.coName(co) + (act != null ? ' · ' + h.cname(act) : '')} onBack={a.back} />
-      <div style={{ padding: '8px 20px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {services.map(s => <ServiceRow key={s.id} {...s} thumb={96} />)}
+      <div style={{ padding: '4px 20px 0', display: 'flex', flexDirection: 'column' }}>
+        {services.map((s, k) => <ServiceLine key={s.id} title={s.title} img={s.img} open={s.open} first={!k} />)}
       </div>
     </div>
   );
@@ -500,19 +511,6 @@ export const CatTag = ({ color, children, h = 28, pad = 12 }: { color: string; c
   <span style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', height: h, padding: '0 ' + pad + 'px', borderRadius: 'var(--radius-pill)', background: 'var(--cat-' + color + '-100)', color: 'var(--cat-' + color + '-800)', font: 'var(--type-caption)' }}>{children}</span>
 );
 
-function ServiceRow({ title, cat, img, open, thumb }: { title: string; cat?: string; img: string; open: () => void; thumb: number }) {
-  return (
-    <div onClick={open} style={{ display: 'flex', gap: 14, padding: 12, ...card, cursor: 'pointer', alignItems: 'center' }}>
-      <span style={{ flex: 'none', width: thumb, aspectRatio: '4/3', borderRadius: 'var(--radius-md)', overflow: 'hidden', background: 'var(--neutral-100)' }}><Img src={img} /></span>
-      <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <span style={{ font: 'var(--type-title)' }}>{title}</span>
-        {cat && <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }}>{cat}</span>}
-      </span>
-      <Icon name="chevron-right" size={18} color="var(--text-tertiary)" />
-    </div>
-  );
-}
-
 /** «عرض الكل» from a service page: all of the service's photos and videos in the two-column gallery. */
 export function ServiceGallery() {
   const a = useApp();
@@ -533,6 +531,22 @@ export function ServiceGallery() {
   );
 }
 
+/**
+ * A hairline from screen edge to screen edge with a centred white pill (same look as the company page's
+ * activity box). The project page puts its number there.
+ */
+function PillDivider({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {
+  const line = <span aria-hidden="true" style={{ flex: 1, minWidth: 16, height: 1, background: 'var(--border-default)' }} />;
+  const pill: CSSProperties = { flex: 'none', minHeight: 44, display: 'flex', alignItems: 'center', gap: 8, padding: '0 18px', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-pill)', background: 'var(--surface-card)', color: 'var(--text-primary)', font: 'var(--type-body)', fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-sans)' };
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 -20px' }}>
+      {line}
+      {onClick ? <button type="button" onClick={onClick} style={{ ...pill, cursor: 'pointer' }}>{children}</button> : <span style={pill}>{children}</span>}
+      {line}
+    </div>
+  );
+}
+
 export function ServicePage() {
   const a = useApp();
   const { t, ar, catalog, page: top } = a;
@@ -545,6 +559,10 @@ export function ServicePage() {
   // «خدمات ذات صلة»: the company's other services in this service's category.
   const more = catalog.services.filter(x => x.co === co.id && x.id !== s.id && x.cat === s.cat).map(h.svcV);
   useEffect(() => { remote.track(co.id, 'service_view', s.id); }, [co.id, s.id]);
+  // The description shows 3 lines with «اقرأ المزيد» when it's longer.
+  const desc = (ar ? s.dar : s.den) || '';
+  const [full, setFull] = useState(false);
+  useEffect(() => setFull(false), [s.id]);
   return (
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* The service's cover: a still picture (no swiping or tapping); its photos are in a row further down. */}
@@ -560,20 +578,26 @@ export function ServicePage() {
           </div>
         </div>
       </div>
-      <div style={{ position: 'relative', marginTop: -28, borderRadius: '28px 28px 0 0', background: 'var(--bg-app)', padding: '0 20px 28px', display: 'flex', flexDirection: 'column', gap: 20, flex: 1 }}>
-        {/* Company logo overlapping the photo, as on the company page. */}
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 14, marginTop: -36, marginBottom: -6 }}>
-          <button type="button" onClick={() => a.go('company', { id: co.id })} aria-label={h.coName(co)}
-            style={{ padding: 0, border: 'none', background: 'none', borderRadius: '50%', cursor: 'pointer' }}>
-            <Avatar name={h.coName(co)} src={logoUrl(co.id)} size={84} verified={co.verified} style={{ borderRadius: '50%', boxShadow: '0 0 0 4px var(--bg-app)' }} />
-          </button>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <CatTag color={color} h={26} pad={10}>{h.cname(s.cat)}</CatTag>
-          <span style={{ font: 'var(--type-h1)' }}>{ar ? s.ar : s.en}</span>
-          <span style={{ font: 'var(--type-body)', color: 'var(--text-secondary)', textWrap: 'pretty' }}>{ar ? s.dar : s.den}</span>
+      <div style={{ position: 'relative', marginTop: -28, borderRadius: '28px 28px 0 0', background: 'var(--bg-app)', padding: '22px 20px 28px', display: 'flex', flexDirection: 'column', gap: 16, flex: 1 }}>
+        {/* Who offers it, as on the project page: logo, name and category (the row opens the company). */}
+        <div onClick={() => a.go('company', { id: co.id, act: s.cat })} style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
+          <Avatar name={h.coName(co)} src={logoUrl(co.id)} size={44} verified={co.verified} />
+          <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+            <span style={{ font: 'var(--type-body-strong)' }}>{h.coName(co)}</span>
+            <span style={{ marginTop: 4 }}><CatTag color={color} h={24} pad={10}>{h.cname(s.cat)}</CatTag></span>
+          </span>
+          <Icon name="chevron-right" size={18} color="var(--text-tertiary)" />
         </div>
         <ContactGrid a={a} co={co} />
+        <div aria-hidden="true" style={{ height: 1, background: 'var(--border-default)' }} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <span style={{ font: 'var(--type-caption)', fontWeight: 700, color: 'var(--text-tertiary)', marginBottom: -6 }}>{t.serviceLabel}</span>
+          <span style={{ font: 'var(--type-h1)', fontSize: 22 }}>{ar ? s.ar : s.en}</span>
+          <span style={{ font: 'var(--type-body)', color: 'var(--text-secondary)', textWrap: 'pretty', ...(full ? {} : { display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }) }}>{desc}</span>
+          {desc.length > 140 && (
+            <button type="button" onClick={() => setFull(m => !m)} style={{ alignSelf: 'flex-start', border: 'none', padding: 0, background: 'none', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 700, fontFamily: 'var(--font-sans)', color: 'var(--brand)' }}>{full ? t.showLess : t.readMore}</button>
+          )}
+        </div>
         {albums.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, margin: '0 -20px' }}>
             <div style={{ padding: '0 20px' }}><SectionHeader title={t.related} action={null} /></div>
@@ -587,10 +611,11 @@ export function ServicePage() {
             </HScroll>
           </div>
         )}
+        {/* «خدمات ذات صلة»: a plain list of the first 3 (small photo, name, arrow), «عرض الكل» opens the rest. */}
         {more.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <span style={{ font: 'var(--type-h3)' }}>{t.relatedServices}</span>
-            {more.map(m => <ServiceRow key={m.id} title={m.title} img={m.img} open={m.open} thumb={80} />)}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <SectionHeader title={t.relatedServices} action={more.length > 3 ? t.viewAll : null} onAction={() => a.go('svcList', { id: co.id, act: s.cat })} />
+            {more.slice(0, 3).map((m, k) => <ServiceLine key={m.id} title={m.title} img={m.img} open={m.open} first={!k} />)}
           </div>
         )}
       </div>
@@ -616,7 +641,6 @@ export function AlbumPage() {
   const photos = media.filter(m => !m.video).length, vids = media.length - photos;
   // The project's number among this company's projects, oldest first (the first project they added is no. 1).
   const projNo = a.catalog.albums.filter(x => x.co === al.co).sort((x, y) => x.added.localeCompare(y.added) || x.id.localeCompare(y.id)).findIndex(x => x.id === al.id) + 1;
-  const line = <span aria-hidden="true" style={{ flex: 1, minWidth: 16, height: 1, background: 'var(--border-default)' }} />;
   // WhatsApp opens with a message naming this project and linking back to it.
   const link = location.origin + '/album/' + al.id;
   const waText = t.waProject.replace('{p}', title).replace('{url}', link);
@@ -651,12 +675,7 @@ export function AlbumPage() {
         </div>
         {/* How to reach them about this project, right under who did it. */}
         <ContactGrid a={a} co={co} waText={waText} />
-        {/* Divider with the project's number in a centred pill (same look as the company page's activity box). */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 -20px' }}>
-          {line}
-          <span style={{ flex: 'none', minHeight: 44, display: 'flex', alignItems: 'center', padding: '0 18px', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-pill)', background: 'var(--surface-card)', color: 'var(--text-primary)', font: 'var(--type-body)', fontSize: 16, fontWeight: 700 }}>{t.projectNo.replace('{n}', h.num(projNo))}</span>
-          {line}
-        </div>
+        <PillDivider>{t.projectNo.replace('{n}', h.num(projNo))}</PillDivider>
         {/* What the project is: title, where and when, description, facts. */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <span style={{ font: 'var(--type-h1)', fontSize: 22 }}>{title}</span>
