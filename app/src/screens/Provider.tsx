@@ -557,7 +557,8 @@ export function ServicePage() {
   const co = a.idx.co.get(s.co)!;
   const color = catalog.cats[s.cat].color;
   const albums = catalog.albums.filter(al => al.co === co.id).map(h.albV);
-  const more = catalog.services.filter(x => x.co === co.id && x.id !== s.id).map(h.svcV);
+  // «خدمات ذات صلة»: the company's other services in this service's category.
+  const more = catalog.services.filter(x => x.co === co.id && x.id !== s.id && x.cat === s.cat).map(h.svcV);
   useEffect(() => { remote.track(co.id, 'service_view', s.id); }, [co.id, s.id]);
   return (
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -617,7 +618,7 @@ export function ServicePage() {
         )}
         {more.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <span style={{ font: 'var(--type-h3)' }}>{t.moreServices}</span>
+            <span style={{ font: 'var(--type-h3)' }}>{t.relatedServices}</span>
             {more.map(m => <ServiceRow key={m.id} title={m.title} img={m.img} open={m.open} thumb={80} />)}
           </div>
         )}

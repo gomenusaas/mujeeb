@@ -15,7 +15,7 @@ export const STR = {
   whatsapp: ['واتساب', 'WhatsApp'], call: ['اتصال', 'Call'], bookVisit: ['احجز زيارة', 'Book visit'],
   menu: ['القائمة', 'Menu'], coAddress: ['العنوان', 'Address'], svcAreas: ['توفر الخدمة حسب المنطقة', 'Service locations availability'], contact: ['التواصل', 'Contact'], website: ['الموقع الإلكتروني', 'Website'], social: ['حسابات التواصل الاجتماعي', 'Social media'], email: ['البريد الإلكتروني', 'Email'], openMaps: ['افتح في الخرائط', 'Open in Maps'], covIntro: ['تقدم الشركة خدماتها في المناطق التالية:', 'This company serves the following areas:'],
   branches: ['الفروع', 'Branches'], primary: ['الفرع الرئيسي', 'Main branch'], branch: ['فرع', 'Branch'], hours: ['ساعات العمل', 'Working hours'], openNow: ['مفتوح الآن', 'Open now'], closedNow: ['مغلق الآن', 'Closed now'], today: ['اليوم', 'Today'], closed: ['مغلق', 'Closed'], since: ['منذ', 'Since'],
-  video: ['فيديو', 'Video'], svcPhotos: ['صور الخدمة', 'Service photos'], related: ['أعمال ذات صلة', 'Related work'], moreServices: ['خدمات أخرى من الشركة', 'More from this company'],
+  video: ['فيديو', 'Video'], svcPhotos: ['صور الخدمة', 'Service photos'], related: ['أعمال ذات صلة', 'Related work'], relatedServices: ['خدمات ذات صلة', 'Related services'],
   gov: ['المحافظة', 'Governorate'], city: ['المدينة أو الولاية', 'City or district'], cityPh: ['مثال: بوشر', 'e.g. Bawshar'],
   name: ['الاسم', 'Name'], phone: ['الهاتف', 'Phone'],
   continue: ['متابعة', 'Continue'],
