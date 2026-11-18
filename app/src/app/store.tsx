@@ -13,6 +13,8 @@ export type RootTab = 'home' | 'categories' | 'explore' | 'profile';
 export interface Route { s: Screen; id?: string; cat?: number; co?: string; src?: 'album' | 'service' | 'gallery' | 'category'; i?: number;
   /** Category page / company page: the gallery tab is open (missing = companies / services). */
   tab?: 'gallery';
+  /** Company page (and its gallery viewer): the activity (category) shown; missing = all activities. */
+  act?: number;
   /** Kept on a page while another page covers it, so Back returns to it as it was: */
   y?: number;      // scroll position
   f?: Filters }    // category page: search, filters and sort
@@ -26,7 +28,7 @@ export interface Filters { gov: 'all' | GovId; verified: boolean; sort: 'rel' | 
 export type ListView = 'large' | 'rows';
 /** Company page: its services as a list, or a gallery of its project photos and videos. */
 export type CoView = 'list' | 'gallery';
-export type SheetKey = null | 'menu' | 'about' | 'hours' | 'branches' | 'address' | 'coverage' | 'contact' | 'website' | 'social' | 'sort' | 'directions';
+export type SheetKey = null | 'menu' | 'about' | 'hours' | 'branches' | 'address' | 'coverage' | 'contact' | 'website' | 'social' | 'sort' | 'directions' | 'activity';
 /** Sign-in sheet steps: sign in, create account, forgot password, choose a new password (from the reset email). */
 export type AuthStep = 'signin' | 'signup' | 'reset' | 'newpw';
 export interface BookingDraft { co: string; purpose: string; city: string; gov: GovId; day: number; time: string; notes: string; step: number }
@@ -147,6 +149,8 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
     // Already in the trail (e.g. company → service → the company's logo): go back to it instead of adding a copy.
     const k = SINGLE.includes(s) && q == null ? st.findIndex(r => samePage(r, next)) : -1;
     if (k >= 0) {
+      // Coming back to a company from a category page switches it to that activity.
+      if (next.act != null) st[k] = { ...st[k], act: next.act };
       stackRef.current = st;
       popTo(k);
       return;

@@ -189,7 +189,8 @@ export function Listing() {
   const set = (p: Partial<Filters>) => setF(x => ({ ...x, ...p }));
   const res = listingCompanies(a, c);
   const color = c == null ? 'violet' : catalog.cats[c].color;
-  const results = res.map(h.coV);
+  // Opening a company from here lands on this category's activity.
+  const results = res.map(co => ({ ...h.coV(co), open: () => a.go('company', { id: co.id, ...(c != null ? { act: c } : {}) }) }));
   // «المعرض» tab: shown when any company has media filed under this category (filters may still empty it).
   const hasMedia = catalog.albums.some(al => (c == null || al.cat === c) && al.imgs.length + (al.vids?.length ?? 0) > (al.hide?.length ?? 0));
   const view: CatView = hasMedia && top.tab === 'gallery' ? 'gallery' : 'companies';
@@ -292,17 +293,105 @@ export function Listing() {
   );
 }
 
+/**
+ * The activity on screen for a company with several: the one asked for (e.g. the category page the
+ * customer came from), otherwise its main (first) category. There's no "all" choice. Null when the
+ * company has a single activity (nothing to narrow).
+ */
+const activeAct = (co: Company, r: { act?: number }) => (co.cats.length < 2 ? null : r.act != null && co.cats.includes(r.act) ? r.act : co.cats[0]);
+
+/** "4 services" with Arabic number agreement (1 خدمة واحدة, 2 خدمتان, 3–10 خدمات, 11+ خدمة). */
+type Words = { ar: [string, string, string, string]; en: [string, string] };
+const SVC_W: Words = { ar: ['خدمة واحدة', 'خدمتان', 'خدمات', 'خدمة'], en: ['service', 'services'] };
+const PRJ_W: Words = { ar: ['مشروع واحد', 'مشروعان', 'مشاريع', 'مشروعًا'], en: ['project', 'projects'] };
+function countOf(a: ReturnType<typeof useApp>, n: number, w: Words) {
+  if (!a.ar) return n + ' ' + (n === 1 ? w.en[0] : w.en[1]);
+  return n === 1 ? w.ar[0] : n === 2 ? w.ar[1] : helpers(a).num(n) + ' ' + (n <= 10 ? w.ar[2] : w.ar[3]);
+}
+
+const EmptyLine = ({ children }: { children: React.ReactNode }) => (
+  <span style={{ padding: '20px 0', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-tertiary)' }}>{children}</span>
+);
+
+/**
+ * «النشاط» under the company description. With several activities it's a button (like the sort
+ * button, with an arrow) that opens the activity sheet; with one it's a plain line.
+ */
+function ActivityPicker({ co, act }: { co: Company; act: number | null }) {
+  const a = useApp();
+  const { t, catalog } = a;
+  const h = helpers(a);
+  const many = co.cats.length > 1;
+  const cur = act ?? co.cats[0];
+  const box: CSSProperties = { minWidth: 0, minHeight: 40, display: 'flex', alignItems: 'center', gap: 8, padding: '0 14px', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-pill)', background: 'var(--surface-card)', color: 'var(--text-primary)', font: 'var(--type-body-sm)', fontWeight: 700, fontFamily: 'var(--font-sans)', textAlign: 'start' };
+  const inner = (
+    <>
+      <span aria-hidden="true" style={{ flex: 'none', width: 10, height: 10, borderRadius: '50%', background: 'var(--cat-' + catalog.cats[cur].color + '-500)' }} />
+      <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.cname(cur)}</span>
+      {many && <Icon name="chevron-down" size={16} color="var(--text-secondary)" style={{ flex: 'none' }} />}
+    </>
+  );
+  // The «النشاط» label sits outside, before the box.
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+      <span style={{ flex: 'none', font: 'var(--type-body-sm)', fontWeight: 600, color: 'var(--text-secondary)' }}>{t.activity}</span>
+      {many
+        ? <button type="button" aria-haspopup="dialog" aria-label={t.activity + ': ' + h.cname(cur)} onClick={() => a.setSheet('activity')} style={{ ...box, cursor: 'pointer' }}>{inner}</button>
+        : <div style={box}>{inner}</div>}
+    </div>
+  );
+}
+
+/**
+ * Bottom sheet of a company's activities, each with its count of services and projects; one is always
+ * chosen. The chosen one is listed first. The order is fixed when the sheet opens, so rows don't jump
+ * while it closes after a pick; the new choice moves to the top the next time it opens.
+ */
+export function ActivitySheet() {
+  const a = useApp();
+  const { t, catalog, page, sheet, setSheet } = a;
+  const h = helpers(a);
+  const co = page.id ? a.idx.co.get(page.id) : undefined;
+  const cur = co ? activeAct(co, page) : null;
+  const open = sheet === 'activity';
+  const key = (co?.id ?? '') + '|' + cur;
+  const [order, setOrder] = useState<{ key: string; cats: number[] } | null>(null);
+  if (open && co && order?.key !== key) setOrder({ key, cats: [...co.cats].sort((x, y) => Number(y === cur) - Number(x === cur)) });
+  if (!co || co.cats.length < 2) return null;
+  const cats = order && order.key.startsWith(co.id + '|') ? order.cats : co.cats;
+  const counts = (c: number) => {
+    const s = catalog.services.filter(x => x.co === co.id && x.cat === c).length;
+    const p = catalog.albums.filter(x => x.co === co.id && x.cat === c).length;
+    return [s ? countOf(a, s, SVC_W) : '', p ? countOf(a, p, PRJ_W) : ''].filter(Boolean).join(' · ') || t.nothingYet;
+  };
+  const pick = (v: number) => {
+    setSheet(null);
+    if (v !== cur) a.replace('company', { id: co.id, ...(page.tab ? { tab: page.tab } : {}), act: v });
+  };
+  const check = (on: boolean) => (on ? <Icon name="check" size={20} color="var(--brand)" /> : null);
+  return (
+    <BottomSheet open={open} onClose={() => setSheet(null)} title={t.activity}>
+      {cats.map(c => (
+        <ListItem key={c} icon={catalog.cats[c].icon} color={catalog.cats[c].color} title={h.cname(c)} subtitle={counts(c)} chevron={false} trailing={check(cur === c)} onClick={() => pick(c)} />
+      ))}
+    </BottomSheet>
+  );
+}
+
 export function CompanyPage() {
   const a = useApp();
   const { t, catalog, page: top } = a;
   const h = helpers(a);
   const co = a.idx.co.get(top.id!)!;
   const cv = h.coV(co);
-  const services = catalog.services.filter(s => s.co === co.id).map(h.svcV);
-  const gallery = companyGallery(a, co.id);
+  // «النشاط»: a company in several categories can be narrowed to one (the category the customer came from).
+  const act = activeAct(co, top);
+  const services = catalog.services.filter(s => s.co === co.id && (act == null || s.cat === act)).map(h.svcV);
+  const allMedia = companyGallery(a, co.id);
+  const gallery = act == null ? allMedia : companyGallery(a, co.id, act);
   // Every visit opens on the services list; the gallery tab is kept only for this visit (in the route,
   // so Back from a photo or project returns to it). Without gallery items there's nothing to switch to.
-  const view: CoView = gallery.length && top.tab === 'gallery' ? 'gallery' : 'list';
+  const view: CoView = allMedia.length && top.tab === 'gallery' ? 'gallery' : 'list';
   useEffect(() => { remote.track(co.id, 'profile_view'); }, [co.id]);
 
   // Switching list ⇄ gallery keeps the page where it is.
@@ -310,7 +399,7 @@ export function CompanyPage() {
   const pickView = (v: CoView) => {
     if (v === view) return;
     steady.prepare();
-    a.replace('company', { id: co.id, ...(v === 'gallery' ? { tab: 'gallery' as const } : {}) });
+    a.replace('company', { id: co.id, ...(v === 'gallery' ? { tab: 'gallery' as const } : {}), ...(act != null ? { act } : {}) });
   };
   return (
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -334,18 +423,23 @@ export function CompanyPage() {
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <span style={{ font: 'var(--type-h1)' }}>{cv.name}</span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 4, font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }}><Icon name="map-pin" size={14} />{cv.city} · {cv.covers}</span>
+          {/* Where the company is, then where it works. */}
+          <span style={{ display: 'flex', flexDirection: 'column', gap: 4, font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Icon name="map-pin" size={14} style={{ flex: 'none' }} />{cv.city}</span>
+            <span style={{ display: 'flex', alignItems: 'flex-start', gap: 4 }}><Icon name="route" size={14} style={{ flex: 'none', marginTop: 2 }} /><span>{t.workArea}: {h.covText(co)}</span></span>
+          </span>
           <ClampedAbout text={a.ar ? co.dar : co.den} />
         </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-          {co.cats.map(i => <CatTag key={i} color={catalog.cats[i].color}>{h.cname(i)}</CatTag>)}
-        </div>
+        <ActivityPicker co={co} act={act} />
         <ContactGrid a={a} co={co} />
         <div ref={steady.ref} style={{ display: 'flex', flexDirection: 'column', gap: 12, minHeight: steady.minHeight }}>
           {/* With project photos there are two tabs; otherwise just the services heading. */}
-          {gallery.length > 0 ? <UnderlineTabs tabs={CO_TABS} value={view} onPick={pickView} /> : <SectionHeader title={t.services} />}
+          {allMedia.length > 0 ? <UnderlineTabs tabs={CO_TABS} value={view} onPick={pickView} /> : <SectionHeader title={t.services} />}
           {view === 'gallery'
-            ? <Masonry items={gallery} onOpen={k => a.go('photo', { src: 'gallery', id: co.id, i: k })} />
+            ? (gallery.length
+              ? <Masonry key={act ?? 'all'} items={gallery} onOpen={k => a.go('photo', { src: 'gallery', id: co.id, i: k, ...(act != null ? { act } : {}) })} />
+              : <EmptyLine>{t.actNoMedia}</EmptyLine>)
+            : !services.length ? <EmptyLine>{t.actNoSvc}</EmptyLine>
             : services.map(s => <ServiceRow key={s.id} {...s} thumb={96} />)}
         </div>
       </div>

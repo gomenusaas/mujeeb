@@ -16,7 +16,7 @@ export function PhotoViewer() {
   const src = top.src ?? 'album';
   const svc = src === 'service' ? a.idx.svc.get(top.id!) : undefined;
   const al = src === 'album' ? a.idx.alb.get(top.id!) : undefined;
-  const items: Media[] = src === 'gallery' ? companyGallery(a, top.id!)
+  const items: Media[] = src === 'gallery' ? companyGallery(a, top.id!, top.act)
     : src === 'category' ? categoryGallery(a, top.cat)
     : al ? albumMedia(al)
     : (svc?.imgs ?? []).map(s => ({ src: s, video: false }));
@@ -48,10 +48,11 @@ export function PhotoViewer() {
     const el = pager.current;
     if (!el) return;
     const k = Math.min(items.length - 1, Math.round(Math.abs(el.scrollLeft) / el.clientWidth));
-    if (k !== i) { setI(k); a.replace('photo', { src, id: top.id, cat: top.cat, i: k }); }
+    if (k !== i) { setI(k); a.replace('photo', { src, id: top.id, cat: top.cat, act: top.act, i: k }); }
   };
-  // The category gallery's order differs per customer and day, so its items are shared as the photo in its project.
-  const shareAt = src === 'category' && project
+  // The category gallery's order differs per customer and day (and a company gallery can be narrowed to one
+  // activity), so those items are shared as the photo in its project.
+  const shareAt = (src === 'category' || (src === 'gallery' && top.act != null)) && project
     ? { s: 'photo' as const, src: 'album' as const, id: project.id, i: Math.max(0, albumMedia(project).findIndex(m => m.src === cur.src)) }
     : { s: 'photo' as const, src, id: top.id, i };
   const share = () => a.sharePage(shareAt, title + (co ? ' · ' + h.coName(co) : ''));
@@ -82,7 +83,7 @@ export function PhotoViewer() {
         {title && <span style={{ font: 'var(--type-title)' }}>{title}</span>}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           {co && (
-            <button type="button" onClick={() => a.go('company', { id: co.id })} aria-label={h.coName(co)}
+            <button type="button" onClick={() => a.go('company', { id: co.id, ...(src === 'category' && project ? { act: project.cat } : {}) })} aria-label={h.coName(co)}
               style={{ pointerEvents: 'auto', flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 10, padding: 0, border: 'none', background: 'none', color: 'inherit', textAlign: 'start', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
               <span style={{ flex: 'none', display: 'flex', borderRadius: '50%', boxShadow: '0 0 0 2px #fff' }}>
                 <Avatar name={h.coName(co)} src={logoUrl(co.id)} size={44} verified={co.verified} />

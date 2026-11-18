@@ -45,12 +45,12 @@ export const albumMedia = (al: Album): Media[] => [
 ];
 
 /**
- * A company's gallery: photos and videos from all of its projects, newest project first,
- * minus anything the company hid from the gallery in the provider app.
+ * A company's gallery: photos and videos from all of its projects (or only those of activity
+ * `cat`), newest project first, minus anything the company hid from the gallery in the provider app.
  */
-export function companyGallery(a: App, coId: string): Media[] {
+export function companyGallery(a: App, coId: string, cat?: number): Media[] {
   const seen = new Set<string>(); // the same photo used in two projects shows once
-  return a.catalog.albums.filter(al => al.co === coId).sort((x, y) => (y.added || '').localeCompare(x.added || ''))
+  return a.catalog.albums.filter(al => al.co === coId && (cat == null || al.cat === cat)).sort((x, y) => (y.added || '').localeCompare(x.added || ''))
     .flatMap(al => {
       const hide = new Set(al.hide || []);
       return al.imgs.map(src => ({ src, video: false, al }))

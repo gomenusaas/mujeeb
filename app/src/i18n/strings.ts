@@ -7,7 +7,7 @@ export const STR = {
   greeting: ['مرحبًا أحمد، كيف نساعدك اليوم؟', 'Hi Ahmed, how can we help today?'], search: ['ما الخدمة التي تبحث عنها؟', 'What service are you looking for?'],
   viewAll: ['عرض الكل', 'View all'], seeAll: ['عرض الكل', 'See all'],
   featuredCo: ['شركات مميزة', 'Featured companies'], featuredPr: ['مشاريع مميزة', 'Featured projects'], recommended: ['مقترحة لك في مسقط', 'Recommended in Muscat'], recSub: ['حسب موقعك ونطاق الخدمة', 'Based on your location and service coverage'],
-  sponsored: ['إعلان ممول', 'Sponsored'], viewOffer: ['عرض', 'View'], photos: ['صورة', 'photos'], covers: ['يغطي', 'Covers'],
+  sponsored: ['إعلان ممول', 'Sponsored'], viewOffer: ['عرض', 'View'], photos: ['صورة', 'photos'], covers: ['يغطي', 'Covers'], activity: ['النشاط', 'Activity'], actNoSvc: ['لا توجد خدمات في هذا النشاط بعد.', 'No services in this activity yet.'], actNoMedia: ['لا توجد صور في هذا النشاط بعد.', 'No photos in this activity yet.'], nothingYet: ['لا توجد أعمال بعد', 'Nothing yet'], workArea: ['نطاق العمل', 'Service area'],
   allCats: ['جميع الفئات', 'All categories'], majorCats: ['فئات رئيسية', 'major categories'], allServices: ['كل الخدمات', 'All services'],
   results: ['شركة', 'companies'], list: ['قائمة', 'List'], map: ['خريطة', 'Map'], relevance: ['الأنسب', 'Relevance'], nearest: ['الأقرب', 'Nearest'], recent: ['الأحدث', 'Recent'],
   verifiedOnly: ['موثّقة فقط', 'Verified only'], viewProfile: ['عرض الملف', 'View profile'], noResults: ['لا توجد نتائج', 'No matches yet'], noResultsBody: ['جرّب منطقة أخرى أو أزل بعض الفلاتر.', 'Try another area or remove a filter.'], clear: ['مسح الفلاتر', 'Clear filters'],
