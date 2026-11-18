@@ -359,9 +359,6 @@ export function CompanyPage() {
   const gallery = act == null ? allMedia : companyGallery(a, co.id, act);
   const featured = catalog.albums.filter(al => al.co === co.id && (act == null || al.cat === act))
     .sort((x, y) => (y.done || y.added || '').localeCompare(x.done || x.added || '')).slice(0, 6);
-  // Services show 6 at first; «كل الخدمات» opens the rest in place.
-  const [allSvc, setAllSvc] = useState(false);
-  useEffect(() => setAllSvc(false), [act]);
   useEffect(() => { remote.track(co.id, 'profile_view'); }, [co.id]);
   return (
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -395,19 +392,10 @@ export function CompanyPage() {
           <ClampedAbout text={a.ar ? co.dar : co.den} />
         </div>
         <div aria-hidden="true" style={{ height: 1, background: 'var(--border-default)', margin: '0 -20px' }} />
-        {/* The activity (opens the activity list), its services as cards that open the service page, then its gallery. */}
+        {/* The activity (opens the activity list), its services (a 3-row sideways strip when there are more than 3), then its gallery. */}
         <ActivityHeader co={co} act={act} />
         {services.length
-          ? <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: -4 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 10 }}>
-                {(allSvc ? services : services.slice(0, 6)).map(x => <ServiceNavCard key={x.id} title={x.title} img={x.img} open={x.open} sub={svcProjects(a, x.id)} />)}
-              </div>
-              {services.length > 6 && (
-                <button type="button" onClick={() => setAllSvc(v => !v)} style={{ alignSelf: 'center', display: 'inline-flex', alignItems: 'center', gap: 4, border: 'none', background: 'none', padding: '6px 8px', cursor: 'pointer', fontFamily: 'var(--font-sans)', font: 'var(--type-body-sm)', fontWeight: 700, color: 'var(--brand)' }}>
-                  {allSvc ? t.showLess : t.allServices + ' (' + h.num(services.length) + ')'}<Icon name={allSvc ? 'chevron-up' : 'chevron-down'} size={16} />
-                </button>
-              )}
-            </div>
+          ? <ServiceStrip key={act ?? 'all'} items={services} />
           : <EmptyLine>{t.actNoSvc}</EmptyLine>}
         {/* «مشاريع مميزة»: the activity's newest completed projects as a sideways row of cards (until companies can pick their own). */}
         {featured.length > 0 && <div aria-hidden="true" style={{ height: 1, background: 'var(--border-default)', margin: '0 -20px' }} />}
@@ -448,20 +436,33 @@ export function CompanyPage() {
   );
 }
 
-/** A service on the company page: a card with its photo, then its name and project count, and an arrow (it opens the service page). */
+/** A service card: small landscape photo, name (up to two lines) and project count, and an arrow; opens the service page. */
 function ServiceNavCard({ title, img, open, sub }: { title: string; img: string; open: () => void; sub: string }) {
   return (
     <button type="button" className="mj-press-sm" onClick={open}
-      style={{ minWidth: 0, display: 'flex', flexDirection: 'column', padding: 0, border: '1px solid var(--border-default)', borderRadius: 12, overflow: 'hidden', background: 'var(--surface-card)', cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'start' }}>
-      <span style={{ position: 'relative', display: 'block', width: '100%', aspectRatio: '16/10', background: 'var(--neutral-100)' }}><Img src={img} style={{ position: 'absolute', inset: 0 }} /></span>
-      <span style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '8px 8px 10px 10px', paddingInlineStart: 10, paddingInlineEnd: 6 }}>
-        <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
-          <span style={{ font: 'var(--type-body-sm)', fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</span>
-          <span style={{ font: 'var(--type-caption)', color: 'var(--text-secondary)' }}>{sub}</span>
-        </span>
-        <Icon name="chevron-right" size={16} color="var(--text-tertiary)" />
+      style={{ minWidth: 0, minHeight: 64, display: 'flex', alignItems: 'center', gap: 10, padding: 8, paddingInlineEnd: 10, border: '1px solid var(--border-default)', borderRadius: 12, background: 'var(--surface-card)', cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'start', scrollSnapAlign: 'start' }}>
+      <span style={{ position: 'relative', flex: 'none', width: 72, height: 50, borderRadius: 8, overflow: 'hidden', background: 'var(--neutral-100)' }}><Img src={img} style={{ position: 'absolute', inset: 0 }} /></span>
+      <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <span style={{ font: 'var(--type-body-sm)', fontWeight: 700, lineHeight: 1.35, color: 'var(--text-primary)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{title}</span>
+        <span style={{ font: 'var(--type-caption)', color: 'var(--text-secondary)' }}>{sub}</span>
       </span>
+      <Icon name="chevron-right" size={16} color="var(--text-tertiary)" />
     </button>
+  );
+}
+
+/**
+ * A company's services as cards: up to 3 stacked; more than 3 become a sideways strip of 3-card columns
+ * (three rows), the next column peeking in at the edge.
+ */
+function ServiceStrip({ items }: { items: ReturnType<ReturnType<typeof helpers>['svcV']>[] }) {
+  const a = useApp();
+  const cards = items.map(x => <ServiceNavCard key={x.id} title={x.title} img={x.img} open={x.open} sub={svcProjects(a, x.id)} />);
+  if (items.length <= 3) return <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{cards}</div>;
+  return (
+    <div className="mj-s" style={{ display: 'grid', gridTemplateRows: 'repeat(3, auto)', gridAutoFlow: 'column', gridAutoColumns: 'calc(100% - 56px)', gap: '8px 10px', overflowX: 'auto', scrollSnapType: 'x mandatory', scrollPaddingInline: 20, margin: '0 -20px', padding: '0 20px', scrollbarWidth: 'none' }}>
+      {cards}
+    </div>
   );
 }
 
@@ -520,9 +521,7 @@ export function ServicePage() {
         {others.length > 0 && (
           <section aria-label={t.relatedServices} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <SectionHeader title={t.relatedServices} action={null} />
-            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 10 }}>
-              {others.map(x => <ServiceNavCard key={x.id} title={x.title} img={x.img} open={x.open} sub={svcProjects(a, x.id)} />)}
-            </div>
+            <ServiceStrip items={others} />
           </section>
         )}
       </div>
