@@ -238,7 +238,12 @@ function ActivityPicker({ co, act }: { co: Company; act: number | null }) {
   const inner = (
     <>
       <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.cname(cur)}</span>
-      {many && <Icon name="chevron-down" size={16} color="var(--text-secondary)" style={{ flex: 'none' }} />}
+      {/* A round brand button so it reads as tappable at a glance. */}
+      {many && (
+        <span aria-hidden="true" style={{ flex: 'none', width: 26, height: 26, borderRadius: '50%', background: 'var(--brand)', color: '#fff', display: 'grid', placeItems: 'center' }}>
+          <Icon name="chevron-down" size={16} />
+        </span>
+      )}
     </>
   );
   // A divider with the selector in the middle: a hairline from each screen edge to the centred box.
@@ -248,7 +253,7 @@ function ActivityPicker({ co, act }: { co: Company; act: number | null }) {
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '6px -20px' }}>
       {line}
       {many
-        ? <button type="button" aria-haspopup="dialog" aria-label={t.activity + ': ' + h.cname(cur)} onClick={() => a.setSheet('activity')} style={{ ...box, flex: '0 1 auto', cursor: 'pointer' }}>{inner}</button>
+        ? <button type="button" aria-haspopup="dialog" aria-label={t.activity + ': ' + h.cname(cur)} onClick={() => a.setSheet('activity')} style={{ ...box, flex: '0 1 auto', cursor: 'pointer', paddingInlineEnd: 9 }}>{inner}</button>
         : <div role="note" aria-label={t.activity + ': ' + h.cname(cur)} style={{ ...box, flex: '0 1 auto' }}>{inner}</div>}
       {line}
     </div>
