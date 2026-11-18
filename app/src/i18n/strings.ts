@@ -31,7 +31,7 @@ export const STR = {
   companiesN: [' شركات', ' companies'], newN: [' جديدة', ' new'], active: ['نشطة', 'active'],
   acceptTime: ['قبول الموعد', 'Accept time'], cancel: ['إلغاء', 'Cancel'], proposed: ['موعد مقترح', 'Proposed'],
   noFav: ['لا توجد مفضلة بعد', 'Nothing saved yet'], noFavBody: ['اضغط على القلب في أي شركة لحفظها هنا.', 'Tap the heart on any company to save it here.'],
-  exploreTitle: ['استكشف الأعمال', 'Explore work'], all: ['الكل', 'All'],
+  exploreTitle: ['استكشف الأعمال', 'Explore work'], all: ['الكل', 'All'], allActivities: ['كل الأنشطة', 'All activities'],
   opening: ['جارٍ فتح واتساب…', 'Opening WhatsApp…'], calling: ['جارٍ الاتصال بـ', 'Calling'], savedT: ['أضيفت إلى المفضلة', 'Saved to favorites'], unsavedT: ['أزيلت من المفضلة', 'Removed from favorites'], rescheduled: ['تم تأكيد الموعد الجديد', 'New time confirmed'], cancelledT: ['تم إلغاء الحجز', 'Booking cancelled'],
   memberSince: ['عضو منذ ٢٠٢٥', 'Member since 2025'], userName: ['أحمد البلوشي', 'Ahmed Al Balushi'],
   loading: ['جارٍ التحميل…', 'Loading…'], loadError: ['تعذر تحميل البيانات', 'Could not load data'],

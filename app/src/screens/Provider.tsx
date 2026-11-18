@@ -225,39 +225,31 @@ const EmptyLine = ({ children }: { children: React.ReactNode }) => (
 );
 
 /**
- * «النشاط» under the company description. With several activities it's a button (like the sort
- * button, with an arrow) that opens the activity sheet; with one it's a plain line.
+ * «النشاط»: the activity shown, as the section's main title,
+ * on a full-width line. Companies with several activities get «كل الأنشطة» at the far end, opening the activity sheet.
  */
-function ActivityPicker({ co, act }: { co: Company; act: number | null }) {
+function ActivityHeader({ co, act }: { co: Company; act: number | null }) {
   const a = useApp();
   const { t } = a;
   const h = helpers(a);
-  const many = co.cats.length > 1;
   const cur = act ?? co.cats[0];
-  const box: CSSProperties = { minWidth: 0, minHeight: 44, display: 'flex', alignItems: 'center', gap: 8, padding: '0 18px', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-pill)', background: 'var(--surface-card)', color: 'var(--text-primary)', font: 'var(--type-body)', fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-sans)', textAlign: 'start' };
+  const many = co.cats.length > 1;
+  // A small «النشاط» label and the activity name as plain text; with several activities the row opens the activity sheet.
   const inner = (
     <>
-      <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.cname(cur)}</span>
-      {/* A round tinted button so it reads as tappable at a glance (solid purple is kept for "Followed"). */}
-      {many && (
-        <span aria-hidden="true" style={{ flex: 'none', width: 26, height: 26, borderRadius: '50%', background: 'var(--brand-tint-strong)', color: 'var(--brand)', display: 'grid', placeItems: 'center' }}>
-          <Icon name="chevron-down" size={16} />
+      <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <span style={{ font: 'var(--type-caption)', fontWeight: 700, color: 'var(--text-tertiary)' }}>{t.activity}</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-h3)', color: 'var(--text-primary)' }}>
+          {h.cname(cur)}
+          {many && <Icon name="chevron-down" size={20} color="var(--brand)" style={{ flex: 'none' }} />}
         </span>
-      )}
+      </span>
     </>
   );
-  // A divider with the selector in the middle: a hairline from each screen edge to the centred box.
-  // It separates the company info from its work and filters the services and gallery below.
-  const line = <span aria-hidden="true" style={{ flex: 1, minWidth: 16, height: 1, background: 'var(--border-default)' }} />;
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '6px -20px' }}>
-      {line}
-      {many
-        ? <button type="button" aria-haspopup="dialog" aria-label={t.activity + ': ' + h.cname(cur)} onClick={() => a.setSheet('activity')} style={{ ...box, flex: '0 1 auto', cursor: 'pointer', paddingInlineEnd: 9 }}>{inner}</button>
-        : <div role="note" aria-label={t.activity + ': ' + h.cname(cur)} style={{ ...box, flex: '0 1 auto' }}>{inner}</div>}
-      {line}
-    </div>
-  );
+  const row: CSSProperties = { width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: 0, border: 'none', background: 'none', fontFamily: 'var(--font-sans)', textAlign: 'start' };
+  return many
+    ? <button type="button" aria-haspopup="dialog" aria-label={t.activity + ': ' + h.cname(cur)} onClick={() => a.setSheet('activity')} style={{ ...row, cursor: 'pointer' }}>{inner}</button>
+    : <div style={row}>{inner}</div>;
 }
 
 /**
@@ -296,10 +288,6 @@ export function ActivitySheet() {
   );
 }
 
-/**
- * A company's services as cards in a sideways strip, like the categories on the home page: two rows
- * that scroll together (one row for 1–3 services), the next column peeking in.
- */
 /** Under a service: how many completed projects are linked to it. */
 function svcProjects(a: ReturnType<typeof useApp>, id: string) {
   const n = a.catalog.albums.filter(al => al.svc === id).length;
@@ -354,6 +342,20 @@ export function CompanyPage() {
   const albums = sel ? catalog.albums.filter(al => al.svc === sel.id).sort((x, y) => (y.done || y.added || '').localeCompare(x.done || x.added || '')) : [];
   useEffect(() => { remote.track(co.id, 'profile_view'); }, [co.id]);
   useEffect(() => { if (sel) remote.track(co.id, 'service_view', sel.id); }, [co.id, sel?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Whether the activity + chips block is pinned at the top (it's sticky; this only changes how its edges look).
+  const pinRef = useRef<HTMLDivElement>(null);
+  const [pinned, setPinned] = useState(false);
+  useEffect(() => {
+    const el = pinRef.current, sc = el?.closest('.mj-scroll');
+    if (!el || !sc) return;
+    const check = () => {
+      const inset = parseFloat(getComputedStyle(el).top) || 0;
+      setPinned(sc.scrollTop > 0 && el.getBoundingClientRect().top - sc.getBoundingClientRect().top <= inset + 0.5);
+    };
+    check();
+    sc.addEventListener('scroll', check, { passive: true });
+    return () => sc.removeEventListener('scroll', check);
+  }, []);
   // Bring the picked chip into view in its row (e.g. arriving from a project's service tag).
   const chipsRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -395,17 +397,21 @@ export function CompanyPage() {
           </span>
           <ClampedAbout text={a.ar ? co.dar : co.den} />
         </div>
-        <ActivityPicker co={co} act={act} />
-        {/* Services: «معرض الأعمال» (the gallery) then a chip per service; the chips stay pinned under the top while
-            scrolling, and the area below shows what's picked. */}
-        {services.length > 0 && <SectionHeader title={<>{t.services} <span style={{ color: 'var(--text-tertiary)' }}>{h.num(services.length)}</span></>} action={null} style={{ marginBottom: -8 }} />}
-        {services.length > 0 && (
-          <div ref={chipsRef} className="mj-s" role="toolbar" aria-label={t.services} style={{ position: 'sticky', top: 'var(--top-inset)', zIndex: 5, display: 'flex', gap: 8, overflowX: 'auto', scrollSnapType: 'x proximity', scrollPaddingInline: 20, margin: '0 -20px', padding: '8px 20px', background: 'var(--bg-app)', scrollbarWidth: 'none' }}>
-            <ServiceChip title={t.workGallery} icon="layout-grid" open={() => pick(undefined)} sub={countOf(a, gallery.length, PHOTO_W)} on={!sel} />
-            {services.map(x => <ServiceChip key={x.id} title={x.title} img={x.img} open={() => pick(x.id)} sub={svcProjects(a, x.id)} on={sel?.id === x.id} />)}
-          </div>
-        )}
-        {!services.length && <EmptyLine>{t.actNoSvc}</EmptyLine>}
+        <div aria-hidden="true" style={{ height: 1, background: 'var(--border-default)', margin: '0 -20px' }} />
+        {/* The activity, then «معرض الأعمال» (the gallery) and a chip per service: both stay pinned under the top
+            while scrolling, and the area below shows what's picked. */}
+        <div ref={pinRef} style={{ position: 'sticky', top: 'var(--top-inset)', zIndex: 5, display: 'flex', flexDirection: 'column', gap: 18, margin: '-10px -20px 0', padding: '10px 20px 10px', background: 'var(--bg-app)',
+          // While pinned: fill the strip above it (under the status bar) so content doesn't show through, and draw a line below.
+          boxShadow: pinned ? '0 calc(-1 * var(--top-inset)) 0 0 var(--bg-app), 0 1px 0 0 var(--border-default)' : 'none' }}>
+          <ActivityHeader co={co} act={act} />
+          {services.length > 0 && (
+            <div ref={chipsRef} className="mj-s" role="toolbar" aria-label={t.services} style={{ display: 'flex', gap: 8, overflowX: 'auto', scrollSnapType: 'x proximity', scrollPaddingInline: 20, margin: '0 -20px', padding: '0 20px', scrollbarWidth: 'none' }}>
+              <ServiceChip title={t.workGallery} icon="layout-grid" open={() => pick(undefined)} sub={countOf(a, gallery.length, PHOTO_W)} on={!sel} />
+              {services.map(x => <ServiceChip key={x.id} title={x.title} img={x.img} open={() => pick(x.id)} sub={svcProjects(a, x.id)} on={sel?.id === x.id} />)}
+            </div>
+          )}
+          {!services.length && <EmptyLine>{t.actNoSvc}</EmptyLine>}
+        </div>
         {(sel || allMedia.length > 0) && <div aria-hidden="true" style={{ height: 1, background: 'var(--border-default)', margin: '0 -20px' }} />}
         {sel
           ? <SelectedService key={sel.id} s={sel} albums={albums} />
