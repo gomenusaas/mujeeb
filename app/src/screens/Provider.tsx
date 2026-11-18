@@ -744,7 +744,8 @@ export function AlbumPage() {
             {chip('images', countOf(a, photos, { ar: ['صورة واحدة', 'صورتان', 'صور', 'صورة'], en: ['photo', 'photos'] }) + (vids ? ' · ' + countOf(a, vids, { ar: ['فيديو واحد', 'فيديوهان', 'فيديوهات', 'فيديو'], en: ['video', 'videos'] }) : ''))}
           </span>
         </div>
-        <div style={{ columns: 2, columnGap: 10, marginTop: 4 }}>
+        <div aria-hidden="true" style={{ height: 1, background: 'var(--border-default)' }} />
+        <div style={{ columns: 2, columnGap: 10 }}>
           {media.map((m, k) => m.video
             ? <MediaTile key={k} m={m} w={600} onOpen={() => a.go('photo', { src: 'album', id: al.id, i: k })} style={{ breakInside: 'avoid', marginBottom: 10 }} />
             : <div key={k} onClick={() => a.go('photo', { src: 'album', id: al.id, i: k })} style={{ breakInside: 'avoid', marginBottom: 10, aspectRatio: ALB_RATIOS[k % ALB_RATIOS.length], borderRadius: 'var(--radius-md)', overflow: 'hidden', background: 'var(--neutral-100)', cursor: 'zoom-in' }}><Img src={photo(m.src, 600)} /></div>)}
