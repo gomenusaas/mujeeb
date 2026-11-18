@@ -230,14 +230,13 @@ const EmptyLine = ({ children }: { children: React.ReactNode }) => (
  */
 function ActivityPicker({ co, act }: { co: Company; act: number | null }) {
   const a = useApp();
-  const { t, catalog } = a;
+  const { t } = a;
   const h = helpers(a);
   const many = co.cats.length > 1;
   const cur = act ?? co.cats[0];
-  const box: CSSProperties = { minWidth: 0, minHeight: 40, display: 'flex', alignItems: 'center', gap: 8, padding: '0 14px', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-pill)', background: 'var(--surface-card)', color: 'var(--text-primary)', font: 'var(--type-body-sm)', fontWeight: 700, fontFamily: 'var(--font-sans)', textAlign: 'start' };
+  const box: CSSProperties = { minWidth: 0, minHeight: 44, display: 'flex', alignItems: 'center', gap: 8, padding: '0 18px', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-pill)', background: 'var(--surface-card)', color: 'var(--text-primary)', font: 'var(--type-body)', fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-sans)', textAlign: 'start' };
   const inner = (
     <>
-      <span aria-hidden="true" style={{ flex: 'none', width: 10, height: 10, borderRadius: '50%', background: 'var(--cat-' + catalog.cats[cur].color + '-500)' }} />
       <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.cname(cur)}</span>
       {many && <Icon name="chevron-down" size={16} color="var(--text-secondary)" style={{ flex: 'none' }} />}
     </>
@@ -342,6 +341,20 @@ export function ServiceList() {
   );
 }
 
+/**
+ * «١٢ متابعًا» under the company name (Follow itself is with the contact buttons). The count from the
+ * server leaves out the viewer, so their own follow is added here and the number moves when they tap.
+ */
+function FollowLine({ co }: { co: Company }) {
+  const a = useApp();
+  const n = (a.catalog.followers?.[co.id] ?? 0) + (a.follows[co.id] ? 1 : 0);
+  return (
+    <span style={{ font: 'var(--type-body)', fontSize: 16, fontWeight: 700, color: 'var(--text-secondary)', textAlign: 'center' }}>
+      {n ? countOf(a, n, { ar: ['متابع واحد', 'متابعان', 'متابعين', 'متابعًا'], en: ['follower', 'followers'] }) : a.t.firstFollower}
+    </span>
+  );
+}
+
 export function CompanyPage() {
   const a = useApp();
   const { t, catalog, page: top } = a;
@@ -370,11 +383,13 @@ export function CompanyPage() {
         </div>
       </div>
       <div style={{ position: 'relative', marginTop: -28, borderRadius: '28px 28px 0 0', background: 'var(--bg-app)', padding: '0 20px 28px', display: 'flex', flexDirection: 'column', gap: 18, flex: 1 }}>
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 14, marginTop: -36 }}>
+        {/* Centred: the logo, the name, then the follower count. */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginTop: -42 }}>
           <Avatar name={cv.name} src={cv.logo} size={84} verified={cv.verified} style={{ borderRadius: '50%', boxShadow: '0 0 0 4px var(--bg-app)' }} />
+          <span style={{ font: 'var(--type-h1)', textAlign: 'center' }}>{cv.name}</span>
+          <FollowLine co={co} />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <span style={{ font: 'var(--type-h1)' }}>{cv.name}</span>
           {/* Where the company is, then where it works. */}
           <span style={{ display: 'flex', flexDirection: 'column', gap: 4, font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Icon name="map-pin" size={14} style={{ flex: 'none' }} />{cv.city}</span>
@@ -594,6 +609,9 @@ export function AlbumPage() {
   const color = a.catalog.cats[al.cat]?.color ?? 'violet';
   const done = al.done ? new Date(al.done + 'T12:00:00').toLocaleDateString(ar ? 'ar-OM' : 'en-GB', { month: 'long', year: 'numeric' }) : '';
   const photos = media.filter(m => !m.video).length, vids = media.length - photos;
+  // The project's number among this company's projects, oldest first (the first project they added is no. 1).
+  const projNo = a.catalog.albums.filter(x => x.co === al.co).sort((x, y) => x.added.localeCompare(y.added) || x.id.localeCompare(y.id)).findIndex(x => x.id === al.id) + 1;
+  const line = <span aria-hidden="true" style={{ flex: 1, minWidth: 16, height: 1, background: 'var(--border-default)' }} />;
   // WhatsApp opens with a message naming this project and linking back to it.
   const link = location.origin + '/album/' + al.id;
   const waText = t.waProject.replace('{p}', title).replace('{url}', link);
@@ -613,13 +631,29 @@ export function AlbumPage() {
         </div>
       </div>
       <div style={{ position: 'relative', marginTop: -28, borderRadius: '28px 28px 0 0', background: 'var(--bg-app)', padding: '22px 20px 28px', display: 'flex', flexDirection: 'column', gap: 16, flex: 1 }}>
-        {/* What the project is: title, where and when, the service it belongs to, description, facts. */}
+        {/* Who did it and which of their services, at the top of the sheet (the row opens the company, the tag the service). */}
+        <div onClick={() => a.go('company', { id: co.id, act: al.cat })} style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
+          <Avatar name={h.coName(co)} src={logoUrl(co.id)} size={44} verified={co.verified} />
+          <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+            <span style={{ font: 'var(--type-body-strong)' }}>{h.coName(co)}</span>
+            {svc && (
+              <button type="button" onClick={e => { e.stopPropagation(); a.go('service', { id: svc.id }); }} style={{ alignSelf: 'flex-start', marginTop: 4, border: 'none', padding: 0, background: 'none', cursor: 'pointer' }}>
+                <CatTag color={color} h={24} pad={10}>{ar ? svc.ar : svc.en}</CatTag>
+              </button>
+            )}
+          </span>
+          <Icon name="chevron-right" size={18} color="var(--text-tertiary)" />
+        </div>
+        {/* How to reach them about this project, right under who did it. */}
+        <ContactGrid a={a} co={co} waText={waText} />
+        {/* Divider with the project's number in a centred pill (same look as the company page's activity box). */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 -20px' }}>
+          {line}
+          <span style={{ flex: 'none', minHeight: 44, display: 'flex', alignItems: 'center', padding: '0 18px', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-pill)', background: 'var(--surface-card)', color: 'var(--text-primary)', font: 'var(--type-body)', fontSize: 16, fontWeight: 700 }}>{t.projectNo.replace('{n}', h.num(projNo))}</span>
+          {line}
+        </div>
+        {/* What the project is: title, where and when, description, facts. */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {svc && (
-            <button type="button" onClick={() => a.go('service', { id: svc.id })} style={{ alignSelf: 'flex-start', border: 'none', padding: 0, background: 'none', cursor: 'pointer' }}>
-              <CatTag color={color} h={26} pad={10}>{ar ? svc.ar : svc.en}</CatTag>
-            </button>
-          )}
           <span style={{ font: 'var(--type-h1)' }}>{title}</span>
           <span style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '4px 12px', font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }}>
             {(ar ? al.pAr : al.pEn) && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="map-pin" size={14} />{ar ? al.pAr : al.pEn}</span>}
@@ -637,16 +671,6 @@ export function AlbumPage() {
             {chip('images', countOf(a, photos, { ar: ['صورة واحدة', 'صورتان', 'صور', 'صورة'], en: ['photo', 'photos'] }) + (vids ? ' · ' + countOf(a, vids, { ar: ['فيديو واحد', 'فيديوهان', 'فيديوهات', 'فيديو'], en: ['video', 'videos'] }) : ''))}
           </span>
         </div>
-        {/* Who did it (the whole row opens the company), and how to reach them about this project. */}
-        <div onClick={() => a.go('company', { id: co.id, act: al.cat })} style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', paddingTop: 4 }}>
-          <Avatar name={h.coName(co)} src={logoUrl(co.id)} size={44} verified={co.verified} />
-          <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-            <span style={{ font: 'var(--type-body-strong)' }}>{h.coName(co)}</span>
-            <span style={{ font: 'var(--type-caption)', fontWeight: 500, color: 'var(--text-tertiary)' }}>{h.city(co)} · {h.cname(al.cat)}</span>
-          </span>
-          <Icon name="chevron-right" size={18} color="var(--text-tertiary)" />
-        </div>
-        <ContactGrid a={a} co={co} waText={waText} />
         <div style={{ columns: 2, columnGap: 10, marginTop: 4 }}>
           {media.map((m, k) => m.video
             ? <MediaTile key={k} m={m} w={600} onOpen={() => a.go('photo', { src: 'album', id: al.id, i: k })} style={{ breakInside: 'avoid', marginBottom: 10 }} />

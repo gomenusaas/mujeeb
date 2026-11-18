@@ -94,7 +94,10 @@ export async function loadCatalog(): Promise<Catalog> {
     id: g.id, ar: g.name_ar, en: g.name_en, region: g.region,
     wilayats: ((wRows || []) as Row[]).filter(w => w.governorate_id === g.id).map(w => ({ id: w.id, ar: w.name_ar, en: w.name_en })),
   })).filter(g => g.wilayats.length);
-  return { cats: categories, gov, hours: hours.map(h => [h.days_ar, h.days_en, h.hours]), companies, services, albums, stories, ...(places.length ? { places } : {}) };
+  // Follower counts per company (numbers only; the viewer's own follow is added back by the app).
+  const { data: fc } = await sb.rpc('follower_counts');
+  const followers = Object.fromEntries(((fc || []) as Row[]).map(r => [r.company_id as string, r.n as number]));
+  return { cats: categories, gov, hours: hours.map(h => [h.days_ar, h.days_en, h.hours]), companies, services, albums, stories, followers, ...(places.length ? { places } : {}) };
 }
 
 function sortKey(id: string) {

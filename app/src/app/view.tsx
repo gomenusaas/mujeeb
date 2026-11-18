@@ -15,7 +15,15 @@ export function helpers(a: App) {
   const covText = (co: Company) => (co.cov.includes('all') ? gname('all') : co.cov.map(gname).join(ar ? '، ' : ', '));
   const num = (n: number) => (ar ? arDigits(n) : String(n));
   const coName = (co: Company) => (ar ? co.ar : co.en);
-  const city = (co: Company) => (ar ? co.cityAr : co.cityEn);
+  // A company's town with its governorate, e.g. «ولاية السيب، محافظة مسقط» / "As Seeb Wilayat, Muscat Governorate",
+  // looked up in the wilayat list; names that already carry an area («الخوير، مسقط») or aren't a wilayat stay as they are.
+  const city = (co: Company) => {
+    const name = ar ? co.cityAr : co.cityEn;
+    if (/[،,]/.test(name)) return name;
+    for (const g of a.places) for (const w of g.wilayats) if (w.ar === co.cityAr || w.en === co.cityEn)
+      return ar ? 'ولاية ' + w.ar + '، محافظة ' + g.ar : w.en + ' Wilayat, ' + g.en + ' Governorate';
+    return name;
+  };
   const coV = (co: Company) => ({
     id: co.id, logo: logoUrl(co.id), name: coName(co), cats: co.cats.map(cname).join(' · '), cat: cname(co.cats[0]),
     city: city(co), covers: t.covers + ' ' + covText(co), cover: photo(co.img, 700), c100: 'var(--cat-' + cat(co.cats[0]).color + '-100)',
@@ -227,20 +235,20 @@ export const MetaLine = ({ icon, children, size = 13, style }: { icon: string; c
 );
 
 /** WhatsApp, Call and Follow on company & service pages. Directions live in the company page's top bar. */
-export function ContactGrid({ a, co, waText }: { a: App; co: Company; waText?: string }) {
+export function ContactGrid({ a, co, waText, follow = true }: { a: App; co: Company; waText?: string; follow?: boolean }) {
   const { t } = a;
   const items = [
     { icon: 'message-circle', label: t.whatsapp, tone: 'green', go: () => openWhatsApp(a, co, waText) },
     { icon: 'phone', label: t.call, tone: 'sky', go: () => callPhone(a, co.phone, co.id) },
-    { icon: a.follows[co.id] ? 'user-check' : 'user-plus', label: a.follows[co.id] ? t.following : t.follow, tone: 'amber', on: !!a.follows[co.id], go: () => a.toggleFollow(co.id) },
+    ...(follow ? [{ icon: a.follows[co.id] ? 'user-check' : 'user-plus', label: a.follows[co.id] ? t.following : t.follow, tone: 'amber', on: !!a.follows[co.id], go: () => a.toggleFollow(co.id) }] : []),
   ];
   return (
     <div style={{ display: 'grid', gridAutoFlow: 'column', gridAutoColumns: 'minmax(0,1fr)', gap: 8 }}>
       {items.map(x => (
         <button key={x.label} type="button" className="mj-press" onClick={x.go} aria-pressed={'on' in x ? x.on : undefined}
-          style={{ minWidth: 0, height: 46, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '0 8px', border: 'none', borderRadius: 12, cursor: 'pointer', fontFamily: 'var(--font-sans)', font: 'var(--type-body-sm)', fontWeight: 700, whiteSpace: 'nowrap',
+          style={{ minWidth: 0, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, padding: '0 8px', border: 'none', borderRadius: 10, cursor: 'pointer', fontFamily: 'var(--font-sans)', font: 'var(--type-body-sm)', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap',
             background: 'on' in x && x.on ? 'var(--brand)' : 'var(--cat-' + x.tone + '-100)', color: 'on' in x && x.on ? '#fff' : 'var(--cat-' + x.tone + '-800)', transition: 'background var(--dur-base), color var(--dur-base)' }}>
-          <Icon name={x.icon} size={18} style={{ flex: 'none' }} />
+          <Icon name={x.icon} size={15} style={{ flex: 'none' }} />
           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{x.label}</span>
         </button>
       ))}

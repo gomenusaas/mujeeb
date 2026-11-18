@@ -69,6 +69,8 @@ export interface Catalog {
   companies: Company[]; services: Service[]; albums: Album[];
   /** Live stories from Supabase; undefined in demo mode (the bundled demo stories are used). */
   stories?: Story[];
+  /** Followers per company (not counting the person viewing); missing = none yet. */
+  followers?: Record<string, number>;
   /** Service locations (governorates → wilayats) in the admin's order; undefined = the bundled list in data/oman.ts. */
   places?: import('./oman').Governorate[];
 }
