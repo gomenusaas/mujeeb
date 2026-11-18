@@ -1,9 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { Avatar, Badge, BottomSheet, Button, EmptyState, Icon, IconButton, ListItem, SearchBar, SectionHeader } from '../ds';
 import { useApp, type Filters, type ListView, type SheetKey } from '../app/store';
-import { ContactGrid, Img, MetaLine, albumMedia, callPhone, card, companyGallery, helpers, listingCompanies, openDirections, openWhatsApp, type Media } from '../app/view';
+import { ContactGrid, Img, MetaLine, albumMedia, callPhone, card, companyGallery, helpers, listingCompanies, openDirections, openWhatsApp, serviceImage, type Media } from '../app/view';
 import { logoUrl, photo, remote } from '../data/api';
-import type { Album, Company, Service } from '../data/types';
+import type { Album, Company } from '../data/types';
 import { WEEK_ORDER, dayName, fmtTime, isOpenNow, muscatToday, shifts } from '../app/hours';
 
 const VIEWS: { v: ListView; icon: string; label: 'viewLarge' | 'viewRows' }[] = [
@@ -295,21 +295,6 @@ function svcProjects(a: ReturnType<typeof useApp>, id: string) {
 }
 
 /** «عرض الكل» from the company page: all of its services (in the chosen activity) as a plain list. */
-/** A chip in the company page's service row: a square photo (or an icon) filling its height, then name and count; the picked one is tinted. */
-function ServiceChip({ title, img, icon, open, sub, on }: { title: string; img?: string; icon?: string; open: () => void; sub: string; on: boolean }) {
-  return (
-    <button type="button" className="mj-press-sm mj-chip" onClick={open} aria-pressed={on}
-      style={{ flex: 'none', height: 54, display: 'flex', alignItems: 'stretch', padding: 0, border: '1px solid ' + (on ? 'var(--brand)' : 'var(--border-default)'), borderRadius: 12, overflow: 'hidden', background: on ? 'var(--brand-tint)' : 'var(--surface-card)', cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'start', scrollSnapAlign: 'start', transition: 'background var(--dur-base), border-color var(--dur-base)' }}>
-      <span style={{ position: 'relative', flex: 'none', width: 52, background: on && icon ? 'var(--brand)' : 'var(--neutral-100)', color: on && icon ? '#fff' : 'var(--text-secondary)', display: 'grid', placeItems: 'center' }}>
-        {img ? <Img src={img} style={{ position: 'absolute', inset: 0 }} /> : <Icon name={icon || 'layout-grid'} size={20} />}
-      </span>
-      <span style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 12px', whiteSpace: 'nowrap' }}>
-        <span style={{ font: 'var(--type-body-sm)', fontWeight: 700, color: on ? 'var(--brand-ink)' : 'var(--text-primary)' }}>{title}</span>
-        <span style={{ font: 'var(--type-caption)', color: 'var(--text-secondary)' }}>{sub}</span>
-      </span>
-    </button>
-  );
-}
 
 /**
  * «١٢ متابعًا» under the company name (Follow itself is with the contact buttons). The count from the
@@ -336,36 +321,10 @@ export function CompanyPage() {
   const services = catalog.services.filter(s => s.co === co.id && (act == null || s.cat === act)).map(h.svcV);
   const allMedia = companyGallery(a, co.id);
   const gallery = act == null ? allMedia : companyGallery(a, co.id, act);
-  // The picked service chip (from the address): its description and completed projects replace the gallery.
-  const sel = top.svc && services.some(x => x.id === top.svc) ? a.idx.svc.get(top.svc)! : undefined;
-  const pick = (id?: string) => a.replace('company', { ...top, svc: id });
-  const albums = sel ? catalog.albums.filter(al => al.svc === sel.id).sort((x, y) => (y.done || y.added || '').localeCompare(x.done || x.added || '')) : [];
+  // Services show 6 at first; «كل الخدمات» opens the rest in place.
+  const [allSvc, setAllSvc] = useState(false);
+  useEffect(() => setAllSvc(false), [act]);
   useEffect(() => { remote.track(co.id, 'profile_view'); }, [co.id]);
-  useEffect(() => { if (sel) remote.track(co.id, 'service_view', sel.id); }, [co.id, sel?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-  // Whether the activity + chips block is pinned at the top (it's sticky; this only changes how its edges look).
-  const pinRef = useRef<HTMLDivElement>(null);
-  const [pinned, setPinned] = useState(false);
-  useEffect(() => {
-    const el = pinRef.current, sc = el?.closest('.mj-scroll');
-    if (!el || !sc) return;
-    const check = () => {
-      const inset = parseFloat(getComputedStyle(el).top) || 0;
-      setPinned(sc.scrollTop > 0 && el.getBoundingClientRect().top - sc.getBoundingClientRect().top <= inset + 0.5);
-    };
-    check();
-    sc.addEventListener('scroll', check, { passive: true });
-    return () => sc.removeEventListener('scroll', check);
-  }, []);
-  // Bring the picked chip into view in its row (e.g. arriving from a project's service tag).
-  const chipsRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const row = chipsRef.current, chip = row?.querySelector<HTMLElement>('[aria-pressed="true"]');
-    if (!row || !chip) return;
-    const r = row.getBoundingClientRect(), c = chip.getBoundingClientRect();
-    // Only when it's (partly) out of view; then line it up with the row's start edge, like the first chip.
-    const rtl = getComputedStyle(row).direction === 'rtl';
-    if (c.left < r.left + 20 || c.right > r.right - 20) row.scrollBy({ left: rtl ? c.right - (r.right - 20) : c.left - (r.left + 20), behavior: 'smooth' });
-  }, [sel?.id]);
   return (
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ position: 'relative', height: HERO_H, background: cv.c100 }}>
@@ -398,24 +357,22 @@ export function CompanyPage() {
           <ClampedAbout text={a.ar ? co.dar : co.den} />
         </div>
         <div aria-hidden="true" style={{ height: 1, background: 'var(--border-default)', margin: '0 -20px' }} />
-        {/* The activity, then «معرض الأعمال» (the gallery) and a chip per service: both stay pinned under the top
-            while scrolling, and the area below shows what's picked. */}
-        <div ref={pinRef} style={{ position: 'sticky', top: 'var(--top-inset)', zIndex: 5, display: 'flex', flexDirection: 'column', gap: 18, margin: '-10px -20px 0', padding: '10px 20px 10px', background: 'var(--bg-app)',
-          // While pinned: fill the strip above it (under the status bar) so content doesn't show through, and draw a line below.
-          boxShadow: pinned ? '0 calc(-1 * var(--top-inset)) 0 0 var(--bg-app), 0 1px 0 0 var(--border-default)' : 'none' }}>
-          <ActivityHeader co={co} act={act} />
-          {services.length > 0 && (
-            <div ref={chipsRef} className="mj-s" role="toolbar" aria-label={t.services} style={{ display: 'flex', gap: 8, overflowX: 'auto', scrollSnapType: 'x proximity', scrollPaddingInline: 20, margin: '0 -20px', padding: '0 20px', scrollbarWidth: 'none' }}>
-              <ServiceChip title={t.workGallery} icon="layout-grid" open={() => pick(undefined)} sub={countOf(a, gallery.length, PHOTO_W)} on={!sel} />
-              {services.map(x => <ServiceChip key={x.id} title={x.title} img={x.img} open={() => pick(x.id)} sub={svcProjects(a, x.id)} on={sel?.id === x.id} />)}
+        {/* The activity (opens the activity list), its services as cards that open the service page, then its gallery. */}
+        <ActivityHeader co={co} act={act} />
+        {services.length
+          ? <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: -4 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 10 }}>
+                {(allSvc ? services : services.slice(0, 6)).map(x => <ServiceNavCard key={x.id} title={x.title} img={x.img} open={x.open} sub={svcProjects(a, x.id)} />)}
+              </div>
+              {services.length > 6 && (
+                <button type="button" onClick={() => setAllSvc(v => !v)} style={{ alignSelf: 'center', display: 'inline-flex', alignItems: 'center', gap: 4, border: 'none', background: 'none', padding: '6px 8px', cursor: 'pointer', fontFamily: 'var(--font-sans)', font: 'var(--type-body-sm)', fontWeight: 700, color: 'var(--brand)' }}>
+                  {allSvc ? t.showLess : t.allServices + ' (' + h.num(services.length) + ')'}<Icon name={allSvc ? 'chevron-up' : 'chevron-down'} size={16} />
+                </button>
+              )}
             </div>
-          )}
-          {!services.length && <EmptyLine>{t.actNoSvc}</EmptyLine>}
-        </div>
-        {(sel || allMedia.length > 0) && <div aria-hidden="true" style={{ height: 1, background: 'var(--border-default)', margin: '0 -20px' }} />}
-        {sel
-          ? <SelectedService key={sel.id} s={sel} albums={albums} />
-          : allMedia.length > 0 && (
+          : <EmptyLine>{t.actNoSvc}</EmptyLine>}
+        {allMedia.length > 0 && <div aria-hidden="true" style={{ height: 1, background: 'var(--border-default)', margin: '0 -20px' }} />}
+        {allMedia.length > 0 && (
             <section aria-label={t.gallery} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <SectionHeader title={<>{t.workGallery} <span style={{ color: 'var(--text-tertiary)' }}>{h.num(gallery.length)}</span></>} action={null} />
               {/* The gallery reaches closer to the screen edges (6px, like Explore) than the rest of the page. */}
@@ -423,31 +380,91 @@ export function CompanyPage() {
                 ? <div style={{ margin: '0 -14px' }}><Masonry key={act ?? 'all'} cols={3} items={gallery} onOpen={k => a.go('photo', { src: 'gallery', id: co.id, i: k, ...(act != null ? { act } : {}) })} /></div>
                 : <EmptyLine>{t.actNoMedia}</EmptyLine>}
             </section>
-          )}
+        )}
       </div>
     </div>
   );
 }
 
-const PHOTO_W: Words = { ar: ['صورة واحدة', 'صورتان', 'صور', 'صورة'], en: ['photo', 'photos'] };
+/** A service on the company page: a card with its photo, then its name and project count, and an arrow (it opens the service page). */
+function ServiceNavCard({ title, img, open, sub }: { title: string; img: string; open: () => void; sub: string }) {
+  return (
+    <button type="button" className="mj-press-sm" onClick={open}
+      style={{ minWidth: 0, display: 'flex', flexDirection: 'column', padding: 0, border: '1px solid var(--border-default)', borderRadius: 12, overflow: 'hidden', background: 'var(--surface-card)', cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'start' }}>
+      <span style={{ position: 'relative', display: 'block', width: '100%', aspectRatio: '16/10', background: 'var(--neutral-100)' }}><Img src={img} style={{ position: 'absolute', inset: 0 }} /></span>
+      <span style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '8px 8px 10px 10px', paddingInlineStart: 10, paddingInlineEnd: 6 }}>
+        <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <span style={{ font: 'var(--type-body-sm)', fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</span>
+          <span style={{ font: 'var(--type-caption)', color: 'var(--text-secondary)' }}>{sub}</span>
+        </span>
+        <Icon name="chevron-right" size={16} color="var(--text-tertiary)" />
+      </span>
+    </button>
+  );
+}
 
-/** The service picked on the company page: its name and description (3 lines, «اقرأ المزيد»), then its completed projects. */
-function SelectedService({ s, albums }: { s: Service; albums: Album[] }) {
+/**
+ * A service's own page: its cover as the header (Back, share), who offers it (logo, name, activity — opens the
+ * company), the contact buttons, its name and description, its completed projects, and the company's other
+ * services in the same activity.
+ */
+export function ServicePage() {
   const a = useApp();
-  const { t, ar } = a;
+  const { t, ar, catalog, page: top } = a;
+  const h = helpers(a);
+  const s = a.idx.svc.get(top.id!)!;
+  const co = a.idx.co.get(s.co)!;
+  const color = catalog.cats[s.cat]?.color ?? 'violet';
+  const title = ar ? s.ar : s.en;
   const desc = (ar ? s.dar : s.den) || '';
   const [full, setFull] = useState(false);
+  useEffect(() => setFull(false), [s.id]);
+  useEffect(() => { remote.track(co.id, 'service_view', s.id); }, [co.id, s.id]);
+  // «مشاريع منجزة»: newest first (by completion month, else when added).
+  const albums = catalog.albums.filter(al => al.svc === s.id).sort((x, y) => (y.done || y.added || '').localeCompare(x.done || x.added || ''));
+  const others = catalog.services.filter(x => x.co === co.id && x.cat === s.cat && x.id !== s.id).map(h.svcV);
+  const line = <div aria-hidden="true" style={{ height: 1, background: 'var(--border-default)', margin: '0 -20px' }} />;
   return (
-    <section aria-label={ar ? s.ar : s.en} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <span style={{ font: 'var(--type-h3)' }}>{ar ? s.ar : s.en}</span>
-        {desc && <span style={{ font: 'var(--type-body)', color: 'var(--text-secondary)', textWrap: 'pretty', ...(full ? {} : { display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }) }}>{desc}</span>}
-        {desc.length > 140 && (
-          <button type="button" onClick={() => setFull(m => !m)} style={{ alignSelf: 'flex-start', border: 'none', padding: 0, background: 'none', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 700, fontFamily: 'var(--font-sans)', color: 'var(--brand)' }}>{full ? t.showLess : t.readMore}</button>
+    <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ position: 'relative', height: HERO_H, background: 'var(--cat-' + color + '-100)' }}>
+        <img src={photo(serviceImage(a, s), 900)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+        <div style={{ position: 'absolute', top: 'calc(var(--top-inset) + 4px)', insetInline: 16, display: 'flex', justifyContent: 'space-between' }}>
+          <IconButton icon="arrow-left" variant="glass" size={40} onClick={a.back} label="Back" />
+          <IconButton icon="share-2" variant="glass" size={40} label={t.share} onClick={() => a.sharePage(top, title + ' · ' + h.coName(co), desc || undefined)} />
+        </div>
+      </div>
+      <div style={{ position: 'relative', marginTop: -28, borderRadius: '28px 28px 0 0', background: 'var(--bg-app)', padding: '22px 20px 28px', display: 'flex', flexDirection: 'column', gap: 16, flex: 1 }}>
+        {/* Who offers it (the row opens the company in this activity). */}
+        <div onClick={() => a.go('company', { id: co.id, act: s.cat })} style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
+          <Avatar name={h.coName(co)} src={logoUrl(co.id)} size={44} verified={co.verified} />
+          <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+            <span style={{ font: 'var(--type-body-strong)' }}>{h.coName(co)}</span>
+            <span style={{ marginTop: 4 }}><CatTag color={color} h={24} pad={10}>{h.cname(s.cat)}</CatTag></span>
+          </span>
+          <Icon name="chevron-right" size={18} color="var(--text-tertiary)" />
+        </div>
+        <ContactGrid a={a} co={co} />
+        {line}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <h1 style={{ margin: 0, font: 'var(--type-h1)', fontSize: 22 }}>{title}</h1>
+          {desc && <span style={{ font: 'var(--type-body)', color: 'var(--text-secondary)', textWrap: 'pretty', ...(full ? {} : { display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }) }}>{desc}</span>}
+          {desc.length > 140 && (
+            <button type="button" onClick={() => setFull(m => !m)} style={{ alignSelf: 'flex-start', border: 'none', padding: 0, background: 'none', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 700, fontFamily: 'var(--font-sans)', color: 'var(--brand)' }}>{full ? t.showLess : t.readMore}</button>
+          )}
+        </div>
+        {albums.length > 0 && line}
+        {albums.length > 0 && <ProjectsBlock albums={albums} />}
+        {others.length > 0 && line}
+        {others.length > 0 && (
+          <section aria-label={t.relatedServices} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <SectionHeader title={t.relatedServices} action={null} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 10 }}>
+              {others.map(x => <ServiceNavCard key={x.id} title={x.title} img={x.img} open={x.open} sub={svcProjects(a, x.id)} />)}
+            </div>
+          </section>
         )}
       </div>
-      {albums.length ? <ProjectsBlock albums={albums} /> : <EmptyLine>{t.nothingYet}</EmptyLine>}
-    </section>
+    </div>
   );
 }
 
@@ -544,7 +561,7 @@ function PillDivider({ children, onClick }: { children: React.ReactNode; onClick
   );
 }
 
-/** «مشاريع منجزة» of a picked service: a two-column grid or large cards (the choice is kept while the app is open). */
+/** «مشاريع منجزة» on a service page: a two-column grid or large cards (the choice is kept while the app is open). */
 type ProjView = 'grid' | 'large';
 let projViewMemo: ProjView = 'grid';
 function ProjectsBlock({ albums }: { albums: Album[] }) {
@@ -638,13 +655,13 @@ export function AlbumPage() {
         </div>
       </div>
       <div style={{ position: 'relative', marginTop: -28, borderRadius: '28px 28px 0 0', background: 'var(--bg-app)', padding: '22px 20px 28px', display: 'flex', flexDirection: 'column', gap: 16, flex: 1 }}>
-        {/* Who did it and which of their services, at the top of the sheet (the row opens the company, the tag the company with that service picked). */}
+        {/* Who did it and which of their services, at the top of the sheet (the row opens the company, the tag the service). */}
         <div onClick={() => a.go('company', { id: co.id, act: al.cat })} style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
           <Avatar name={h.coName(co)} src={logoUrl(co.id)} size={44} verified={co.verified} />
           <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
             <span style={{ font: 'var(--type-body-strong)' }}>{h.coName(co)}</span>
             {svc && (
-              <button type="button" onClick={e => { e.stopPropagation(); a.go('company', { id: co.id, act: svc.cat, svc: svc.id }); }} style={{ alignSelf: 'flex-start', marginTop: 4, border: 'none', padding: 0, background: 'none', cursor: 'pointer' }}>
+              <button type="button" onClick={e => { e.stopPropagation(); a.go('service', { id: svc.id }); }} style={{ alignSelf: 'flex-start', marginTop: 4, border: 'none', padding: 0, background: 'none', cursor: 'pointer' }}>
                 <CatTag color={color} h={24} pad={10}>{ar ? svc.ar : svc.en}</CatTag>
               </button>
             )}

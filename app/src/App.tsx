@@ -6,7 +6,7 @@ import type { Catalog, CustomerSeed } from './data/types';
 import { STR } from './i18n/strings';
 import { useDragScroll } from './app/useDragScroll';
 import { Categories, Explore, Home, LocationSheet } from './screens/Discover';
-import { ActivitySheet, AlbumPage, CompanyPage, CompanySheet, Listing, ReachSheets, SortSheet } from './screens/Provider';
+import { ActivitySheet, AlbumPage, CompanyPage, CompanySheet, Listing, ReachSheets, ServicePage, SortSheet } from './screens/Provider';
 import { BookingPage, DonePage } from './screens/Flows';
 import { StoryViewer } from './screens/Stories';
 import { PhotoViewer } from './screens/Photo';
@@ -159,6 +159,7 @@ function ScreenSwitch({ route }: { route: Route }) {
     case 'profile': return <Profile />;
     case 'listing': return <Listing />;
     case 'company': return <CompanyPage />;
+    case 'service': return <ServicePage />;
     case 'album': return <AlbumPage />;
     case 'booking': return <BookingPage />;
     case 'bkDone': return <DonePage />;
@@ -175,7 +176,7 @@ function DemoPanel() {
   const H: Route = { s: 'home' };
   const jumps: [string, () => void][] = [
     ['Home', jump([H])], ['Categories', jump([{ s: 'categories' }], 'categories')], ['Listing · AC', jump([H, { s: 'listing', cat: 1 }])],
-    ['Company profile', jump([H, { s: 'company', id: 'c4' }])], ['Service details', jump([H, { s: 'company', id: 'g1-1', act: 4, svc: 'sg1-1-2' }])], ['Album', jump([H, { s: 'album', id: 'a3' }])],
+    ['Company profile', jump([H, { s: 'company', id: 'c4' }])], ['Service details', jump([H, { s: 'company', id: 'g1-1', act: 4 }, { s: 'service', id: 'sg1-1-2' }])], ['Album', jump([H, { s: 'album', id: 'a3' }])],
     ['Book site visit', () => { a.reset([H, { s: 'company', id: 'c4' }], 'home'); setTimeout(() => a.startBk('c4'), 0); }],
     ['My bookings', jump([{ s: 'profile' }, { s: 'bookings' }], 'profile')], ['Explore', jump([{ s: 'explore' }], 'explore')],
     ['Profile', jump([{ s: 'profile' }], 'profile')], ['Notifications', jump([H, { s: 'notifs' }])], ['Stories', jump([H, { s: 'story', id: STORIES[0].id }])],
