@@ -654,7 +654,7 @@ export function AlbumPage() {
         </div>
         {/* What the project is: title, where and when, description, facts. */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <span style={{ font: 'var(--type-h1)' }}>{title}</span>
+          <span style={{ font: 'var(--type-h1)', fontSize: 22 }}>{title}</span>
           <span style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '4px 12px', font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }}>
             {(ar ? al.pAr : al.pEn) && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="map-pin" size={14} />{ar ? al.pAr : al.pEn}</span>}
             {done && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="calendar-check" size={14} />{t.completedIn} {done}</span>}
