@@ -89,37 +89,36 @@ function ViewSwitch() {
 }
 
 /**
- * The company page's gallery: an even grid of square photos and videos, three across with thin gaps (like a
- * business profile). Shows `first` at first; «عرض كل الصور (٥٤)» opens the rest in place. Remount to start over.
+ * The company page's gallery: square photos and videos, three across with thin gaps (like a business profile).
+ * More than `per` become a sideways strip of pages of `per` (3 × 4), the next page peeking in at the edge.
  */
-function SquareGrid({ items, onOpen, first = 12 }: { items: Media[]; onOpen: (k: number) => void; first?: number }) {
-  const a = useApp();
-  const h = helpers(a);
-  const [all, setAll] = useState(false);
-  const shown = all ? items : items.slice(0, first);
+function SquareGrid({ items, onOpen, per = 12 }: { items: Media[]; onOpen: (k: number) => void; per?: number }) {
   const fill: CSSProperties = { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' };
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 3 }}>
-        {shown.map((m, k) => (
-          <button key={k} type="button" onClick={() => onOpen(k)} aria-label={m.video ? 'video' : 'photo'}
-            style={{ position: 'relative', aspectRatio: '1/1', padding: 0, border: 'none', borderRadius: 6, overflow: 'hidden', background: 'var(--neutral-100)', cursor: 'zoom-in' }}>
-            {m.video
-              ? <video src={m.src + '#t=0.1'} muted loop playsInline autoPlay preload="metadata" style={fill} />
-              : <img src={photo(m.src, 360)} alt="" loading="lazy" decoding="async" style={fill} />}
-            {m.video && (
-              <span style={{ position: 'absolute', top: 5, insetInlineEnd: 5, width: 20, height: 20, borderRadius: '50%', background: 'oklch(0 0 0 / 0.5)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Icon name="play" size={10} />
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
-      {items.length > first && (
-        <button type="button" onClick={() => setAll(v => !v)} style={{ alignSelf: 'center', display: 'inline-flex', alignItems: 'center', gap: 4, border: 'none', background: 'none', padding: '6px 8px', cursor: 'pointer', fontFamily: 'var(--font-sans)', font: 'var(--type-body-sm)', fontWeight: 700, color: 'var(--brand)' }}>
-          {all ? a.t.showLess : a.t.allPhotos + ' (' + h.num(items.length) + ')'}<Icon name={all ? 'chevron-up' : 'chevron-down'} size={16} />
-        </button>
+  const tile = (m: Media, k: number) => (
+    <button key={k} type="button" onClick={() => onOpen(k)} aria-label={m.video ? 'video' : 'photo'}
+      style={{ position: 'relative', aspectRatio: '1/1', padding: 0, border: 'none', borderRadius: 6, overflow: 'hidden', background: 'var(--neutral-100)', cursor: 'zoom-in' }}>
+      {m.video
+        ? <video src={m.src + '#t=0.1'} muted loop playsInline autoPlay preload="metadata" style={fill} />
+        : <img src={photo(m.src, 360)} alt="" loading="lazy" decoding="async" style={fill} />}
+      {m.video && (
+        <span style={{ position: 'absolute', top: 5, insetInlineEnd: 5, width: 20, height: 20, borderRadius: '50%', background: 'oklch(0 0 0 / 0.5)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name="play" size={10} />
+        </span>
       )}
+    </button>
+  );
+  const grid = (list: Media[], from: number, style?: CSSProperties) => (
+    <div key={from} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', alignContent: 'start', gap: 3, ...style }}>
+      {list.map((m, k) => tile(m, from + k))}
+    </div>
+  );
+  // Up to one page: a plain grid in line with the page content.
+  if (items.length <= per) return grid(items, 0);
+  const pages: number[] = [];
+  for (let k = 0; k < items.length; k += per) pages.push(k);
+  return (
+    <div className="mj-s" style={{ display: 'flex', gap: 10, overflowX: 'auto', scrollSnapType: 'x mandatory', scrollPaddingInline: 20, margin: '0 -20px', padding: '0 20px', scrollbarWidth: 'none' }}>
+      {pages.map(from => grid(items.slice(from, from + per), from, { flex: 'none', width: 'calc(100% - 32px)', scrollSnapAlign: 'start' }))}
     </div>
   );
 }
@@ -392,15 +391,14 @@ export function CompanyPage() {
           <ClampedAbout text={a.ar ? co.dar : co.den} />
         </div>
         <div aria-hidden="true" style={{ height: 1, background: 'var(--border-default)', margin: '0 -20px' }} />
-        {/* The activity (opens the activity list), its services (a 3-row sideways strip when there are more than 3), then its gallery. */}
+        {/* The activity (opens the activity list), then everything it filters, with no lines between, so it reads as one block: its services (a 3-row sideways strip when there are more than 3), featured projects and gallery. */}
         <ActivityHeader co={co} act={act} />
         {services.length
           ? <ServiceStrip key={act ?? 'all'} items={services} />
           : <EmptyLine>{t.actNoSvc}</EmptyLine>}
         {/* «مشاريع مميزة»: the activity's newest completed projects as a sideways row of cards (until companies can pick their own). */}
-        {featured.length > 0 && <div aria-hidden="true" style={{ height: 1, background: 'var(--border-default)', margin: '0 -20px' }} />}
         {featured.length > 0 && (
-          <section aria-label={t.featuredPr} style={{ display: 'flex', flexDirection: 'column', gap: 12, margin: '0 -20px' }}>
+          <section aria-label={t.featuredPr} style={{ display: 'flex', flexDirection: 'column', gap: 12, margin: '10px -20px 0' }}>
             <div style={{ padding: '0 20px' }}><SectionHeader title={t.featuredPr} action={null} /></div>
             <HScroll>
               {featured.map(al => {
@@ -421,13 +419,12 @@ export function CompanyPage() {
             </HScroll>
           </section>
         )}
-        {allMedia.length > 0 && <div aria-hidden="true" style={{ height: 1, background: 'var(--border-default)', margin: '0 -20px' }} />}
         {allMedia.length > 0 && (
-            <section aria-label={t.gallery} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <section aria-label={t.gallery} style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 10 }}>
               <SectionHeader title={<>{t.workGallery} <span style={{ color: 'var(--text-tertiary)' }}>{h.num(gallery.length)}</span></>} action={null} />
-              {/* An even square grid that reaches closer to the screen edges (6px) than the rest of the page. */}
+              {/* Square tiles in line with the page content: pages of 12 (3 × 4) scrolling sideways when there are more. */}
               {gallery.length
-                ? <div style={{ margin: '0 -14px' }}><SquareGrid key={act ?? 'all'} items={gallery} onOpen={k => a.go('photo', { src: 'gallery', id: co.id, i: k, ...(act != null ? { act } : {}) })} /></div>
+                ? <SquareGrid key={act ?? 'all'} items={gallery} onOpen={k => a.go('photo', { src: 'gallery', id: co.id, i: k, ...(act != null ? { act } : {}) })} />
                 : <EmptyLine>{t.actNoMedia}</EmptyLine>}
             </section>
         )}
