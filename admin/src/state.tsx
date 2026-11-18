@@ -2,11 +2,12 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { Refs } from './api';
 import { arDigits, strings, type T } from './i18n';
 
-export type Section = 'overview' | 'companies' | 'users' | 'admins';
+export type Section = 'overview' | 'companies' | 'users' | 'locations' | 'admins';
 export const SECTIONS: { id: Section; icon: string; label: keyof T }[] = [
   { id: 'overview', icon: 'layout-dashboard', label: 'overview' },
   { id: 'companies', icon: 'building-2', label: 'companies' },
   { id: 'users', icon: 'user-round', label: 'users' },
+  { id: 'locations', icon: 'map-pin', label: 'locations' },
   { id: 'admins', icon: 'shield-check', label: 'admins' },
 ];
 

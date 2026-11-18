@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient, type User } from '@supabase/supabase-js';
+import type { Governorate } from './oman';
 import type { Album, Branch, Catalog, Category, Company, CustomerSeed, GovId, Pair, Service, Story, WeekHours } from './types';
 
 const URL_ = import.meta.env.VITE_SUPABASE_URL as string | undefined;
@@ -83,7 +84,16 @@ export async function loadCatalog(): Promise<Catalog> {
     poster: r.poster_url || (r.kind === 'image' ? r.media_url : photo(coverOf.get(r.company_id) || '', 540)),
     ar: r.caption_ar, en: r.caption_en, h: Math.max(1, Math.round((Date.now() - Date.parse(r.created_at)) / 36e5)),
   }));
-  return { cats: categories, gov, hours: hours.map(h => [h.days_ar, h.days_en, h.hours]), companies, services, albums, stories };
+  // Service locations in the admin's order (only active ones come back); the bundled list if none.
+  const [{ data: gRows }, { data: wRows }] = await Promise.all([
+    sb.from('governorates').select('id, name_ar, name_en, region').order('position'),
+    sb.from('wilayats').select('id, governorate_id, name_ar, name_en').order('position'),
+  ]);
+  const places: Governorate[] = ((gRows || []) as Row[]).map(g => ({
+    id: g.id, ar: g.name_ar, en: g.name_en, region: g.region,
+    wilayats: ((wRows || []) as Row[]).filter(w => w.governorate_id === g.id).map(w => ({ id: w.id, ar: w.name_ar, en: w.name_en })),
+  })).filter(g => g.wilayats.length);
+  return { cats: categories, gov, hours: hours.map(h => [h.days_ar, h.days_en, h.hours]), companies, services, albums, stories, ...(places.length ? { places } : {}) };
 }
 
 function sortKey(id: string) {

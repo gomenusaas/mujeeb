@@ -6,6 +6,13 @@ import { Img, TopBar, card, helpers, openWhatsApp, stop } from '../app/view';
 import { BK_ST, NOTIFS, PURPOSES } from '../i18n/strings';
 import { auth, logoUrl, remote } from '../data/api';
 
+/** Countries MUJEEB works in. Only Oman is open for now; the others show as coming soon. */
+const COUNTRIES = [
+  { code: 'OM', flag: '🇴🇲', ar: 'عُمان', en: 'Oman', live: true },
+  { code: 'SA', flag: '🇸🇦', ar: 'السعودية', en: 'Saudi Arabia', live: false },
+  { code: 'QA', flag: '🇶🇦', ar: 'قطر', en: 'Qatar', live: false },
+];
+
 const ROOT = { padding: 'calc(var(--top-inset) + 8px) 20px 100px', display: 'flex', flexDirection: 'column' } as const;
 const badge = (m: Record<string, readonly [string, string, string]>, k: string, ar: boolean) => ({ label: m[k][ar ? 0 : 1], tone: m[k][2] });
 
@@ -13,6 +20,7 @@ export function Profile() {
   const a = useApp();
   const { t, ar, bookings, fav, me } = a;
   const [askDelete, setAskDelete] = useState(false);
+  const [countryOpen, setCountryOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const soon = () => a.showToast(ar ? 'قريبًا' : 'Coming soon', 'info');
   // With Supabase the profile is the real account; the demo keeps its sample customer.
@@ -21,6 +29,7 @@ export function Profile() {
     ...(live ? [] : [{ icon: 'calendar-check', color: 'amber', title: t.myBookings, sub: String(bookings.filter(b => ['pending', 'confirmed', 'reschedule'].includes(b.st)).length) + ' ' + t.active, go: () => a.go('bookings') }]),
     { icon: 'heart', color: 'pink', title: t.favorites, sub: Object.values(fav).filter(Boolean).length + t.companiesN, go: () => (live && !me ? a.setAuthStep('signin') : a.go('favs')) },
     ...(live ? [] : [{ icon: 'bell', color: 'sky', title: t.notifications, sub: NOTIFS.length + t.newN, go: () => a.go('notifs') }]),
+    { icon: 'globe', color: 'violet', title: t.country, sub: COUNTRIES[0].flag + ' ' + (ar ? COUNTRIES[0].ar : COUNTRIES[0].en), go: () => setCountryOpen(true) },
     { icon: 'languages', color: 'teal', title: t.language, sub: t.langName, go: () => a.setLang(ar ? 'en' : 'ar') },
     { icon: 'life-buoy', color: 'green', title: t.help, go: soon },
   ];
@@ -65,6 +74,16 @@ export function Profile() {
       )}
       {/* Over the whole phone screen, not inside the scrolling page. */}
       {createPortal(<div style={{ position: 'absolute', inset: 0, zIndex: 55, pointerEvents: 'none' }}>
+        <BottomSheet open={countryOpen} onClose={() => setCountryOpen(false)} title={t.country}>
+          {COUNTRIES.map(c => (
+            <button key={c.code} type="button" disabled={!c.live} onClick={() => setCountryOpen(false)}
+              style={{ display: 'flex', alignItems: 'center', gap: 14, width: '100%', minHeight: 56, padding: '10px 4px', border: 'none', background: 'none', cursor: c.live ? 'pointer' : 'default', textAlign: 'start', fontFamily: 'var(--font-sans)', opacity: c.live ? 1 : 0.55 }}>
+              <span aria-hidden="true" style={{ flex: 'none', width: 40, height: 40, borderRadius: 12, background: 'var(--neutral-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>{c.flag}</span>
+              <span style={{ flex: 1, font: 'var(--type-body-strong)', color: 'var(--text-primary)' }}>{ar ? c.ar : c.en}</span>
+              {c.live ? <Icon name="check" size={20} color="var(--brand)" /> : <Badge tone="neutral" size="sm">{t.comingSoon}</Badge>}
+            </button>
+          ))}
+        </BottomSheet>
         <BottomSheet open={askDelete} onClose={() => setAskDelete(false)} title={t.deleteTitle}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '4px 20px calc(24px + var(--safe-bottom))' }}>
             <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-secondary)' }}>{t.deleteBody}</p>

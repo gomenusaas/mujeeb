@@ -5,7 +5,7 @@ import { dataSource, loadCatalog, loadCustomerSeed } from './data/api';
 import type { Catalog, CustomerSeed } from './data/types';
 import { STR } from './i18n/strings';
 import { useDragScroll } from './app/useDragScroll';
-import { Categories, Explore, Home } from './screens/Discover';
+import { Categories, Explore, Home, LocationSheet } from './screens/Discover';
 import { ActivitySheet, AlbumPage, CompanyPage, CompanySheet, Listing, ReachSheets, ServiceGallery, ServiceList, ServicePage, SortSheet } from './screens/Provider';
 import { BookingPage, DonePage } from './screens/Flows';
 import { StoryViewer } from './screens/Stories';
@@ -138,6 +138,7 @@ function Phone() {
         {reachCo && <ReachSheets co={reachCo} />}
         {top.s === 'listing' && <SortSheet />}
         {top.s === 'company' && <ActivitySheet />}
+        <LocationSheet />
         <AuthSheet />
         {toast && (
           <div style={{ position: 'absolute', insetInline: 16, bottom: showTabs ? 'calc(88px + var(--safe-bottom))' : 'calc(104px + var(--safe-bottom))', zIndex: 60 }}>

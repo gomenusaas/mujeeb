@@ -5,6 +5,7 @@ import { strings, STR, type T } from '../i18n/strings';
 import { bookingDays, type BookingDay } from './dates';
 import { pathToStack, routeToPath, shareLink } from './links';
 import { STORIES } from '../data/stories';
+import { DEFAULT_WILAYAT, OMAN, findWilayat, wilayatLabel } from '../data/oman';
 
 export type Screen = 'home' | 'categories' | 'explore' | 'profile' | 'listing' | 'company' | 'service' | 'album'
   | 'booking' | 'bkDone' | 'bookings' | 'favs' | 'notifs' | 'story' | 'photo' | 'svcGallery' | 'svcList';
@@ -24,7 +25,7 @@ export const isOverlay = (r: Route) => r.s === 'story' || r.s === 'photo';
 export interface Filters { gov: 'all' | GovId; verified: boolean; sort: 'rel' | 'near' | 'recent' | 'verified'; q: string }
 /** How the company list is laid out: big cards or thin rows. */
 export type ListView = 'large' | 'rows';
-export type SheetKey = null | 'menu' | 'about' | 'hours' | 'branches' | 'address' | 'coverage' | 'contact' | 'website' | 'social' | 'sort' | 'directions' | 'activity';
+export type SheetKey = null | 'menu' | 'about' | 'hours' | 'branches' | 'address' | 'coverage' | 'contact' | 'website' | 'social' | 'sort' | 'directions' | 'activity' | 'location';
 /** Sign-in sheet steps: sign in, create account, forgot password, choose a new password (from the reset email). */
 export type AuthStep = 'signin' | 'signup' | 'reset' | 'newpw';
 export interface BookingDraft { co: string; purpose: string; city: string; gov: GovId; day: number; time: string; notes: string; step: number }
@@ -32,7 +33,7 @@ export interface BookingDraft { co: string; purpose: string; city: string; gov: 
 const DEFAULT_F: Filters = { gov: 'all', verified: false, sort: 'rel', q: '' };
 const LS = 'mujeeb.v1';
 
-interface Persisted { lang: Lang; fav: Record<string, boolean>; bookings: Booking[]; seq: { bk: number }; seen: Record<string, boolean>; listView: ListView; follows: Record<string, boolean> }
+interface Persisted { lang: Lang; fav: Record<string, boolean>; bookings: Booking[]; seq: { bk: number }; seen: Record<string, boolean>; listView: ListView; follows: Record<string, boolean>; wilayat: string }
 
 function readPersisted(): Partial<Persisted> {
   try { return JSON.parse(localStorage.getItem(LS) || '{}'); } catch { return {}; }
@@ -56,6 +57,10 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
   const [seq, setSeq] = useState({ bk: saved.seq?.bk ?? 57 });
   /** Story ids the customer has opened. */
   const [seen, setSeen] = useState<Record<string, boolean>>(saved.seen || {});
+  /** The customer's service location (a wilayat id; see data/oman.ts). */
+  const [wilayat, setWilayat] = useState<string>(saved.wilayat || DEFAULT_WILAYAT);
+  /** Governorates and wilayats to pick from (the admin's list, or the bundled one). */
+  const places = catalog.places ?? OMAN;
   const [listView, setListView] = useState<ListView>(saved.listView === 'rows' ? 'rows' : 'large'); // an old saved 'grid' becomes large cards
   /** Companies the customer follows (also sent to Supabase when it's configured). */
   const [follows, setFollows] = useState<Record<string, boolean>>(auth.enabled ? {} : saved.follows || {});
@@ -79,8 +84,8 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
   fRef.current = f;
 
   useEffect(() => {
-    try { localStorage.setItem(LS, JSON.stringify({ lang, fav, bookings, seq, seen, listView, follows } satisfies Persisted)); } catch { /* storage unavailable */ }
-  }, [lang, fav, bookings, seq, seen, listView, follows]);
+    try { localStorage.setItem(LS, JSON.stringify({ lang, fav, bookings, seq, seen, listView, follows, wilayat } satisfies Persisted)); } catch { /* storage unavailable */ }
+  }, [lang, fav, bookings, seq, seen, listView, follows, wilayat]);
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -229,9 +234,11 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
   }, [ar, showToast]);
 
   const startBk = useCallback((coId: string) => {
-    setBk({ co: coId, purpose: 'measure', city: t.loc, gov: 'muscat', day: 0, time: '09:00', notes: '', step: 0 });
+    // The visit starts at the customer's service location (its region, or Muscat where the app has none yet).
+    const { w: wl, g } = findWilayat(places, wilayat);
+    setBk({ co: coId, purpose: 'measure', city: ar ? wl.ar : wl.en, gov: g.region ?? 'muscat', day: 0, time: '09:00', notes: '', step: 0 });
     go('booking');
-  }, [go, t.loc]);
+  }, [go, wilayat, ar, places]);
 
   const submitBooking = useCallback(async () => {
     if (!bk) return;
@@ -258,6 +265,7 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
     fav, toggleFav, f, setF, sheet, setSheet, exCat, setExCat,
     bookings, setBookings,
     bk, setBk, startBk, submitBooking, days, seen, markSeen, listView, setListView, follows, toggleFollow,
+    wilayat, setWilayat, places, locLabel: wilayatLabel(places, wilayat, ar),
     me, authStep, setAuthStep, closeAuth, signOut,
   };
 }

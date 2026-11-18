@@ -55,7 +55,42 @@ async function rpc<T>(fn: string, args?: Record<string, unknown>): Promise<T> {
   return data as T;
 }
 
+/** A governorate with its wilayats, as the admin sees them (hidden ones included). */
+export interface PlaceGov { id: string; name_ar: string; name_en: string; region: string | null; position: number; is_active: boolean; wilayats: PlaceWil[] }
+export interface PlaceWil { id: string; governorate_id: string; name_ar: string; name_en: string; position: number; is_active: boolean }
+
+/** New ids for places the admin adds (the customer app keeps a picked wilayat by id). */
+const newId = (prefix: string) => prefix + '-' + Math.random().toString(36).slice(2, 8);
+async function ok<T>(p: PromiseLike<{ data: T; error: { message: string } | null }>): Promise<T> {
+  const { data, error } = await p;
+  if (error) throw new ApiError(error.message);
+  return data;
+}
+
 export const api = {
+  /* ── Service locations (tables governorates / wilayats; only platform admins may write) ── */
+  async places(): Promise<PlaceGov[]> {
+    const [g, w] = await Promise.all([
+      ok(client().from('governorates').select('id, name_ar, name_en, region, position, is_active').order('position')),
+      ok(client().from('wilayats').select('id, governorate_id, name_ar, name_en, position, is_active').order('position')),
+    ]);
+    return (g as Omit<PlaceGov, 'wilayats'>[]).map(x => ({ ...x, wilayats: (w as PlaceWil[]).filter(y => y.governorate_id === x.id) }));
+  },
+  async saveGov(x: { id?: string; name_ar: string; name_en: string; region: string | null; is_active: boolean; position?: number }) {
+    if (x.id) await ok(client().from('governorates').update({ name_ar: x.name_ar, name_en: x.name_en, region: x.region, is_active: x.is_active }).eq('id', x.id));
+    else await ok(client().from('governorates').insert({ id: newId('g'), name_ar: x.name_ar, name_en: x.name_en, region: x.region, is_active: x.is_active, position: x.position ?? 999 }));
+  },
+  async saveWil(x: { id?: string; governorate_id: string; name_ar: string; name_en: string; is_active: boolean; position?: number }) {
+    if (x.id) await ok(client().from('wilayats').update({ name_ar: x.name_ar, name_en: x.name_en, is_active: x.is_active }).eq('id', x.id));
+    else await ok(client().from('wilayats').insert({ id: newId('w'), governorate_id: x.governorate_id, name_ar: x.name_ar, name_en: x.name_en, is_active: x.is_active, position: x.position ?? 999 }));
+  },
+  deleteGov: async (id: string) => { await ok(client().from('governorates').delete().eq('id', id)); },
+  deleteWil: async (id: string) => { await ok(client().from('wilayats').delete().eq('id', id)); },
+  /** Saves a new order: each id gets its index as its position. */
+  async reorder(table: 'governorates' | 'wilayats', ids: string[]) {
+    await Promise.all(ids.map((id, k) => ok(client().from(table).update({ position: k }).eq('id', id))));
+  },
+
   /* Session */
   async session() { return (await client().auth.getSession()).data.session?.user ?? null; },
   async signIn(email: string, password: string): Promise<'ok' | 'bad' | 'unconfirmed'> {

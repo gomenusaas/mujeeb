@@ -67,6 +67,8 @@ export interface Catalog {
   companies: Company[]; services: Service[]; albums: Album[];
   /** Live stories from Supabase; undefined in demo mode (the bundled demo stories are used). */
   stories?: Story[];
+  /** Service locations (governorates → wilayats) in the admin's order; undefined = the bundled list in data/oman.ts. */
+  places?: import('./oman').Governorate[];
 }
 
 export interface CustomerSeed { bookings: Booking[] }

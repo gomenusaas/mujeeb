@@ -3,7 +3,7 @@ import type { Pair } from '../data/types';
 /** Centralized UI strings: [arabic, english]. Copied from the MUJEEB App design. */
 export const STR = {
   home: ['الرئيسية', 'Home'], categories: ['الفئات', 'Categories'], explore: ['استكشف', 'Explore'], profile: ['حسابي', 'Profile'],
-  brand: ['مجيب', 'MUJEEB'], serviceLoc: ['موقع الخدمة', 'Service location'], loc: ['بوشر، مسقط', 'Bawshar, Muscat'], otherLang: ['EN', 'عربي'],
+  brand: ['مجيب', 'MUJEEB'], serviceLoc: ['موقع الخدمة', 'Service location'], searchWilayat: ['ابحث عن ولايتك', 'Search your wilayat'], noWilayat: ['لا توجد ولاية بهذا الاسم', 'No wilayat by that name'], otherLang: ['EN', 'عربي'],
   greeting: ['مرحبًا أحمد، كيف نساعدك اليوم؟', 'Hi Ahmed, how can we help today?'], search: ['ما الخدمة التي تبحث عنها؟', 'What service are you looking for?'],
   viewAll: ['عرض الكل', 'View all'], seeAll: ['عرض الكل', 'See all'],
   featuredCo: ['شركات مميزة', 'Featured companies'], featuredPr: ['مشاريع مميزة', 'Featured projects'], recommended: ['مقترحة لك في مسقط', 'Recommended in Muscat'], recSub: ['حسب موقعك ونطاق الخدمة', 'Based on your location and service coverage'],
@@ -25,7 +25,7 @@ export const STR = {
   bkSubmit: ['إرسال طلب الحجز', 'Send booking request'], muscatTime: ['بتوقيت مسقط', 'Muscat time'],
   bkNote: ['تؤكد الشركة الموعد يدويًا، عادةً خلال ساعات. الإلغاء مجاني قبل ٢٤ ساعة.', 'The company confirms manually, usually within a few hours. Free cancellation up to 24 hours before.'],
   bkDone: ['تم إرسال طلب الحجز', 'Booking request sent'], waitConfirm: ['بانتظار تأكيد', 'Waiting for confirmation from'], viewBookings: ['عرض حجوزاتي', 'View my bookings'],
-  myBookings: ['حجوزاتي', 'My bookings'], favorites: ['المفضلة', 'Favorites'], notifications: ['الإشعارات', 'Notifications'], language: ['اللغة', 'Language'], settings: ['الإعدادات', 'Settings'], help: ['المساعدة', 'Help'], signOut: ['تسجيل الخروج', 'Sign out'], langName: ['العربية', 'English'],
+  myBookings: ['حجوزاتي', 'My bookings'], favorites: ['المفضلة', 'Favorites'], country: ['الدولة', 'Country'], comingSoon: ['قريبًا', 'Coming soon'], notifications: ['الإشعارات', 'Notifications'], language: ['اللغة', 'Language'], settings: ['الإعدادات', 'Settings'], help: ['المساعدة', 'Help'], signOut: ['تسجيل الخروج', 'Sign out'], langName: ['العربية', 'English'],
   companiesN: [' شركات', ' companies'], newN: [' جديدة', ' new'], active: ['نشطة', 'active'],
   acceptTime: ['قبول الموعد', 'Accept time'], cancel: ['إلغاء', 'Cancel'], proposed: ['موعد مقترح', 'Proposed'],
   noFav: ['لا توجد مفضلة بعد', 'Nothing saved yet'], noFavBody: ['اضغط على القلب في أي شركة لحفظها هنا.', 'Tap the heart on any company to save it here.'],

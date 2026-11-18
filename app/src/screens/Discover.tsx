@@ -1,4 +1,5 @@
-import { Avatar, Badge, CategoryCard, Chip, Icon, IconButton, SectionHeader } from '../ds';
+import { useState } from 'react';
+import { Avatar, Badge, BottomSheet, CategoryCard, Chip, Icon, IconButton, SectionHeader } from '../ds';
 import { useApp } from '../app/store';
 import { HScroll, Img, MetaLine, card, exploreMedia, helpers, stop } from '../app/view';
 import { logoUrl, photo } from '../data/api';
@@ -51,10 +52,12 @@ export function Home() {
               <IconButton icon="bell" variant="glass" size={40} dot onClick={() => a.go('notifs')} label={t.notifications} />
             </div>
           </div>
-          <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 2, marginTop: 14 }}>
+          {/* Service location: opens the wilayat picker. */}
+          <button type="button" aria-haspopup="dialog" onClick={() => a.setSheet('location')}
+            style={{ position: 'relative', alignSelf: 'flex-start', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2, marginTop: 14, padding: 0, border: 'none', background: 'none', color: 'inherit', cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'start' }}>
             <span style={{ font: 'var(--type-caption)', opacity: 0.8 }}>{t.serviceLoc}</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4, font: 'var(--type-title)' }}><Icon name="map-pin" size={16} />{t.loc}<Icon name="chevron-down" size={16} /></span>
-          </div>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4, font: 'var(--type-title)' }}><Icon name="map-pin" size={16} />{a.locLabel}<Icon name="chevron-down" size={16} /></span>
+          </button>
           <div style={{ position: 'relative', font: 'var(--type-h1)', marginTop: 18, textWrap: 'balance' }}>{t.greeting}</div>
         </div>
         <div style={{ position: 'relative', zIndex: 1, padding: '0 20px', marginTop: -26 }}>
@@ -181,10 +184,11 @@ export function Explore() {
     <div style={{ padding: 'calc(var(--top-inset) + 8px) 0 100px', display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 2 }}>
         <span style={{ font: 'var(--type-h1)' }}>{t.exploreTitle}</span>
-        {/* The service location from the home header (fixed for now; it will follow the customer's choice). */}
-        <span style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4, font: 'var(--type-body-sm)', fontWeight: 700, color: 'var(--text-primary)' }}>
-          <Icon name="map-pin" size={15} color="var(--brand)" />{t.loc}
-        </span>
+        {/* The customer's service location (same as the home header); tap to change it. */}
+        <button type="button" aria-haspopup="dialog" onClick={() => a.setSheet('location')}
+          style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 4, marginTop: 4, padding: 0, border: 'none', background: 'none', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 700, fontFamily: 'var(--font-sans)', color: 'var(--text-primary)' }}>
+          <Icon name="map-pin" size={15} color="var(--brand)" />{a.locLabel}<Icon name="chevron-down" size={15} color="var(--text-secondary)" />
+        </button>
       </div>
       <div className="mj-s" style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '0 20px', scrollbarWidth: 'none' }}>
         <Chip selected={exCat < 0} onClick={() => setExCat(-1)}>{t.all}</Chip>
@@ -195,5 +199,53 @@ export function Explore() {
         <Masonry key={exCat} cols={3} items={items} onOpen={k => a.go('photo', { src: 'explore', i: k, ...(cat != null ? { cat } : {}) })} />
       </div>
     </div>
+  );
+}
+
+/**
+ * «موقع الخدمة»: pick a wilayat (grouped by governorate, with a search box). The choice is kept on
+ * the phone and shown in the home header and on Explore; a booking starts there.
+ */
+export function LocationSheet() {
+  const a = useApp();
+  const { t, ar, sheet, setSheet, wilayat, setWilayat, places } = a;
+  const [q, setQ] = useState('');
+  const open = sheet === 'location';
+  const n = q.trim().toLowerCase();
+  const hit = (s: string) => s.toLowerCase().includes(n);
+  const groups = places.map(g => ({ g, list: !n || hit(g.ar) || hit(g.en) ? g.wilayats : g.wilayats.filter(x => hit(x.ar) || hit(x.en)) })).filter(x => x.list.length);
+  const close = () => { setSheet(null); setQ(''); };
+  const pick = (id: string) => { setWilayat(id); close(); };
+  return (
+    <BottomSheet open={open} onClose={close} title={t.serviceLoc}>
+      <div style={{ position: 'sticky', top: -12, zIndex: 1, margin: '-12px -20px 4px', padding: '12px 20px 10px', background: 'var(--surface-card)' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, height: 44, padding: '0 14px', borderRadius: 'var(--radius-pill)', background: 'var(--neutral-100)' }}>
+          <Icon name="search" size={18} color="var(--text-tertiary)" />
+          <input value={q} onChange={e => setQ(e.target.value)} placeholder={t.searchWilayat} aria-label={t.searchWilayat}
+            style={{ flex: 1, minWidth: 0, border: 'none', outline: 'none', background: 'none', font: 'var(--type-body)', fontFamily: 'var(--font-sans)', color: 'var(--text-primary)' }} />
+        </label>
+      </div>
+      {!groups.length && <div style={{ padding: '24px 0', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-tertiary)' }}>{t.noWilayat}</div>}
+      {groups.map(({ g, list }) => (
+        <div key={g.id} style={{ display: 'flex', flexDirection: 'column' }}>
+          {/* Governorate heading: a tinted band with the name in bold and how many wilayats it has. */}
+          <span style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 14, marginBottom: 2, padding: '9px 12px', borderRadius: 12, background: 'var(--brand-tint)', color: 'var(--brand-ink)' }}>
+            <Icon name="map-pin" size={15} />
+            <span style={{ flex: 1, font: 'var(--type-body-strong)', fontWeight: 800 }}>{ar ? g.ar : g.en}</span>
+            <span style={{ font: 'var(--type-caption)', fontWeight: 600, opacity: 0.75 }}>{helpers(a).num(g.wilayats.length)}</span>
+          </span>
+          {list.map(x => {
+            const on = x.id === wilayat;
+            return (
+              <button key={x.id} type="button" onClick={() => pick(x.id)} aria-pressed={on}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 48, padding: '0 4px', border: 'none', borderBottom: '1px solid var(--border-subtle)', background: 'none', cursor: 'pointer', textAlign: 'start', fontFamily: 'var(--font-sans)', font: 'var(--type-body)', fontWeight: on ? 700 : 500, color: on ? 'var(--brand)' : 'var(--text-primary)' }}>
+                <span style={{ flex: 1 }}>{ar ? x.ar : x.en}</span>
+                {on && <Icon name="check" size={20} color="var(--brand)" />}
+              </button>
+            );
+          })}
+        </div>
+      ))}
+    </BottomSheet>
   );
 }

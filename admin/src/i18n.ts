@@ -14,6 +14,14 @@ export const STR = {
 
   // Navigation
   overview: ['نظرة عامة', 'Overview'], companies: ['الشركات', 'Companies'], users: ['المستخدمون', 'Users'], admins: ['المشرفون', 'Admins'],
+  locations: ['المواقع', 'Locations'],
+  locationsSub: ['المحافظات والولايات التي يختار منها العملاء «موقع الخدمة»، بالترتيب الذي تراه هنا. المخفية لا تظهر للعملاء.', 'The governorates and wilayats customers pick their service location from, in the order shown here. Hidden ones aren’t shown to customers.'],
+  addGov: ['إضافة محافظة', 'Add governorate'], editGov: ['تعديل المحافظة', 'Edit governorate'], addWil: ['إضافة ولاية', 'Add wilayat'], editWil: ['تعديل الولاية', 'Edit wilayat'],
+  region: ['منطقة التغطية', 'Coverage region'], regionHelp: ['تربط المحافظة بمناطق تغطية الشركات في التطبيق.', 'Links the governorate to the companies’ coverage regions in the app.'], noRegion: ['بدون', 'None'],
+  shown: ['ظاهرة للعملاء', 'Shown to customers'], hiddenFromCustomers: ['مخفية عن العملاء', 'Hidden from customers'], hiddenTag: ['مخفية', 'Hidden'],
+  moveUp: ['تحريك للأعلى', 'Move up'], moveDown: ['تحريك للأسفل', 'Move down'], sortAZ: ['ترتيب أبجدي', 'Sort A–Z'],
+  deleteGovBody: ['ستُحذف المحافظة وكل ولاياتها. العملاء الذين اختاروا ولاية منها يعودون إلى الموقع الافتراضي.', 'The governorate and all its wilayats are deleted. Customers who picked one of them go back to the default location.'],
+  deleteWilBody: ['العملاء الذين اختاروا هذه الولاية يعودون إلى الموقع الافتراضي. يمكنك إخفاؤها بدل حذفها.', 'Customers who picked this wilayat go back to the default location. You can hide it instead of deleting it.'],
 
   // Overview
   overviewSub: ['حالة المنصة الآن ونشاط آخر ٧ أيام.', 'The platform right now, and activity over the last 7 days.'],
