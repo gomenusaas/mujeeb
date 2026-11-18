@@ -32,8 +32,8 @@ export function helpers(a: App) {
   return { cat, cname, cshort, gname, covText, num, coName, city, coV, albV, svcV };
 }
 
-/** Photos shown on a project page (the demo pads short albums to six). The photo viewer uses the same list. */
-export const albumPhotos = (al: Album) => al.imgs.concat(al.imgs).slice(0, 6);
+/** Photos shown on a project page (each once). The photo viewer uses the same list. */
+export const albumPhotos = (al: Album) => al.imgs;
 
 /** One photo or video. `src` is an Unsplash id (demo) or a full URL; `al` is the project it belongs to. */
 export interface Media { src: string; video: boolean; al?: Album }
@@ -227,10 +227,10 @@ export const MetaLine = ({ icon, children, size = 13, style }: { icon: string; c
 );
 
 /** WhatsApp, Call and Follow on company & service pages. Directions live in the company page's top bar. */
-export function ContactGrid({ a, co }: { a: App; co: Company }) {
+export function ContactGrid({ a, co, waText }: { a: App; co: Company; waText?: string }) {
   const { t } = a;
   const items = [
-    { icon: 'message-circle', label: t.whatsapp, tone: 'green', go: () => openWhatsApp(a, co) },
+    { icon: 'message-circle', label: t.whatsapp, tone: 'green', go: () => openWhatsApp(a, co, waText) },
     { icon: 'phone', label: t.call, tone: 'sky', go: () => callPhone(a, co.phone, co.id) },
     { icon: a.follows[co.id] ? 'user-check' : 'user-plus', label: a.follows[co.id] ? t.following : t.follow, tone: 'amber', on: !!a.follows[co.id], go: () => a.toggleFollow(co.id) },
   ];
@@ -250,10 +250,11 @@ export function ContactGrid({ a, co }: { a: App; co: Company }) {
 
 /* Deep links. Each tap is logged for the company's stats (Supabase only); clicks are interactions, not confirmed business. */
 const digits = (p: string) => p.replace(/[^\d]/g, '');
-export function openWhatsApp(a: App, co: Company) {
+/** Opens a WhatsApp chat with the company, optionally with a ready-made message. */
+export function openWhatsApp(a: App, co: Company, text?: string) {
   a.showToast(a.t.opening, 'info');
   remote.track(co.id, 'whatsapp');
-  window.open('https://wa.me/' + digits(co.phone), '_blank', 'noopener');
+  window.open('https://wa.me/' + digits(co.phone) + (text ? '?text=' + encodeURIComponent(text) : ''), '_blank', 'noopener');
 }
 /**
  * Opens the phone's maps app with directions to a branch: to its map pin when the company has set one in

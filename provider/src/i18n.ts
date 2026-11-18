@@ -82,6 +82,8 @@ export const STR = {
   svcCoverNone: ['لا يوجد غلاف بعد، فتظهر الصورة الأولى من صور العمل. ارفع صورة حقيقية من أعمالكم.', 'No cover yet, so the first work photo is shown. Upload a real photo of your own work.'],
   svcCoverPreview: ['معاينة أعلى صفحة الخدمة في تطبيق العملاء', 'Preview of the top of the service page in the customer app'],
   svcPhotosHelp: ['تظهر صفًا من الصور في صفحة الخدمة، وتُفتح بملء الشاشة. JPG أو PNG.', 'Shown as a row of photos on the service page; they open full screen. JPG or PNG.'],
+  projDescAr: ['وصف المشروع بالعربية', 'Project description (Arabic)'], projDescEn: ['وصف المشروع بالإنجليزية', 'Project description (English)'],
+  projDone: ['شهر الإنجاز', 'Month completed'], projArea: ['المساحة (م²)', 'Area (m²)'], projWeeks: ['المدة (أسابيع)', 'Duration (weeks)'], optional: ['اختياري', 'Optional'],
   projService: ['الخدمة', 'Service'], noService: ['بدون خدمة', 'No service'],
   projServiceHelp: ['صور هذا المشروع وفيديوهاته تظهر في صفحة هذه الخدمة لدى العملاء.', "This project's photos and videos show on this service's page for customers."],
   svcFromProjects: ['صور الخدمة تأتي تلقائيًا من مشاريعها. اربط المشروع بهذه الخدمة من صفحة المشاريع، واستخدم العين لإخفاء أي صورة.', "The service's photos come from its projects automatically. Link a project to this service on the Projects page, and use the eye to hide any photo."],

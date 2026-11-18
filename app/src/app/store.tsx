@@ -8,7 +8,7 @@ import { STORIES } from '../data/stories';
 import { DEFAULT_WILAYAT, OMAN, findWilayat, wilayatLabel } from '../data/oman';
 
 export type Screen = 'home' | 'categories' | 'explore' | 'profile' | 'listing' | 'company' | 'service' | 'album'
-  | 'booking' | 'bkDone' | 'bookings' | 'favs' | 'notifs' | 'story' | 'photo' | 'svcGallery' | 'svcList';
+  | 'booking' | 'bkDone' | 'bookings' | 'notifs' | 'story' | 'photo' | 'svcGallery' | 'svcList';
 export type RootTab = 'home' | 'categories' | 'explore' | 'profile';
 /** `src` + `i`: which photo a `photo` route shows (of the album or service `id`). */
 export interface Route { s: Screen; id?: string; cat?: number; co?: string; src?: 'album' | 'service' | 'gallery' | 'explore'; i?: number;
@@ -32,6 +32,26 @@ export interface BookingDraft { co: string; purpose: string; city: string; gov: 
 
 const DEFAULT_F: Filters = { gov: 'all', verified: false, sort: 'rel', q: '' };
 const LS = 'mujeeb.v1';
+const TRAIL = 'mujeeb.trail';
+
+/** The back trail saved for this tab, if it still ends on the page in the address bar. */
+function restoreTrail(catalog: Catalog): { stack: Route[]; tab: RootTab } | null {
+  try {
+    const t = JSON.parse(sessionStorage.getItem(TRAIL) || 'null') as { stack: Route[]; tab: RootTab } | null;
+    if (!t?.stack?.length) return null;
+    const here = location.pathname.replace(/\/+$/, '') || '/';
+    if (routeToPath(t.stack[t.stack.length - 1]) !== here) return null;
+    // Every page in it must still exist (a company, service or project may have been removed since).
+    const has = (list: { id: string }[], id?: string) => !!id && list.some(x => x.id === id);
+    const ok = (r: Route) =>
+      r.s === 'company' || r.s === 'svcList' ? has(catalog.companies, r.id)
+      : r.s === 'service' || r.s === 'svcGallery' ? has(catalog.services, r.id)
+      : r.s === 'album' ? has(catalog.albums, r.id)
+      : r.s === 'photo' ? (r.src === 'explore' || (r.src === 'gallery' ? has(catalog.companies, r.id) : r.src === 'service' ? has(catalog.services, r.id) : has(catalog.albums, r.id)))
+      : r.s !== 'story' && r.s !== 'booking' && r.s !== 'bkDone';
+    return t.stack.every(ok) ? t : null;
+  } catch { return null; }
+}
 
 interface Persisted { lang: Lang; fav: Record<string, boolean>; bookings: Booking[]; seq: { bk: number }; seen: Record<string, boolean>; listView: ListView; follows: Record<string, boolean>; wilayat: string }
 
@@ -43,7 +63,9 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
   const saved = useRef(readPersisted()).current;
   const [lang, setLang] = useState<Lang>(saved.lang || 'ar');
   // Opening a shared link (e.g. /company/c4) starts on that screen.
-  const initial = useRef(pathToStack(location.pathname, catalog, catalog.stories ?? STORIES)).current;
+  // After a reload in the same tab, pick the back trail up where it was (kept in sessionStorage); a new
+  // tab or a shared link builds one from the address instead.
+  const initial = useRef(restoreTrail(catalog) ?? pathToStack(location.pathname, catalog, catalog.stories ?? STORIES)).current;
   const [stack, setStack] = useState<Route[]>(initial.stack);
   const [tab, setTabState] = useState<RootTab>(initial.tab);
   const [toast, setToast] = useState<{ msg: string; tone: string } | null>(null);
@@ -92,6 +114,11 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
     document.documentElement.dir = ar ? 'rtl' : 'ltr';
     document.title = ar ? 'مجيب' : 'MUJEEB';
   }, [lang, ar]);
+
+  // Keep the back trail for this tab, so a reload doesn't lose it.
+  useEffect(() => {
+    try { sessionStorage.setItem(TRAIL, JSON.stringify({ stack, tab })); } catch { /* storage unavailable */ }
+  }, [stack, tab]);
 
   // The address bar follows the screen on top, so the URL is always shareable.
   useEffect(() => {

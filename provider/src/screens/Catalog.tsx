@@ -16,6 +16,8 @@ type Item = {
   cover?: string | null;
   /** Projects only: the service it shows under. */
   service_id?: string | null;
+  /** Projects only: page details. done = "YYYY-MM"; area and weeks as typed. */
+  d_ar?: string; d_en?: string; done?: string; area?: string; weeks?: string;
 };
 
 function Tile({ item, sub, onEdit, onDelete, n, thumb }: { item: Item; sub: string; onEdit: () => void; onDelete: () => void; n?: number; thumb?: string }) {
@@ -98,6 +100,17 @@ function Editor({ title, initial, isProject, onClose, onSave, services, linked }
               options={[{ value: '', label: t.noService }, ...inCat(x.category_id).map(s => ({ value: s.id!, label: p.pick(s.title_ar, s.title_en) }))]} />
             <span style={{ font: 'var(--type-caption)', fontWeight: 500, color: 'var(--text-tertiary)' }}>{t.projServiceHelp}</span>
           </div>
+        )}
+        {isProject && (
+          <>
+            <Field label={t.projDescAr} dir="rtl" multiline rows={3} value={x.d_ar || ''} onChange={v => set({ d_ar: v })} />
+            <Field label={t.projDescEn} dir="ltr" multiline rows={3} value={x.d_en || ''} onChange={v => set({ d_en: v })} />
+            <Field label={t.projDone} type="month" dir="ltr" value={x.done || ''} onChange={v => set({ done: v })} help={t.optional} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <Field label={t.projArea} type="number" dir="ltr" value={x.area || ''} onChange={v => set({ area: v.replace(/[^0-9]/g, '') })} help={t.optional} />
+              <Field label={t.projWeeks} type="number" dir="ltr" value={x.weeks || ''} onChange={v => set({ weeks: v.replace(/[^0-9]/g, '') })} help={t.optional} />
+            </div>
+          </>
         )}
       </div>
       {!isProject && (
@@ -182,7 +195,8 @@ export function Services() {
 
 /* ───────────────────────── Projects (portfolio albums) ───────────────────────── */
 
-const albToItem = (a: Album): Item => ({ id: a.id, title_ar: a.title_ar, title_en: a.title_en, category_id: a.category_id, photos: a.photos, is_published: a.is_published, a_ar: a.place_ar || '', a_en: a.place_en || '', videos: a.videos || [], hidden: a.gallery_hidden || [], service_id: a.service_id ?? null });
+const albToItem = (a: Album): Item => ({ id: a.id, title_ar: a.title_ar, title_en: a.title_en, category_id: a.category_id, photos: a.photos, is_published: a.is_published, a_ar: a.place_ar || '', a_en: a.place_en || '', videos: a.videos || [], hidden: a.gallery_hidden || [], service_id: a.service_id ?? null,
+  d_ar: a.description_ar || '', d_en: a.description_en || '', done: a.completed_on ? a.completed_on.slice(0, 7) : '', area: a.area_m2 ? String(a.area_m2) : '', weeks: a.duration_weeks ? String(a.duration_weeks) : '' });
 
 export function Projects() {
   const p = useP();
@@ -199,7 +213,9 @@ export function Projects() {
   const save = async (x: Item) => {
     const base = edit && edit !== 'new' ? edit : { company_id: company.id, position: 0 };
     await repo.saveAlbum({ ...base, id: x.id, company_id: company.id, category_id: x.category_id, title_ar: x.title_ar, title_en: x.title_en, place_ar: x.a_ar.trim() || null, place_en: x.a_en.trim() || null, photos: x.photos, cover_photo: x.photos[0], is_published: x.is_published,
-      videos: x.videos || [], gallery_hidden: (x.hidden || []).filter(h => x.photos.includes(h) || (x.videos || []).includes(h)), service_id: x.service_id ?? null } as Album);
+      videos: x.videos || [], gallery_hidden: (x.hidden || []).filter(h => x.photos.includes(h) || (x.videos || []).includes(h)), service_id: x.service_id ?? null,
+      description_ar: (x.d_ar || '').trim(), description_en: (x.d_en || '').trim(), completed_on: x.done ? x.done + '-01' : null,
+      area_m2: Number(x.area) > 0 ? Math.round(Number(x.area)) : null, duration_weeks: Number(x.weeks) > 0 ? Math.round(Number(x.weeks)) : null } as Album);
     p.showToast(t.saved); setEdit(null); reload();
   };
   const remove = async () => {

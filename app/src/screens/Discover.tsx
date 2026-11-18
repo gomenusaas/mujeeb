@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Avatar, Badge, BottomSheet, CategoryCard, Chip, Icon, IconButton, SectionHeader } from '../ds';
 import { useApp } from '../app/store';
-import { HScroll, Img, MetaLine, card, exploreMedia, helpers, stop } from '../app/view';
+import { HScroll, Img, MetaLine, card, exploreMedia, helpers } from '../app/view';
 import { logoUrl, photo } from '../data/api';
 import { StoryRow } from './Stories';
 import { Masonry } from './Provider';
@@ -95,7 +95,6 @@ export function Home() {
             <div key={co.id} onClick={co.open} style={{ flex: 'none', width: 260, scrollSnapAlign: 'start', ...card, overflow: 'hidden', cursor: 'pointer' }}>
               <div style={{ position: 'relative', aspectRatio: '16/9', background: co.c100 }}>
                 <Img src={co.cover} />
-                <span style={{ position: 'absolute', top: 8, insetInlineEnd: 8 }} onClick={stop}><IconButton icon="heart" variant="glass" size={34} active={co.fav} onClick={co.onFav} label={t.favorites} /></span>
               </div>
               <div style={{ padding: '12px 14px 14px', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                 <Avatar name={co.name} src={co.logo} size={44} verified={co.verified} />

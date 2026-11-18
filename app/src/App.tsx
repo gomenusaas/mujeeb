@@ -11,7 +11,7 @@ import { BookingPage, DonePage } from './screens/Flows';
 import { StoryViewer } from './screens/Stories';
 import { PhotoViewer } from './screens/Photo';
 import { STORIES } from './data/stories';
-import { Bookings, Favorites, Notifications, Profile } from './screens/Account';
+import { Bookings, Notifications, Profile } from './screens/Account';
 import { AuthSheet } from './screens/Auth';
 
 const TABS: { id: RootTab; icon: string }[] = [
@@ -166,7 +166,6 @@ function ScreenSwitch({ route }: { route: Route }) {
     case 'booking': return <BookingPage />;
     case 'bkDone': return <DonePage />;
     case 'bookings': return <Bookings />;
-    case 'favs': return <Favorites />;
     case 'notifs': return <Notifications />;
     case 'story': case 'photo': return null;
   }

@@ -36,8 +36,10 @@ export interface Album {
   videos: string[];
   /** Photos and videos kept out of the company's galleries (company page, service page, Explore). */
   gallery_hidden: string[];
-  /** The service this project shows under on the customer app (its photo strip). Null = none. */
+  /** The service this project belongs to on the customer app. Null = none. */
   service_id: string | null;
+  /** Project page details (all optional). completed_on is the 1st of the month it was completed. */
+  description_ar: string; description_en: string; completed_on: string | null; area_m2: number | null; duration_weeks: number | null;
 }
 export interface Story {
   id?: string; company_id: string; kind: 'image' | 'video'; media_url: string; poster_url: string | null;
@@ -219,7 +221,7 @@ type DemoData = {
   gov: Record<string, [string, string]>;
   companies: { id: string; ar: string; en: string; cats: number[]; hrs?: (string[] | null)[]; cityAr: string; cityEn: string; gov: string; img: string; verified: boolean; phone: string; since: number; dar: string; den: string; branches: [string, string, boolean][] }[];
   services: { id: string; co: string; cat: number; ar: string; en: string; imgs: string[]; dar: string; den: string; cover?: string }[];
-  albums: { svc?: string; id: string; co: string; cat: number; ar: string; en: string; pAr: string; pEn: string; img: string; imgs: string[]; vids?: string[]; added: string }[];
+  albums: { svc?: string; dAr?: string; dEn?: string; done?: string; area?: number; weeks?: number; id: string; co: string; cat: number; ar: string; en: string; pAr: string; pEn: string; img: string; imgs: string[]; vids?: string[]; added: string }[];
 };
 
 async function demoRepo(): Promise<Repo> {
@@ -243,6 +245,7 @@ async function demoRepo(): Promise<Repo> {
   let albums: Album[] = d.albums.filter(a => a.co === CID).map((a, k) => ({
     id: a.id, company_id: CID, category_id: a.cat, title_ar: a.ar, title_en: a.en, place_ar: a.pAr, place_en: a.pEn, photos: a.imgs, cover_photo: a.img, is_published: true, position: k, created_at: a.added,
     videos: a.vids || [], gallery_hidden: [], service_id: a.svc ?? null,
+    description_ar: a.dAr || '', description_en: a.dEn || '', completed_on: a.done ?? null, area_m2: a.area ?? null, duration_weeks: a.weeks ?? null,
   }));
   let week: DayHours[] = Array.from({ length: 7 }, (_, d) => {
     const h = co.hrs?.[d];

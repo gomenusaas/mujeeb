@@ -75,7 +75,8 @@ export async function loadCatalog(): Promise<Catalog> {
   })).sort((a, b) => sortKey(a.id) - sortKey(b.id));
   const categories: Category[] = cats.map(c => ({ i: c.id, ar: c.name_ar, en: c.name_en, sar: c.short_ar, sen: c.short_en, icon: c.icon, color: c.color, art: c.art_url }));
   const services: Service[] = svcs.map(s => ({ id: s.id, co: s.company_id, cat: s.category_id, ar: s.title_ar, en: s.title_en, imgs: s.photos, dar: s.description_ar, den: s.description_en, cover: s.cover_url || undefined }));
-  const albums: Album[] = albs.map(a => ({ id: a.id, co: a.company_id, cat: a.category_id, ar: a.title_ar, en: a.title_en, pAr: a.place_ar, pEn: a.place_en, n: a.photo_count, img: a.cover_photo, imgs: a.photos, added: a.created_at, vids: a.videos || [], hide: a.gallery_hidden || [], svc: a.service_id || undefined }));
+  const albums: Album[] = albs.map(a => ({ id: a.id, co: a.company_id, cat: a.category_id, ar: a.title_ar, en: a.title_en, pAr: a.place_ar, pEn: a.place_en, n: a.photo_count, img: a.cover_photo, imgs: a.photos, added: a.created_at, vids: a.videos || [], hide: a.gallery_hidden || [], svc: a.service_id || undefined,
+    dAr: a.description_ar || '', dEn: a.description_en || '', done: a.completed_on || undefined, area: a.area_m2 ?? undefined, weeks: a.duration_weeks ?? undefined }));
   // Live stories (RLS only returns ones that haven't expired). A video without a poster uses the company cover.
   const { data: st } = await sb.from('stories').select('*').order('created_at', { ascending: false });
   const coverOf = new Map(companies.map(c => [c.id, c.img]));

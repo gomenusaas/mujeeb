@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Avatar, Badge, BottomSheet, Button, Chip, EmptyState, Icon, IconButton, ListItem } from '../ds';
+import { Avatar, Badge, BottomSheet, Button, Icon, ListItem } from '../ds';
 import { useApp } from '../app/store';
-import { Img, TopBar, card, helpers, openWhatsApp, stop } from '../app/view';
+import { TopBar, card, helpers, openWhatsApp } from '../app/view';
 import { BK_ST, NOTIFS, PURPOSES } from '../i18n/strings';
 import { auth, logoUrl, remote } from '../data/api';
 
@@ -18,7 +18,7 @@ const badge = (m: Record<string, readonly [string, string, string]>, k: string, 
 
 export function Profile() {
   const a = useApp();
-  const { t, ar, bookings, fav, me } = a;
+  const { t, ar, bookings, me } = a;
   const [askDelete, setAskDelete] = useState(false);
   const [countryOpen, setCountryOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -27,7 +27,6 @@ export function Profile() {
   const live = auth.enabled;
   const rows = [
     ...(live ? [] : [{ icon: 'calendar-check', color: 'amber', title: t.myBookings, sub: String(bookings.filter(b => ['pending', 'confirmed', 'reschedule'].includes(b.st)).length) + ' ' + t.active, go: () => a.go('bookings') }]),
-    { icon: 'heart', color: 'pink', title: t.favorites, sub: Object.values(fav).filter(Boolean).length + t.companiesN, go: () => (live && !me ? a.setAuthStep('signin') : a.go('favs')) },
     ...(live ? [] : [{ icon: 'bell', color: 'sky', title: t.notifications, sub: NOTIFS.length + t.newN, go: () => a.go('notifs') }]),
     { icon: 'globe', color: 'violet', title: t.country, sub: COUNTRIES[0].flag + ' ' + (ar ? COUNTRIES[0].ar : COUNTRIES[0].en), go: () => setCountryOpen(true) },
     { icon: 'languages', color: 'teal', title: t.language, sub: t.langName, go: () => a.setLang(ar ? 'en' : 'ar') },
@@ -148,55 +147,6 @@ export function Bookings() {
             </div>
           );
         })}
-      </div>
-    </div>
-  );
-}
-
-/** Saved companies grouped under the app's main categories (each under its primary category), with filter chips. */
-export function Favorites() {
-  const a = useApp();
-  const { t, catalog, fav } = a;
-  const h = helpers(a);
-  const [only, setOnly] = useState(-1);
-  const saved = catalog.companies.filter(c => fav[c.id]);
-  const groups = catalog.cats
-    .map(cat => ({ cat, list: saved.filter(c => c.cats[0] === cat.i).map(h.coV) }))
-    .filter(g => g.list.length);
-  const shown = only < 0 ? groups : groups.filter(g => g.cat.i === only);
-  return (
-    <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
-      <TopBar title={t.favorites} onBack={a.back}>
-        {groups.length > 1 && (
-          <div className="mj-s" style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '2px 20px 12px', scrollbarWidth: 'none' }}>
-            <Chip size="sm" selected={only < 0} onClick={() => setOnly(-1)}>{t.all + ' (' + h.num(saved.length) + ')'}</Chip>
-            {groups.map(g => (
-              <Chip key={g.cat.i} size="sm" icon={g.cat.icon} selected={only === g.cat.i} onClick={() => setOnly(g.cat.i)}>{h.cshort(g.cat.i) + ' (' + h.num(g.list.length) + ')'}</Chip>
-            ))}
-          </div>
-        )}
-      </TopBar>
-      {!saved.length && <EmptyState icon="heart" color="pink" title={t.noFav} body={t.noFavBody} />}
-      <div style={{ padding: '8px 20px 40px', display: 'flex', flexDirection: 'column', gap: 22 }}>
-        {shown.map(({ cat, list }) => (
-          <section key={cat.i} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ flex: 'none', width: 32, height: 32, borderRadius: 10, background: 'var(--cat-' + cat.color + '-100)', color: 'var(--cat-' + cat.color + '-600)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name={cat.icon} size={17} /></span>
-              <span style={{ flex: 1, minWidth: 0, font: 'var(--type-title)' }}>{h.cname(cat.i)}</span>
-              <span style={{ font: 'var(--type-caption)', color: 'var(--text-tertiary)' }}>{h.num(list.length)}</span>
-            </span>
-            {list.map(co => (
-              <div key={co.id} onClick={co.open} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: 12, ...card, cursor: 'pointer' }}>
-                <span style={{ flex: 'none', width: 88, aspectRatio: '4/3', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}><Img src={co.cover} /></span>
-                <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
-                  <span style={{ font: 'var(--type-title)' }}>{co.name}</span>
-                  <span style={{ font: 'var(--type-caption)', fontWeight: 500, color: 'var(--text-tertiary)' }}>{co.city}</span>
-                </span>
-                <span onClick={stop}><IconButton icon="heart" variant="plain" size={40} active={co.fav} onClick={co.onFav} label={t.favorites} /></span>
-              </div>
-            ))}
-          </section>
-        ))}
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { Avatar, Badge, BottomSheet, Button, EmptyState, Icon, IconButton, ListItem, SearchBar, SectionHeader } from '../ds';
 import { useApp, type Filters, type ListView, type SheetKey } from '../app/store';
-import { ContactGrid, HScroll, Img, MetaLine, TopBar, albumMedia, callPhone, card, companyGallery, helpers, listingCompanies, openDirections, openWhatsApp, serviceGallery, serviceImage, stop, type Media } from '../app/view';
+import { ContactGrid, HScroll, Img, MetaLine, TopBar, albumMedia, callPhone, card, companyGallery, helpers, listingCompanies, openDirections, openWhatsApp, serviceGallery, serviceImage, type Media } from '../app/view';
 import { logoUrl, photo, remote } from '../data/api';
 import type { Company } from '../data/types';
 import { WEEK_ORDER, dayName, fmtTime, isOpenNow, muscatToday, shifts } from '../app/hours';
@@ -169,7 +169,6 @@ export function Listing() {
             <div key={co.id} onClick={co.open} style={{ ...card, overflow: 'hidden', cursor: 'pointer' }}>
               <div style={{ position: 'relative', aspectRatio: '4/3', maxHeight: 200, width: '100%', background: co.c100 }}>
                 <Img src={co.cover} />
-                <span style={{ position: 'absolute', top: 10, insetInlineEnd: 10 }} onClick={stop}><IconButton icon="heart" variant="glass" size={38} active={co.fav} onClick={co.onFav} label={t.favorites} /></span>
               </div>
               <div style={{ padding: '14px 16px 16px', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                 <Avatar name={co.name} src={co.logo} size={48} verified={co.verified} />
@@ -373,7 +372,6 @@ export function CompanyPage() {
       <div style={{ position: 'relative', marginTop: -28, borderRadius: '28px 28px 0 0', background: 'var(--bg-app)', padding: '0 20px 28px', display: 'flex', flexDirection: 'column', gap: 18, flex: 1 }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 14, marginTop: -36 }}>
           <Avatar name={cv.name} src={cv.logo} size={84} verified={cv.verified} style={{ borderRadius: '50%', boxShadow: '0 0 0 4px var(--bg-app)' }} />
-          <FavButton id={co.id} />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <span style={{ font: 'var(--type-h1)' }}>{cv.name}</span>
@@ -478,18 +476,6 @@ function HoursSheet({ co }: { co: Company }) {
   );
 }
 
-/** Round favorite button beside the company logo (company and service pages): grey outline heart, filled red once saved. */
-function FavButton({ id }: { id: string }) {
-  const a = useApp();
-  const on = !!a.fav[id];
-  return (
-    <button type="button" className="mj-press" aria-label={a.t.favorites} title={a.t.favorites} aria-pressed={on} onClick={() => a.toggleFav(id)}
-      style={{ flex: 'none', alignSelf: 'center', width: 46, height: 46, borderRadius: '50%', border: 'none', background: 'var(--surface-card)', color: on ? 'var(--danger)' : 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 4px var(--bg-app), var(--shadow-sm)', transition: 'color var(--dur-base)' }}>
-      <Icon name="heart" size={26} filled={on} />
-    </button>
-  );
-}
-
 export const CatTag = ({ color, children, h = 28, pad = 12 }: { color: string; children: React.ReactNode; h?: number; pad?: number }) => (
   <span style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', height: h, padding: '0 ' + pad + 'px', borderRadius: 'var(--radius-pill)', background: 'var(--cat-' + color + '-100)', color: 'var(--cat-' + color + '-800)', font: 'var(--type-caption)' }}>{children}</span>
 );
@@ -561,7 +547,6 @@ export function ServicePage() {
             style={{ padding: 0, border: 'none', background: 'none', borderRadius: '50%', cursor: 'pointer' }}>
             <Avatar name={h.coName(co)} src={logoUrl(co.id)} size={84} verified={co.verified} style={{ borderRadius: '50%', boxShadow: '0 0 0 4px var(--bg-app)' }} />
           </button>
-          <FavButton id={co.id} />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <CatTag color={color} h={26} pad={10}>{h.cname(s.cat)}</CatTag>
@@ -601,20 +586,68 @@ export function AlbumPage() {
   const h = helpers(a);
   const al = a.idx.alb.get(top.id!)!;
   const co = a.idx.co.get(al.co)!;
+  const svc = al.svc ? a.idx.svc.get(al.svc) : undefined;
   const media = albumMedia(al);
+  const title = ar ? al.ar : al.en;
+  const desc = (ar ? al.dAr : al.dEn) || '';
+  const [more, setMore] = useState(false);
+  const color = a.catalog.cats[al.cat]?.color ?? 'violet';
+  const done = al.done ? new Date(al.done + 'T12:00:00').toLocaleDateString(ar ? 'ar-OM' : 'en-GB', { month: 'long', year: 'numeric' }) : '';
+  const photos = media.filter(m => !m.video).length, vids = media.length - photos;
+  // WhatsApp opens with a message naming this project and linking back to it.
+  const link = location.origin + '/album/' + al.id;
+  const waText = t.waProject.replace('{p}', title).replace('{url}', link);
+  const chip = (icon: string, text: string) => (
+    <span key={icon} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 32, padding: '0 12px', borderRadius: 'var(--radius-pill)', background: 'var(--neutral-100)', font: 'var(--type-body-sm)', fontWeight: 600, color: 'var(--text-secondary)' }}>
+      <Icon name={icon} size={15} />{text}
+    </span>
+  );
   return (
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
-      <TopBar title={ar ? al.ar : al.en} subtitle={al.n + ' ' + t.photos + (al.vids?.length ? ' · ' + h.num(al.vids.length) + ' ' + t.video : '')} onBack={a.back} />
-      <div style={{ padding: '8px 20px 28px', display: 'flex', flexDirection: 'column', gap: 16, flex: 1 }}>
-        <div onClick={() => a.go('company', { id: co.id })} style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
-          <Avatar name={h.coName(co)} src={logoUrl(co.id)} size={40} verified={co.verified} />
-          <span style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-            <span style={{ font: 'var(--type-body-strong)' }}>{h.coName(co)}</span>
-            <span style={{ font: 'var(--type-caption)', fontWeight: 500, color: 'var(--text-tertiary)' }}>{(ar ? al.pAr : al.pEn)} · {h.cname(al.cat)}</span>
-          </span>
-          <Button variant="secondary" size="sm" onClick={() => a.go('company', { id: co.id })}>{t.viewProfile}</Button>
+      {/* Header: the project's cover, with back and share. */}
+      <div style={{ position: 'relative', height: HERO_H, background: 'var(--cat-' + color + '-100)' }}>
+        <img src={photo(al.img || al.imgs[0], 900)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+        <div style={{ position: 'absolute', top: 'calc(var(--top-inset) + 4px)', insetInline: 16, display: 'flex', justifyContent: 'space-between' }}>
+          <IconButton icon="arrow-left" variant="glass" size={40} onClick={a.back} label="Back" />
+          <IconButton icon="share-2" variant="glass" size={40} label={t.share} onClick={() => a.sharePage(top, title + ' · ' + h.coName(co), desc || undefined)} />
         </div>
-        <div style={{ columns: 2, columnGap: 10 }}>
+      </div>
+      <div style={{ position: 'relative', marginTop: -28, borderRadius: '28px 28px 0 0', background: 'var(--bg-app)', padding: '22px 20px 28px', display: 'flex', flexDirection: 'column', gap: 16, flex: 1 }}>
+        {/* What the project is: title, where and when, the service it belongs to, description, facts. */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {svc && (
+            <button type="button" onClick={() => a.go('service', { id: svc.id })} style={{ alignSelf: 'flex-start', border: 'none', padding: 0, background: 'none', cursor: 'pointer' }}>
+              <CatTag color={color} h={26} pad={10}>{ar ? svc.ar : svc.en}</CatTag>
+            </button>
+          )}
+          <span style={{ font: 'var(--type-h1)' }}>{title}</span>
+          <span style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '4px 12px', font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }}>
+            {(ar ? al.pAr : al.pEn) && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="map-pin" size={14} />{ar ? al.pAr : al.pEn}</span>}
+            {done && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="calendar-check" size={14} />{t.completedIn} {done}</span>}
+          </span>
+          {desc && (
+            <span style={{ font: 'var(--type-body)', color: 'var(--text-secondary)', textWrap: 'pretty', ...(more ? {} : { display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }) }}>{desc}</span>
+          )}
+          {desc.length > 140 && (
+            <button type="button" onClick={() => setMore(m => !m)} style={{ alignSelf: 'flex-start', border: 'none', padding: 0, background: 'none', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 700, fontFamily: 'var(--font-sans)', color: 'var(--brand)' }}>{more ? t.showLess : t.readMore}</button>
+          )}
+          <span style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+            {al.area ? chip('ruler', h.num(al.area) + ' ' + t.areaM2) : null}
+            {al.weeks ? chip('hourglass', weeksText(a, al.weeks)) : null}
+            {chip('images', countOf(a, photos, { ar: ['صورة واحدة', 'صورتان', 'صور', 'صورة'], en: ['photo', 'photos'] }) + (vids ? ' · ' + countOf(a, vids, { ar: ['فيديو واحد', 'فيديوهان', 'فيديوهات', 'فيديو'], en: ['video', 'videos'] }) : ''))}
+          </span>
+        </div>
+        {/* Who did it (the whole row opens the company), and how to reach them about this project. */}
+        <div onClick={() => a.go('company', { id: co.id, act: al.cat })} style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', paddingTop: 4 }}>
+          <Avatar name={h.coName(co)} src={logoUrl(co.id)} size={44} verified={co.verified} />
+          <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+            <span style={{ font: 'var(--type-body-strong)' }}>{h.coName(co)}</span>
+            <span style={{ font: 'var(--type-caption)', fontWeight: 500, color: 'var(--text-tertiary)' }}>{h.city(co)} · {h.cname(al.cat)}</span>
+          </span>
+          <Icon name="chevron-right" size={18} color="var(--text-tertiary)" />
+        </div>
+        <ContactGrid a={a} co={co} waText={waText} />
+        <div style={{ columns: 2, columnGap: 10, marginTop: 4 }}>
           {media.map((m, k) => m.video
             ? <MediaTile key={k} m={m} w={600} onOpen={() => a.go('photo', { src: 'album', id: al.id, i: k })} style={{ breakInside: 'avoid', marginBottom: 10 }} />
             : <div key={k} onClick={() => a.go('photo', { src: 'album', id: al.id, i: k })} style={{ breakInside: 'avoid', marginBottom: 10, aspectRatio: ALB_RATIOS[k % ALB_RATIOS.length], borderRadius: 'var(--radius-md)', overflow: 'hidden', background: 'var(--neutral-100)', cursor: 'zoom-in' }}><Img src={photo(m.src, 600)} /></div>)}
@@ -622,6 +655,11 @@ export function AlbumPage() {
       </div>
     </div>
   );
+}
+
+/** "6 weeks" with Arabic number agreement (أسبوع واحد، أسبوعان، ٣–١٠ أسابيع، ١١+ أسبوعًا). */
+function weeksText(a: ReturnType<typeof useApp>, n: number) {
+  return countOf(a, n, { ar: ['أسبوع واحد', 'أسبوعان', 'أسابيع', 'أسبوعًا'], en: ['week', 'weeks'] });
 }
 
 /* ── Company menu bottom sheet (About, Branches, Address, Coverage, Contact, Website, Social) ── */

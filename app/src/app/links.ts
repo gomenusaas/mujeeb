@@ -50,13 +50,15 @@ export function pathToStack(path: string, catalog: Catalog, stories: Story[]): {
   // A category page (or all companies). Old category-gallery links (/category/1/gallery/…) land here too.
   if (a === 'category' && b != null && catalog.cats.some(x => String(x.i) === b)) return { stack: [home, { s: 'listing', cat: Number(b) }], tab: 'home' };
   if (a === 'companies') return { stack: [home, { s: 'listing' }], tab: 'home' };
+  // A shared service or project opens under its company, so Back goes to the company first.
+  const coOf = (id?: string): Route[] => (id && has.co(id) ? [{ s: 'company', id }] : []);
   if (a === 'service' && b && has.svc(b)) {
-    const base: Route[] = [home, { s: 'service', id: b }];
+    const base: Route[] = [home, ...coOf(catalog.services.find(x => x.id === b)?.co), { s: 'service', id: b }];
     if (c === 'gallery') return { stack: [...base, { s: 'svcGallery', id: b }], tab: 'home' };
     return { stack: c === 'photo' ? [...base, { s: 'photo', src: 'service', id: b, i: Number(d) || 0 }] : base, tab: 'home' };
   }
   if (a === 'album' && b && has.alb(b)) {
-    const base: Route[] = [home, { s: 'album', id: b }];
+    const base: Route[] = [home, ...coOf(catalog.albums.find(x => x.id === b)?.co), { s: 'album', id: b }];
     return { stack: c === 'photo' ? [...base, { s: 'photo', src: 'album', id: b, i: Number(d) || 0 }] : base, tab: 'home' };
   }
   if (a === 'story' && b && stories.some(s => s.id === b)) return { stack: [home, { s: 'story', id: b }], tab: 'home' };

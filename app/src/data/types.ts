@@ -36,8 +36,10 @@ export interface Album {
   vids?: string[];
   /** Photos and videos the company keeps out of its galleries (company page, service page, Explore). */
   hide?: string[];
-  /** The service this project shows under (the service page's photo strip). */
+  /** The service this project belongs to. */
   svc?: string;
+  /** Project page details (optional): description, completion month (YYYY-MM-01), area in m², duration in weeks. */
+  dAr?: string; dEn?: string; done?: string; area?: number; weeks?: number;
 }
 
 export type BookingStatus = 'pending' | 'confirmed' | 'reschedule' | 'cancelled' | 'rejected' | 'completed' | 'noshow';
