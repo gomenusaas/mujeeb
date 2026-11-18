@@ -17,7 +17,7 @@ insert into public.categories (id, name_ar, name_en, short_ar, short_en, icon, c
   (6, 'الكاميرات والأنظمة الأمنية والمراقبة', 'Cameras, Security & Surveillance', 'كاميرات ومراقبة', 'Security & CCTV', 'cctv', 'indigo', 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Video%20camera/3D/video_camera_3d.png', 6),
   (7, 'أنظمة الحريق والإنذار', 'Fire & Alarm Systems', 'حريق وإنذار', 'Fire & alarm', 'fire-extinguisher', 'ruby', 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Fire%20extinguisher/3D/fire_extinguisher_3d.png', 7),
   (8, 'تصميم الحدائق', 'Garden Design', 'حدائق', 'Gardens', 'trees', 'green', 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Potted%20plant/3D/potted_plant_3d.png', 8),
-  (9, 'المطابخ والخزانات', 'Kitchens & Cabinets', 'مطابخ', 'Kitchens', 'chef-hat', 'wood', 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Cooking/3D/cooking_3d.png', 9);
+  (9, 'المطابخ والخزانات والأبواب', 'Kitchens, Cabinets & Doors', 'مطابخ', 'Kitchens', 'chef-hat', 'wood', 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Cooking/3D/cooking_3d.png', 9);
 insert into public.working_hours (id, days_ar, days_en, hours) values
   (0, 'السبت – الخميس', 'Sat – Thu', '8:00 – 18:00'),
   (1, 'الجمعة', 'Friday', null);
