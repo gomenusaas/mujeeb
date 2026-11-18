@@ -5,21 +5,19 @@ import type { RootTab, Route } from './store';
  * Page links. The address bar follows the screen on top, and opening a link rebuilds the screen
  * stack, so anything shared opens on the same page:
  *   /company/c4           company profile        /category/1             companies in a category
- *   /service/s7           service page           /service/s7/photo/0     one photo of a service
+ *   /company/c4/service/s7  company profile with one of its services picked (its projects show)
+ *   /service/s7           (old links) the same as /company/<its company>/service/s7   /service/s7/photo/0  one photo of a service
  *   /album/a3             project (album)        /album/a3/photo/2       one photo of a project
  *   /story/<id>           a story (photo or video)   /company/c4/gallery/3   one item of a company's gallery
- *   /service/s7/gallery     all of a service's photos and videos   /company/c4/services   all of a company's services
+ *   (old) /service/s7/gallery and /company/c4/services open the company page
  *   /explore/photo/3  /explore/4/photo/3   one item of the Explore gallery (all, or category 4)
  *   /categories /explore /profile               the other tabs
  */
 
 export function routeToPath(r: Route): string {
   switch (r.s) {
-    case 'company': return '/company/' + r.id;
+    case 'company': return '/company/' + r.id + (r.svc ? '/service/' + r.svc : '');
     case 'listing': return r.cat != null ? '/category/' + r.cat : '/companies';
-    case 'service': return '/service/' + r.id;
-    case 'svcGallery': return '/service/' + r.id + '/gallery';
-    case 'svcList': return '/company/' + r.id + '/services';
     case 'album': return '/album/' + r.id;
     case 'photo': return r.src === 'gallery' ? '/company/' + r.id + '/gallery/' + (r.i ?? 0)
       : r.src === 'explore' ? '/explore/' + (r.cat != null ? r.cat + '/' : '') + 'photo/' + (r.i ?? 0)
@@ -42,9 +40,11 @@ export function pathToStack(path: string, catalog: Catalog, stories: Story[]): {
     return { stack: [{ s: 'explore' }, { s: 'photo', src: 'explore', ...(cat != null && !isNaN(cat) ? { cat } : {}), i: Number(b === 'photo' ? c : d) || 0 }], tab: 'explore' };
   }
   if (a === 'categories' || a === 'explore' || a === 'profile') return { stack: [{ s: a }], tab: a };
+  // A service opens as its company's page with that service picked (and the activity it belongs to).
+  const atService = (id: string): Route => { const sv = catalog.services.find(x => x.id === id)!; return { s: 'company', id: sv.co, act: sv.cat, svc: sv.id }; };
   if (a === 'company' && b && has.co(b)) {
+    if (c === 'service' && d && has.svc(d) && catalog.services.find(x => x.id === d)?.co === b) return { stack: [home, atService(d)], tab: 'home' };
     const base: Route[] = [home, { s: 'company', id: b }];
-    if (c === 'services') return { stack: [...base, { s: 'svcList', id: b }], tab: 'home' };
     return { stack: c === 'gallery' ? [...base, { s: 'photo', src: 'gallery', id: b, i: Number(d) || 0 }] : base, tab: 'home' };
   }
   // A category page (or all companies). Old category-gallery links (/category/1/gallery/…) land here too.
@@ -52,9 +52,8 @@ export function pathToStack(path: string, catalog: Catalog, stories: Story[]): {
   if (a === 'companies') return { stack: [home, { s: 'listing' }], tab: 'home' };
   // A shared service or project opens under its company, so Back goes to the company first.
   const coOf = (id?: string): Route[] => (id && has.co(id) ? [{ s: 'company', id }] : []);
-  if (a === 'service' && b && has.svc(b)) {
-    const base: Route[] = [home, ...coOf(catalog.services.find(x => x.id === b)?.co), { s: 'service', id: b }];
-    if (c === 'gallery') return { stack: [...base, { s: 'svcGallery', id: b }], tab: 'home' };
+  if (a === 'service' && b && has.svc(b) && has.co(catalog.services.find(x => x.id === b)!.co)) {
+    const base: Route[] = [home, atService(b)];
     return { stack: c === 'photo' ? [...base, { s: 'photo', src: 'service', id: b, i: Number(d) || 0 }] : base, tab: 'home' };
   }
   if (a === 'album' && b && has.alb(b)) {

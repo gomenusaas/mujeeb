@@ -7,18 +7,20 @@ import { pathToStack, routeToPath, shareLink } from './links';
 import { STORIES } from '../data/stories';
 import { DEFAULT_WILAYAT, OMAN, findWilayat, wilayatLabel } from '../data/oman';
 
-export type Screen = 'home' | 'categories' | 'explore' | 'profile' | 'listing' | 'company' | 'service' | 'album'
-  | 'booking' | 'bkDone' | 'bookings' | 'notifs' | 'story' | 'photo' | 'svcGallery' | 'svcList';
+export type Screen = 'home' | 'categories' | 'explore' | 'profile' | 'listing' | 'company' | 'album'
+  | 'booking' | 'bkDone' | 'bookings' | 'notifs' | 'story' | 'photo';
 export type RootTab = 'home' | 'categories' | 'explore' | 'profile';
 /** `src` + `i`: which photo a `photo` route shows (of the album or service `id`). */
 export interface Route { s: Screen; id?: string; cat?: number; co?: string; src?: 'album' | 'service' | 'gallery' | 'explore'; i?: number;
   /** Company page (and its gallery viewer): the activity (category) shown; missing = all activities. */
   act?: number;
+  /** Company page: the service picked in its row of service chips (its description and projects show); missing = all (the gallery). */
+  svc?: string;
   /** Kept on a page while another page covers it, so Back returns to it as it was: */
   y?: number;      // scroll position
   f?: Filters }    // category page: search, filters and sort
 /** Pages that exist once in the back trail: opening one that's already there goes back to it. */
-const SINGLE: Screen[] = ['company', 'service', 'album', 'listing', 'svcGallery', 'svcList'];
+const SINGLE: Screen[] = ['company', 'album', 'listing'];
 const samePage = (x: Route, y: Route) => x.s === y.s && (x.id ?? '') === (y.id ?? '') && (x.cat ?? '') === (y.cat ?? '');
 /** Story and full-screen photo open over the page they were tapped on. */
 export const isOverlay = (r: Route) => r.s === 'story' || r.s === 'photo';
@@ -43,9 +45,10 @@ function restoreTrail(catalog: Catalog): { stack: Route[]; tab: RootTab } | null
     if (routeToPath(t.stack[t.stack.length - 1]) !== here) return null;
     // Every page in it must still exist (a company, service or project may have been removed since).
     const has = (list: { id: string }[], id?: string) => !!id && list.some(x => x.id === id);
-    const ok = (r: Route) =>
-      r.s === 'company' || r.s === 'svcList' ? has(catalog.companies, r.id)
-      : r.s === 'service' || r.s === 'svcGallery' ? has(catalog.services, r.id)
+    // Screens that no longer exist (the old service pages, now part of the company page) drop the trail.
+    const gone = ['service', 'svcGallery', 'svcList'];
+    const ok = (r: Route) => gone.includes(r.s as string) ? false
+      : r.s === 'company' ? has(catalog.companies, r.id) && (!r.svc || has(catalog.services, r.svc))
       : r.s === 'album' ? has(catalog.albums, r.id)
       : r.s === 'photo' ? (r.src === 'explore' || (r.src === 'gallery' ? has(catalog.companies, r.id) : r.src === 'service' ? has(catalog.services, r.id) : has(catalog.albums, r.id)))
       : r.s !== 'story' && r.s !== 'booking' && r.s !== 'bkDone';
@@ -179,6 +182,8 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
     if (k >= 0) {
       // Coming back to a company from a category page switches it to that activity.
       if (next.act != null) st[k] = { ...st[k], act: next.act };
+      // …and to the service it was opened for (from a project's service tag, a shared link…), from the top.
+      if (s === 'company' && 'svc' in rest) st[k] = { ...st[k], svc: next.svc, y: 0 };
       stackRef.current = st;
       popTo(k);
       return;

@@ -26,6 +26,8 @@ a { color: var(--brand); text-decoration: none; }
 a:hover { color: var(--brand-pressed); }
 button { -webkit-tap-highlight-color: transparent; }
 :focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+/* Service chips: keyboard focus shows as a purple border, not a second ring around the chip. */
+.mj-chip:focus-visible { outline: none; border-color: var(--brand) !important; }
 input[type=search]::-webkit-search-cancel-button { -webkit-appearance: none; }
 
 /* Arabic script must not be letter-spaced. */
