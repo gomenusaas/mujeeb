@@ -421,8 +421,9 @@ export function CompanyPage() {
             ? <ServiceStrip items={services} all={services.length > 3 ? { label: t.allServices + ' · ' + h.num(services.length), open: () => a.go('svcList', { id: co.id, ...(act != null ? { act } : {}) }) } : undefined} />
             : <div style={{ padding: '0 20px' }}><EmptyLine>{t.actNoSvc}</EmptyLine></div>}
         </section>
+        {allMedia.length > 0 && <div aria-hidden="true" style={{ height: 1, background: 'var(--border-default)' }} />}
         {allMedia.length > 0 && (
-          <section aria-label={t.gallery} style={{ display: 'flex', flexDirection: 'column', marginTop: 6 }}>
+          <section aria-label={t.gallery} style={{ display: 'flex', flexDirection: 'column' }}>
             {/* The gallery reaches closer to the screen edges (6px, like Explore) than the rest of the page. */}
             {gallery.length
               ? <div style={{ margin: '0 -14px' }}><Masonry key={act ?? 'all'} cols={3} items={gallery} onOpen={k => a.go('photo', { src: 'gallery', id: co.id, i: k, ...(act != null ? { act } : {}) })} /></div>
@@ -612,8 +613,8 @@ export function ServicePage() {
   const s = a.idx.svc.get(top.id!)!;
   const co = a.idx.co.get(s.co)!;
   const color = catalog.cats[s.cat].color;
-  // «مشاريع منجزة»: the projects linked to this service, newest first.
-  const albums = catalog.albums.filter(al => al.svc === s.id).sort((x, y) => (y.added || '').localeCompare(x.added || ''));
+  // «مشاريع منجزة»: the projects linked to this service, newest first (by completion month, else when added).
+  const albums = catalog.albums.filter(al => al.svc === s.id).sort((x, y) => (y.done || y.added || '').localeCompare(x.done || x.added || ''));
   // «خدمات ذات صلة»: the company's other services in this service's category.
   const more = catalog.services.filter(x => x.co === co.id && x.id !== s.id && x.cat === s.cat).map(h.svcV);
   useEffect(() => { remote.track(co.id, 'service_view', s.id); }, [co.id, s.id]);
@@ -656,8 +657,10 @@ export function ServicePage() {
             <button type="button" onClick={() => setFull(m => !m)} style={{ alignSelf: 'flex-start', border: 'none', padding: 0, background: 'none', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 700, fontFamily: 'var(--font-sans)', color: 'var(--brand)' }}>{full ? t.showLess : t.readMore}</button>
           )}
         </div>
+        {albums.length > 0 && <div aria-hidden="true" style={{ height: 1, background: 'var(--border-default)' }} />}
         {albums.length > 0 && <ProjectsBlock albums={albums} />}
         {/* «خدمات ذات صلة»: a plain list of the first 3 (small photo, name, arrow), «عرض الكل» opens the rest. */}
+        {more.length > 0 && <div aria-hidden="true" style={{ height: 1, background: 'var(--border-default)' }} />}
         {more.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <SectionHeader title={t.relatedServices} action={more.length > 3 ? t.viewAll : null} onAction={() => a.go('svcList', { id: co.id, act: s.cat })} />
