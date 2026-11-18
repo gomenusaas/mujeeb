@@ -243,13 +243,16 @@ function ActivityPicker({ co, act }: { co: Company; act: number | null }) {
       {many && <Icon name="chevron-down" size={16} color="var(--text-secondary)" style={{ flex: 'none' }} />}
     </>
   );
-  // The «النشاط» label sits outside, before the box.
+  // A divider with the selector in the middle: a hairline from each screen edge to the centred box.
+  // It separates the company info from its work and filters the services and gallery below.
+  const line = <span aria-hidden="true" style={{ flex: 1, minWidth: 16, height: 1, background: 'var(--border-default)' }} />;
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-      <span style={{ flex: 'none', font: 'var(--type-body-sm)', fontWeight: 600, color: 'var(--text-secondary)' }}>{t.activity}</span>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '6px -20px' }}>
+      {line}
       {many
-        ? <button type="button" aria-haspopup="dialog" aria-label={t.activity + ': ' + h.cname(cur)} onClick={() => a.setSheet('activity')} style={{ ...box, cursor: 'pointer' }}>{inner}</button>
-        : <div style={box}>{inner}</div>}
+        ? <button type="button" aria-haspopup="dialog" aria-label={t.activity + ': ' + h.cname(cur)} onClick={() => a.setSheet('activity')} style={{ ...box, flex: '0 1 auto', cursor: 'pointer' }}>{inner}</button>
+        : <div role="note" aria-label={t.activity + ': ' + h.cname(cur)} style={{ ...box, flex: '0 1 auto' }}>{inner}</div>}
+      {line}
     </div>
   );
 }
@@ -294,8 +297,11 @@ export function ActivitySheet() {
  * A company's services as cards in a sideways strip, like the categories on the home page: two rows
  * that scroll together (one row for 1–3 services), the next column peeking in.
  */
-function ServiceStrip({ items }: { items: ReturnType<ReturnType<typeof helpers>['svcV']>[] }) {
+function ServiceStrip({ items, all }: { items: ReturnType<ReturnType<typeof helpers>['svcV']>[]; all?: { label: string; open: () => void } }) {
+  const a = useApp();
   const rows = items.length > 3 ? 2 : 1;
+  // Under each service: how many completed projects are linked to it.
+  const projects = (id: string) => { const n = a.catalog.albums.filter(al => al.svc === id).length; return n ? countOf(a, n, PRJ_W) : a.t.nothingYet; };
   return (
     <div className="mj-s" style={{ display: 'grid', gridTemplateRows: 'repeat(' + rows + ', auto)', gridAutoFlow: 'column', gridAutoColumns: 'calc(100% - 64px)', gap: 10, overflowX: 'auto', scrollSnapType: 'x mandatory', scrollPaddingInline: 20, padding: '4px 20px 12px', margin: '-4px 0 -12px', scrollbarWidth: 'none' }}>
       {items.map(s => (
@@ -303,11 +309,18 @@ function ServiceStrip({ items }: { items: ReturnType<ReturnType<typeof helpers>[
           style={{ ...card, overflow: 'hidden', height: 92, border: 'none', padding: 0, cursor: 'pointer', scrollSnapAlign: 'start', display: 'flex', alignItems: 'stretch', fontFamily: 'var(--font-sans)', textAlign: 'start' }}>
           <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 4, padding: '0 16px' }}>
             <span style={{ font: 'var(--type-title)', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</span>
-            <span style={{ font: 'var(--type-caption)', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.cat}</span>
+            <span style={{ font: 'var(--type-caption)', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{projects(s.id)}</span>
           </span>
           <img src={s.img} alt="" loading="lazy" style={{ flex: 'none', width: '38%', height: '100%', objectFit: 'cover' }} />
         </button>
       ))}
+      {/* Last card: all the services as a list («كل الخدمات · ١٢»). */}
+      {all && (
+        <button type="button" className="mj-press-sm" onClick={all.open}
+          style={{ ...card, height: 92, border: 'none', padding: '0 16px', cursor: 'pointer', scrollSnapAlign: 'start', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, fontFamily: 'var(--font-sans)', font: 'var(--type-title)', color: 'var(--brand)' }}>
+          {all.label}<Icon name="chevron-right" size={18} />
+        </button>
+      )}
     </div>
   );
 }
@@ -371,25 +384,21 @@ export function CompanyPage() {
           </span>
           <ClampedAbout text={a.ar ? co.dar : co.den} />
         </div>
-        <ActivityPicker co={co} act={act} />
         <ContactGrid a={a} co={co} />
-        {/* Services as a sideways strip (two rows from 4 services), then the gallery below; no tabs. */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, margin: '0 -20px' }}>
-          <div style={{ padding: '0 20px' }}>
-            <SectionHeader title={<>{t.services}{services.length > 0 && <span style={{ color: 'var(--text-tertiary)' }}> · {h.num(services.length)}</span>}</>}
-              action={services.length > 3 ? t.seeAll : null} onAction={() => a.go('svcList', { id: co.id, ...(act != null ? { act } : {}) })} />
-          </div>
+        <ActivityPicker co={co} act={act} />
+        {/* Services as a sideways strip (two rows from 4 services), then the gallery below; no titles. */}
+        <section aria-label={t.services} style={{ display: 'flex', flexDirection: 'column', margin: '0 -20px' }}>
           {services.length
-            ? <ServiceStrip items={services} />
+            ? <ServiceStrip items={services} all={services.length > 3 ? { label: t.allServices + ' · ' + h.num(services.length), open: () => a.go('svcList', { id: co.id, ...(act != null ? { act } : {}) }) } : undefined} />
             : <div style={{ padding: '0 20px' }}><EmptyLine>{t.actNoSvc}</EmptyLine></div>}
-        </div>
+        </section>
         {allMedia.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <SectionHeader title={t.gallery} />
+          <section aria-label={t.gallery} style={{ display: 'flex', flexDirection: 'column', marginTop: 6 }}>
+            {/* The gallery reaches closer to the screen edges (6px, like Explore) than the rest of the page. */}
             {gallery.length
-              ? <Masonry key={act ?? 'all'} cols={3} items={gallery} onOpen={k => a.go('photo', { src: 'gallery', id: co.id, i: k, ...(act != null ? { act } : {}) })} />
+              ? <div style={{ margin: '0 -14px' }}><Masonry key={act ?? 'all'} cols={3} items={gallery} onOpen={k => a.go('photo', { src: 'gallery', id: co.id, i: k, ...(act != null ? { act } : {}) })} /></div>
               : <EmptyLine>{t.actNoMedia}</EmptyLine>}
-          </div>
+          </section>
         )}
       </div>
     </div>
@@ -498,35 +507,6 @@ function ServiceRow({ title, cat, img, open, thumb }: { title: string; cat?: str
   );
 }
 
-/** The service page strip shows at most this many items; «عرض الكل» opens all of them. */
-const STRIP_MAX = 27;
-
-/**
- * Three rows of square tiles that scroll sideways together: three columns (9 tiles) fit on screen
- * and the next column peeks in. Videos show their first frame with a play badge.
- */
-function MediaStrip({ items, color, onOpen }: { items: Media[]; color: string; onOpen: (k: number) => void }) {
-  const a = useApp();
-  const rows = Math.min(3, items.length);
-  return (
-    <div className="mj-s" style={{ display: 'grid', gridTemplateRows: 'repeat(' + rows + ', 104px)', gridAutoFlow: 'column', gridAutoColumns: '104px', gap: 8, overflowX: 'auto', scrollSnapType: 'x mandatory', scrollPaddingInline: 20, padding: '4px 20px 12px', margin: '-4px 0 -12px', scrollbarWidth: 'none' }}>
-      {items.map((m, k) => (
-        <button key={k} type="button" aria-label={(m.video ? 'video' : 'photo') + ' ' + helpers(a).num(k + 1)} onClick={() => onOpen(k)}
-          style={{ position: 'relative', padding: 0, border: 'none', borderRadius: 'var(--radius-md)', overflow: 'hidden', background: 'var(--cat-' + color + '-100)', scrollSnapAlign: k % 3 === 0 ? 'start' : undefined, cursor: 'zoom-in' }}>
-          {m.video
-            ? <video src={m.src + '#t=0.1'} muted playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-            : <Img src={photo(m.src, 260)} />}
-          {m.video && (
-            <span style={{ position: 'absolute', top: 6, insetInlineEnd: 6, width: 22, height: 22, borderRadius: '50%', background: 'oklch(0 0 0 / 0.5)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Icon name="play" size={11} />
-            </span>
-          )}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 /** «عرض الكل» from a service page: all of the service's photos and videos in the two-column gallery. */
 export function ServiceGallery() {
   const a = useApp();
@@ -556,8 +536,6 @@ export function ServicePage() {
   const color = catalog.cats[s.cat].color;
   // «مشاريع منجزة»: the projects linked to this service, newest first.
   const albums = catalog.albums.filter(al => al.svc === s.id).sort((x, y) => (y.added || '').localeCompare(x.added || '')).map(h.albV);
-  // Photos and videos from the projects linked to this service (minus what the company hid).
-  const media = serviceGallery(a, s.id);
   // «خدمات ذات صلة»: the company's other services in this service's category.
   const more = catalog.services.filter(x => x.co === co.id && x.id !== s.id && x.cat === s.cat).map(h.svcV);
   useEffect(() => { remote.track(co.id, 'service_view', s.id); }, [co.id, s.id]);
@@ -591,12 +569,6 @@ export function ServicePage() {
           <span style={{ font: 'var(--type-body)', color: 'var(--text-secondary)', textWrap: 'pretty' }}>{ar ? s.dar : s.den}</span>
         </div>
         <ContactGrid a={a} co={co} />
-        {media.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, margin: '0 -20px' }}>
-            <div style={{ padding: '0 20px' }}><SectionHeader title={t.svcPhotos} action={t.seeAll} onAction={() => a.go('svcGallery', { id: s.id })} /></div>
-            <MediaStrip items={media.slice(0, STRIP_MAX)} color={color} onOpen={k => a.go('photo', { src: 'service', id: s.id, i: k })} />
-          </div>
-        )}
         {albums.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, margin: '0 -20px' }}>
             <div style={{ padding: '0 20px' }}><SectionHeader title={t.related} action={null} /></div>
