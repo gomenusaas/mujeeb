@@ -40,7 +40,13 @@ export interface Album {
   service_id: string | null;
   /** Project page details (all optional). completed_on is the 1st of the month it was completed. */
   description_ar: string; description_en: string; completed_on: string | null; area_m2: number | null; duration_weeks: number | null;
+  /** Shown in «مشاريع مميزة» on the company page (at most FEATURED_MAX per company; the database enforces it). */
+  is_featured: boolean;
 }
+/** Most projects a company can feature. */
+export const FEATURED_MAX = 7;
+/** True when a save failed because the company already features FEATURED_MAX projects. */
+export const isFeaturedLimit = (e: unknown) => /featured_limit/.test(String((e as { message?: string })?.message ?? e));
 export interface Story {
   id?: string; company_id: string; kind: 'image' | 'video'; media_url: string; poster_url: string | null;
   caption_ar: string; caption_en: string; created_at?: string; expires_at?: string;
@@ -221,7 +227,7 @@ type DemoData = {
   gov: Record<string, [string, string]>;
   companies: { id: string; ar: string; en: string; cats: number[]; hrs?: (string[] | null)[]; cityAr: string; cityEn: string; gov: string; img: string; verified: boolean; phone: string; since: number; dar: string; den: string; branches: [string, string, boolean][] }[];
   services: { id: string; co: string; cat: number; ar: string; en: string; imgs: string[]; dar: string; den: string; cover?: string }[];
-  albums: { svc?: string; dAr?: string; dEn?: string; done?: string; area?: number; weeks?: number; id: string; co: string; cat: number; ar: string; en: string; pAr: string; pEn: string; img: string; imgs: string[]; vids?: string[]; added: string }[];
+  albums: { svc?: string; dAr?: string; dEn?: string; done?: string; area?: number; weeks?: number; feat?: boolean; id: string; co: string; cat: number; ar: string; en: string; pAr: string; pEn: string; img: string; imgs: string[]; vids?: string[]; added: string }[];
 };
 
 async function demoRepo(): Promise<Repo> {
@@ -245,7 +251,7 @@ async function demoRepo(): Promise<Repo> {
   let albums: Album[] = d.albums.filter(a => a.co === CID).map((a, k) => ({
     id: a.id, company_id: CID, category_id: a.cat, title_ar: a.ar, title_en: a.en, place_ar: a.pAr, place_en: a.pEn, photos: a.imgs, cover_photo: a.img, is_published: true, position: k, created_at: a.added,
     videos: a.vids || [], gallery_hidden: [], service_id: a.svc ?? null,
-    description_ar: a.dAr || '', description_en: a.dEn || '', completed_on: a.done ?? null, area_m2: a.area ?? null, duration_weeks: a.weeks ?? null,
+    description_ar: a.dAr || '', description_en: a.dEn || '', completed_on: a.done ?? null, area_m2: a.area ?? null, duration_weeks: a.weeks ?? null, is_featured: !!a.feat,
   }));
   let week: DayHours[] = Array.from({ length: 7 }, (_, d) => {
     const h = co.hrs?.[d];
@@ -286,7 +292,10 @@ async function demoRepo(): Promise<Repo> {
     saveService: async s => { const [l, item] = upsert(services, s); services = l; return wait(item); },
     deleteService: async id => { services = services.filter(s => s.id !== id); },
     albums: async () => wait([...albums].sort((x, y) => (y.created_at || '').localeCompare(x.created_at || ''))),
-    saveAlbum: async a => { const [l, item] = upsert(albums, { ...a, cover_photo: a.photos.includes(a.cover_photo) ? a.cover_photo : a.photos[0], created_at: a.created_at || new Date().toISOString() }); albums = l; return wait(item); },
+    saveAlbum: async a => {
+      if (a.is_featured && !albums.find(x => x.id === a.id)?.is_featured && albums.filter(x => x.is_featured && x.id !== a.id).length >= FEATURED_MAX) throw new Error('featured_limit');
+      const [l, item] = upsert(albums, { ...a, cover_photo: a.photos.includes(a.cover_photo) ? a.cover_photo : a.photos[0], created_at: a.created_at || new Date().toISOString() }); albums = l; return wait(item);
+    },
     deleteAlbum: async id => { albums = albums.filter(a => a.id !== id); },
     stories: async () => wait(stories),
     createStory: async s => { const item = { ...s, id: uid(), created_at: iso(0), expires_at: iso(-24 * 36e5) }; stories = [item, ...stories]; return wait(item); },

@@ -260,31 +260,38 @@ const EmptyLine = ({ children }: { children: React.ReactNode }) => (
 );
 
 /**
- * «النشاط»: the activity shown, as the section's main title,
- * on a full-width line. Companies with several activities get «كل الأنشطة» at the far end, opening the activity sheet.
+ * The activity selector: a pill centred on a hairline that runs from screen edge to screen edge. It separates the
+ * company info from its work and filters everything below (services, featured projects, gallery). With several
+ * activities it opens the activity sheet.
  */
-function ActivityHeader({ co, act }: { co: Company; act: number | null }) {
+function ActivityPicker({ co, act }: { co: Company; act: number | null }) {
   const a = useApp();
   const { t } = a;
   const h = helpers(a);
-  const cur = act ?? co.cats[0];
   const many = co.cats.length > 1;
-  // A small «النشاط» label and the activity name as plain text; with several activities the row opens the activity sheet.
+  const cur = act ?? co.cats[0];
+  const box: CSSProperties = { flex: '0 1 auto', minWidth: 0, minHeight: 44, display: 'flex', alignItems: 'center', gap: 8, padding: '0 18px', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-pill)', background: 'var(--surface-card)', color: 'var(--text-primary)', font: 'var(--type-body)', fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-sans)', textAlign: 'start' };
   const inner = (
     <>
-      <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <span style={{ font: 'var(--type-caption)', fontWeight: 700, color: 'var(--text-tertiary)' }}>{t.activity}</span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-h3)', color: 'var(--text-primary)' }}>
-          {h.cname(cur)}
-          {many && <Icon name="chevron-down" size={20} color="var(--brand)" style={{ flex: 'none' }} />}
+      <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.cname(cur)}</span>
+      {/* A round tinted button so it reads as tappable at a glance (solid purple is kept for "Followed"). */}
+      {many && (
+        <span aria-hidden="true" style={{ flex: 'none', width: 26, height: 26, borderRadius: '50%', background: 'var(--brand-tint-strong)', color: 'var(--brand)', display: 'grid', placeItems: 'center' }}>
+          <Icon name="chevron-down" size={16} />
         </span>
-      </span>
+      )}
     </>
   );
-  const row: CSSProperties = { width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: 0, border: 'none', background: 'none', fontFamily: 'var(--font-sans)', textAlign: 'start' };
-  return many
-    ? <button type="button" aria-haspopup="dialog" aria-label={t.activity + ': ' + h.cname(cur)} onClick={() => a.setSheet('activity')} style={{ ...row, cursor: 'pointer' }}>{inner}</button>
-    : <div style={row}>{inner}</div>;
+  const line = <span aria-hidden="true" style={{ flex: 1, minWidth: 16, height: 1, background: 'var(--border-default)' }} />;
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '6px -20px' }}>
+      {line}
+      {many
+        ? <button type="button" aria-haspopup="dialog" aria-label={t.activity + ': ' + h.cname(cur)} onClick={() => a.setSheet('activity')} style={{ ...box, cursor: 'pointer', paddingInlineEnd: 9 }}>{inner}</button>
+        : <div role="note" aria-label={t.activity + ': ' + h.cname(cur)} style={box}>{inner}</div>}
+      {line}
+    </div>
+  );
 }
 
 /**
@@ -356,8 +363,12 @@ export function CompanyPage() {
   const services = catalog.services.filter(s => s.co === co.id && (act == null || s.cat === act)).map(h.svcV);
   const allMedia = companyGallery(a, co.id);
   const gallery = act == null ? allMedia : companyGallery(a, co.id, act);
-  const featured = catalog.albums.filter(al => al.co === co.id && (act == null || al.cat === act))
-    .sort((x, y) => (y.done || y.added || '').localeCompare(x.done || x.added || '')).slice(0, 6);
+  // «مشاريع مميزة»: the projects the company picked (up to 7), in the chosen activity. A company that hasn't
+  // picked any yet shows its newest projects instead.
+  const own = catalog.albums.filter(al => al.co === co.id);
+  const picked = own.some(al => al.feat);
+  const featured = own.filter(al => (!picked || al.feat) && (act == null || al.cat === act))
+    .sort((x, y) => (y.done || y.added || '').localeCompare(x.done || x.added || '')).slice(0, 7);
   useEffect(() => { remote.track(co.id, 'profile_view'); }, [co.id]);
   return (
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -390,13 +401,12 @@ export function CompanyPage() {
           </span>
           <ClampedAbout text={a.ar ? co.dar : co.den} />
         </div>
-        <div aria-hidden="true" style={{ height: 1, background: 'var(--border-default)', margin: '0 -20px' }} />
-        {/* The activity (opens the activity list), then everything it filters, with no lines between, so it reads as one block: its services (a 3-row sideways strip when there are more than 3), featured projects and gallery. */}
-        <ActivityHeader co={co} act={act} />
+        {/* The activity pill on a full-width line (opens the activity list), then everything it filters, with no lines between, so it reads as one block: its services (a 3-row sideways strip when there are more than 3), featured projects and gallery. */}
+        <ActivityPicker co={co} act={act} />
         {services.length
           ? <ServiceStrip key={act ?? 'all'} items={services} />
           : <EmptyLine>{t.actNoSvc}</EmptyLine>}
-        {/* «مشاريع مميزة»: the activity's newest completed projects as a sideways row of cards (until companies can pick their own). */}
+        {/* «مشاريع مميزة»: the company's picks in this activity as a sideways row of cards. */}
         {featured.length > 0 && (
           <section aria-label={t.featuredPr} style={{ display: 'flex', flexDirection: 'column', gap: 12, margin: '10px -20px 0' }}>
             <div style={{ padding: '0 20px' }}><SectionHeader title={t.featuredPr} action={null} /></div>
@@ -605,7 +615,7 @@ export const CatTag = ({ color, children, h = 28, pad = 12 }: { color: string; c
 
 /**
  * A hairline from screen edge to screen edge with a centred white pill (same look as the company page's
- * activity box). The project page puts its number there.
+ * activity pill). The project page puts its number there.
  */
 function PillDivider({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {
   const line = <span aria-hidden="true" style={{ flex: 1, minWidth: 16, height: 1, background: 'var(--border-default)' }} />;

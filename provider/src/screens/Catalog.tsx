@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button, EmptyState, Icon } from '../shared/ds';
-import { logoOf, photoUrl, type Album, type Service } from '../data';
+import { FEATURED_MAX, isFeaturedLimit, logoOf, photoUrl, type Album, type Service } from '../data';
 import { useList, useP } from '../state';
 import { Confirm, Field, Modal, PageHeader, PhotoEditor, Pill, Select, ServiceCoverEditor, Spinner, Toggle, VideoEditor, card } from '../ui';
 
@@ -18,14 +18,17 @@ type Item = {
   service_id?: string | null;
   /** Projects only: page details. done = "YYYY-MM"; area and weeks as typed. */
   d_ar?: string; d_en?: string; done?: string; area?: string; weeks?: string;
+  /** Projects only: shown in «مشاريع مميزة». */
+  feat?: boolean;
 };
 
-function Tile({ item, sub, onEdit, onDelete, n, thumb }: { item: Item; sub: string; onEdit: () => void; onDelete: () => void; n?: number; thumb?: string }) {
+function Tile({ item, sub, onEdit, onDelete, n, thumb, onStar }: { item: Item; sub: string; onEdit: () => void; onDelete: () => void; n?: number; thumb?: string; onStar?: () => void }) {
   const p = useP();
   const { t } = p;
   return (
     <div style={{ ...card, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-      <button type="button" onClick={onEdit} style={{ position: 'relative', aspectRatio: '4/3', padding: 0, border: 'none', background: 'var(--neutral-100)', cursor: 'pointer' }}>
+      <div style={{ position: 'relative' }}>
+      <button type="button" onClick={onEdit} style={{ position: 'relative', width: '100%', aspectRatio: '4/3', padding: 0, border: 'none', background: 'var(--neutral-100)', cursor: 'pointer', display: 'block' }}>
         {thumb || item.cover || item.photos[0]
           ? <img src={photoUrl(thumb || item.cover || item.photos[0], 500)} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
           : <Icon name="image" size={32} color="var(--text-tertiary)" />}
@@ -35,6 +38,15 @@ function Tile({ item, sub, onEdit, onDelete, n, thumb }: { item: Item; sub: stri
           {!!item.videos?.length && <><Icon name="play" size={12} style={{ marginInlineStart: 4 }} />{p.num(item.videos.length)}</>}
         </span>
       </button>
+      {/* Projects: the star puts it in «مشاريع مميزة» (filled amber when featured). */}
+      {onStar && (
+        <button type="button" onClick={onStar} aria-pressed={!!item.feat} aria-label={item.feat ? t.unfeature : t.feature} title={item.feat ? t.unfeature : t.feature}
+          style={{ position: 'absolute', top: 8, insetInlineEnd: 8, width: 36, height: 36, borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'grid', placeItems: 'center',
+            background: item.feat ? 'oklch(0.8 0.16 80)' : 'oklch(0.2 0.02 285 / 0.55)', color: '#fff', boxShadow: 'var(--shadow-sm)' }}>
+          <Icon name="star" size={18} filled={item.feat} />
+        </button>
+      )}
+      </div>
       <div style={{ padding: '12px 14px 14px', display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
         <span style={{ font: 'var(--type-title)' }}>{p.pick(item.title_ar, item.title_en)}</span>
         <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }}>{sub}</span>
@@ -47,8 +59,10 @@ function Tile({ item, sub, onEdit, onDelete, n, thumb }: { item: Item; sub: stri
   );
 }
 
-function Editor({ title, initial, isProject, onClose, onSave, services, linked }: {
+function Editor({ title, initial, isProject, onClose, onSave, services, linked, featFull }: {
   title: string; initial: Item; isProject: boolean; onClose: () => void; onSave: (x: Item) => Promise<void>;
+  /** Projects: the company already features the most projects allowed (so this one can't be added). */
+  featFull?: boolean;
   /** Projects: the company's services (for the «الخدمة» picker). */
   services?: Service[];
   /** Services: the projects linked to it (their photos fill its page). */
@@ -72,7 +86,7 @@ function Editor({ title, initial, isProject, onClose, onSave, services, linked }
     setTried(true);
     if (bad) return;
     setBusy(true);
-    try { await onSave({ ...x, title_ar: x.title_ar.trim(), title_en: x.title_en.trim() }); } catch { p.showToast(t.saveFailed, 'error'); } finally { setBusy(false); }
+    try { await onSave({ ...x, title_ar: x.title_ar.trim(), title_en: x.title_en.trim() }); } catch (e) { p.showToast(isFeaturedLimit(e) ? t.featuredFull : t.saveFailed, 'error'); } finally { setBusy(false); }
   };
   const req = (v: string) => (tried && !v.trim() ? t.required : undefined);
   return (
@@ -148,6 +162,9 @@ function Editor({ title, initial, isProject, onClose, onSave, services, linked }
         </>
       )}
       <Toggle on={x.is_published} onChange={v => set({ is_published: v })} label={x.is_published ? t.published : t.hidden} help={t.publishedHelp} />
+      {isProject && (
+        <Toggle on={!!x.feat} onChange={v => (v && featFull ? p.showToast(t.featuredFull, 'error') : set({ feat: v }))} label={t.featured} help={t.featuredHelp} />
+      )}
     </Modal>
   );
 }
@@ -196,7 +213,7 @@ export function Services() {
 /* ───────────────────────── Projects (portfolio albums) ───────────────────────── */
 
 const albToItem = (a: Album): Item => ({ id: a.id, title_ar: a.title_ar, title_en: a.title_en, category_id: a.category_id, photos: a.photos, is_published: a.is_published, a_ar: a.place_ar || '', a_en: a.place_en || '', videos: a.videos || [], hidden: a.gallery_hidden || [], service_id: a.service_id ?? null,
-  d_ar: a.description_ar || '', d_en: a.description_en || '', done: a.completed_on ? a.completed_on.slice(0, 7) : '', area: a.area_m2 ? String(a.area_m2) : '', weeks: a.duration_weeks ? String(a.duration_weeks) : '' });
+  d_ar: a.description_ar || '', d_en: a.description_en || '', done: a.completed_on ? a.completed_on.slice(0, 7) : '', area: a.area_m2 ? String(a.area_m2) : '', weeks: a.duration_weeks ? String(a.duration_weeks) : '', feat: !!a.is_featured });
 
 export function Projects() {
   const p = useP();
@@ -215,8 +232,15 @@ export function Projects() {
     await repo.saveAlbum({ ...base, id: x.id, company_id: company.id, category_id: x.category_id, title_ar: x.title_ar, title_en: x.title_en, place_ar: x.a_ar.trim() || null, place_en: x.a_en.trim() || null, photos: x.photos, cover_photo: x.photos[0], is_published: x.is_published,
       videos: x.videos || [], gallery_hidden: (x.hidden || []).filter(h => x.photos.includes(h) || (x.videos || []).includes(h)), service_id: x.service_id ?? null,
       description_ar: (x.d_ar || '').trim(), description_en: (x.d_en || '').trim(), completed_on: x.done ? x.done + '-01' : null,
-      area_m2: Number(x.area) > 0 ? Math.round(Number(x.area)) : null, duration_weeks: Number(x.weeks) > 0 ? Math.round(Number(x.weeks)) : null } as Album);
+      area_m2: Number(x.area) > 0 ? Math.round(Number(x.area)) : null, duration_weeks: Number(x.weeks) > 0 ? Math.round(Number(x.weeks)) : null, is_featured: !!x.feat } as Album);
     p.showToast(t.saved); setEdit(null); reload();
+  };
+  // «مشاريع مميزة»: up to FEATURED_MAX projects, picked with the star on each tile (or in the editor).
+  const nFeat = (items || []).filter(a => a.is_featured).length;
+  const star = async (a: Album) => {
+    if (!a.is_featured && nFeat >= FEATURED_MAX) { p.showToast(t.featuredFull, 'error'); return; }
+    try { await repo.saveAlbum({ ...a, is_featured: !a.is_featured }); p.showToast(a.is_featured ? t.featuredOff : t.featuredOn); reload(); }
+    catch (e) { p.showToast(isFeaturedLimit(e) ? t.featuredFull : t.saveFailed, 'error'); }
   };
   const remove = async () => {
     if (!del?.id) return;
@@ -229,11 +253,20 @@ export function Projects() {
       {!items ? <Spinner /> : !items.length
         ? <EmptyState icon="images" title={t.noProjects} body={t.noProjectsBody} action={<Button iconLeft="plus" onClick={() => setEdit('new')}>{t.newProject}</Button>} />
         : (
-          <div className="pv-tiles">
-            {items.map(a => <Tile key={a.id} item={albToItem(a)} sub={[svcName(a.service_id), p.pick(a.place_ar || '', a.place_en || '')].filter(Boolean).join(' · ') || p.pick(p.cat(a.category_id)?.name_ar || '', p.cat(a.category_id)?.name_en || '')} onEdit={() => setEdit(a)} onDelete={() => setDel(a)} />)}
+          <>
+          {/* How many are featured, and how to pick them. */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 16, padding: '10px 14px', borderRadius: 14, background: 'var(--surface-card)', border: '1px solid var(--border-subtle)' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, font: 'var(--type-body-sm)', fontWeight: 700 }}>
+              <Icon name="star" size={16} filled color="oklch(0.75 0.16 80)" />{t.featuredCount.replace('{n}', p.num(nFeat))}
+            </span>
+            <span style={{ font: 'var(--type-caption)', fontWeight: 500, color: 'var(--text-tertiary)' }}>{t.featuredTip}</span>
           </div>
+          <div className="pv-tiles">
+            {items.map(a => <Tile key={a.id} item={albToItem(a)} onStar={() => star(a)} sub={[svcName(a.service_id), p.pick(a.place_ar || '', a.place_en || '')].filter(Boolean).join(' · ') || p.pick(p.cat(a.category_id)?.name_ar || '', p.cat(a.category_id)?.name_en || '')} onEdit={() => setEdit(a)} onDelete={() => setDel(a)} />)}
+          </div>
+          </>
         )}
-      {edit && <Editor title={edit === 'new' ? t.newProject : t.editProject} isProject services={services} initial={edit === 'new' ? blank : albToItem(edit)} onClose={() => setEdit(null)} onSave={save} />}
+      {edit && <Editor title={edit === 'new' ? t.newProject : t.editProject} isProject services={services} featFull={nFeat >= FEATURED_MAX && !(edit !== 'new' && edit.is_featured)} initial={edit === 'new' ? blank : albToItem(edit)} onClose={() => setEdit(null)} onSave={save} />}
       <Confirm open={!!del} busy={busy} onCancel={() => setDel(null)} onConfirm={remove} />
     </>
   );

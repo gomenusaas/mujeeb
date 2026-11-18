@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Avatar, Button, EmptyState, Icon } from '../shared/ds';
-import { api, CUSTOMER_URL, logoOf, type AdminCompany, type CompanyDetails, type CompanyFilter } from '../api';
+import { api, CUSTOMER_URL, logoOf, photoUrl, type AdminCompany, type CompanyDetails, type CompanyFilter } from '../api';
 import { useA, useLoad } from '../state';
 import { Field, Modal, PageHeader, Pill, Select, Spinner, Toggle, card } from '../ui';
 import { ConfirmModal, LoadError, Toolbar, errText } from './common';
@@ -125,6 +125,7 @@ function CompanyPanel({ co, onClose, onChanged }: { co: AdminCompany; onClose: (
 
       <Details c={c} onSaved={d => { setC(x => ({ ...x, ...d })); onChanged(); }} />
       <Categories c={c} onSaved={cats => { setC(x => ({ ...x, categories: cats })); onChanged(); }} />
+      <Featured cid={c.id} />
       <Team cid={c.id} />
 
       <Section title={t.dangerZone}>
@@ -214,6 +215,36 @@ function Categories({ c, onSaved }: { c: AdminCompany; onSaved: (cats: number[])
         })}
       </div>
       <div><Button size="sm" iconLeft="check" disabled={!dirty || !cats.length} loading={busy} onClick={save}>{t.save}</Button></div>
+    </Section>
+  );
+}
+
+/** «مشاريع مميزة»: the projects the company picked for its page; an admin can take one off. */
+function Featured({ cid }: { cid: string }) {
+  const a = useA();
+  const { t, pick } = a;
+  const f = useLoad(() => api.featured(cid), [cid]);
+  const [busy, setBusy] = useState('');
+  const off = async (id: string) => {
+    setBusy(id);
+    try { await api.setFeatured(id, false); a.showToast(t.unfeatured); f.reload(); }
+    catch (e) { a.showToast(errText(e, t), 'error'); } finally { setBusy(''); }
+  };
+  return (
+    <Section title={t.featuredT + (f.data?.length ? ' · ' + a.num(f.data.length) + ' / ' + a.num(7) : '')} help={t.featuredHelp}>
+      {f.error ? <LoadError onRetry={f.reload} /> : !f.data ? <Spinner size={22} /> : !f.data.length
+        ? <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }}>{t.noFeatured}</span>
+        : f.data.map(x => (
+          <div key={x.id} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <img src={photoUrl(x.cover_photo)} alt="" style={{ flex: 'none', width: 56, height: 42, borderRadius: 8, objectFit: 'cover', background: 'var(--neutral-100)' }} />
+            <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+              <span style={{ font: 'var(--type-body-sm)', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pick(x.title_ar, x.title_en)}</span>
+              <span style={{ font: 'var(--type-caption)', color: 'var(--text-tertiary)' }}>{a.catName(x.category_id)}</span>
+            </span>
+            {!x.is_published && <Pill tone="neutral">{t.hiddenProject}</Pill>}
+            <Button size="sm" variant="outline" loading={busy === x.id} onClick={() => off(x.id)}>{t.unfeature}</Button>
+          </div>
+        ))}
     </Section>
   );
 }

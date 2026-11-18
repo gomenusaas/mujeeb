@@ -30,6 +30,11 @@ export interface AdminCompany {
   owner_email: string | null; categories: number[]; services: number; projects: number; followers: number;
   logo_url: string | null; cover_photo: string; review_note: string | null; created_at: string; submitted_at: string | null;
 }
+/** A project the company shows in «مشاريع مميزة» on its page (at most 7). */
+export interface FeaturedProject { id: string; title_ar: string; title_en: string; cover_photo: string; category_id: number; is_published: boolean; completed_on: string | null }
+/** Display URL for a photo: demo data stores Unsplash ids, uploads are full URLs. */
+export const photoUrl = (id: string, w = 200) => (/^(https?:|blob:|data:)/.test(id) ? id
+  : 'https://images.unsplash.com/photo-' + id + '?w=' + w + '&q=70&auto=format&fit=crop');
 export interface Member { user_id: string; email: string; full_name: string; role: 'owner' | 'editor'; created_at: string }
 export interface AdminUser {
   id: string; email: string; full_name: string; kind: 'customer' | 'provider'; sign_in_with: string; created_at: string;
@@ -136,6 +141,8 @@ export const api = {
   setCategories: (cid: string, cats: number[]) => rpc<void>('admin_set_company_categories', { cid, cats }),
   deleteCompany: (cid: string) => rpc<void>('admin_delete_company', { cid }),
   members: (cid: string) => rpc<Member[]>('admin_company_members', { cid }),
+  featured: (cid: string) => rpc<FeaturedProject[]>('admin_company_featured', { cid }),
+  setFeatured: (aid: string, on: boolean) => rpc<void>('admin_set_featured', { aid, on_: on }),
   addMember: (cid: string, email: string, role: 'owner' | 'editor') => rpc<void>('admin_add_member', { cid, p_email: email, p_role: role }),
   removeMember: (cid: string, uid: string) => rpc<void>('admin_remove_member', { cid, uid }),
 

@@ -40,6 +40,8 @@ export interface Album {
   svc?: string;
   /** Project page details (optional): description, completion month (YYYY-MM-01), area in m², duration in weeks. */
   dAr?: string; dEn?: string; done?: string; area?: number; weeks?: number;
+  /** Picked by the company for «مشاريع مميزة» on its page (at most 7 per company). */
+  feat?: boolean;
 }
 
 export type BookingStatus = 'pending' | 'confirmed' | 'reschedule' | 'cancelled' | 'rejected' | 'completed' | 'noshow';
