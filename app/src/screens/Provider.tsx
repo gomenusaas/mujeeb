@@ -88,6 +88,42 @@ function ViewSwitch() {
   );
 }
 
+/**
+ * The company page's gallery: an even grid of square photos and videos, three across with thin gaps (like a
+ * business profile). Shows `first` at first; «عرض كل الصور (٥٤)» opens the rest in place. Remount to start over.
+ */
+function SquareGrid({ items, onOpen, first = 12 }: { items: Media[]; onOpen: (k: number) => void; first?: number }) {
+  const a = useApp();
+  const h = helpers(a);
+  const [all, setAll] = useState(false);
+  const shown = all ? items : items.slice(0, first);
+  const fill: CSSProperties = { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' };
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 3 }}>
+        {shown.map((m, k) => (
+          <button key={k} type="button" onClick={() => onOpen(k)} aria-label={m.video ? 'video' : 'photo'}
+            style={{ position: 'relative', aspectRatio: '1/1', padding: 0, border: 'none', borderRadius: 6, overflow: 'hidden', background: 'var(--neutral-100)', cursor: 'zoom-in' }}>
+            {m.video
+              ? <video src={m.src + '#t=0.1'} muted loop playsInline autoPlay preload="metadata" style={fill} />
+              : <img src={photo(m.src, 360)} alt="" loading="lazy" decoding="async" style={fill} />}
+            {m.video && (
+              <span style={{ position: 'absolute', top: 5, insetInlineEnd: 5, width: 20, height: 20, borderRadius: '50%', background: 'oklch(0 0 0 / 0.5)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Icon name="play" size={10} />
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+      {items.length > first && (
+        <button type="button" onClick={() => setAll(v => !v)} style={{ alignSelf: 'center', display: 'inline-flex', alignItems: 'center', gap: 4, border: 'none', background: 'none', padding: '6px 8px', cursor: 'pointer', fontFamily: 'var(--font-sans)', font: 'var(--type-body-sm)', fontWeight: 700, color: 'var(--brand)' }}>
+          {all ? a.t.showLess : a.t.allPhotos + ' (' + h.num(items.length) + ')'}<Icon name={all ? 'chevron-up' : 'chevron-down'} size={16} />
+        </button>
+      )}
+    </div>
+  );
+}
+
 type Sort = Filters['sort'];
 const SORTS: { v: Sort; icon: string }[] = [{ v: 'rel', icon: 'star' }, { v: 'near', icon: 'map-pin' }, { v: 'recent', icon: 'clock' }, { v: 'verified', icon: 'badge-check' }];
 const sortLabel = (t: ReturnType<typeof useApp>['t'], v: Sort) => (v === 'near' ? t.nearest : v === 'recent' ? t.recent : v === 'verified' ? t.verifiedSort : t.relevance);
@@ -401,9 +437,9 @@ export function CompanyPage() {
         {allMedia.length > 0 && (
             <section aria-label={t.gallery} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <SectionHeader title={<>{t.workGallery} <span style={{ color: 'var(--text-tertiary)' }}>{h.num(gallery.length)}</span></>} action={null} />
-              {/* The gallery reaches closer to the screen edges (6px, like Explore) than the rest of the page. */}
+              {/* An even square grid that reaches closer to the screen edges (6px) than the rest of the page. */}
               {gallery.length
-                ? <div style={{ margin: '0 -14px' }}><Masonry key={act ?? 'all'} cols={3} items={gallery} onOpen={k => a.go('photo', { src: 'gallery', id: co.id, i: k, ...(act != null ? { act } : {}) })} /></div>
+                ? <div style={{ margin: '0 -14px' }}><SquareGrid key={act ?? 'all'} items={gallery} onOpen={k => a.go('photo', { src: 'gallery', id: co.id, i: k, ...(act != null ? { act } : {}) })} /></div>
                 : <EmptyLine>{t.actNoMedia}</EmptyLine>}
             </section>
         )}
