@@ -211,6 +211,15 @@ export function Listing() {
   const set = (p: Partial<Filters>) => setF(x => ({ ...x, ...p }));
   const res = listingCompanies(a, c);
   const chips = categoryServiceChips(a, c);
+  // Slide the chips row so the selected chip sits in the middle (as far as the row can scroll).
+  const chipRow = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const row = chipRow.current;
+    const el = row && f.svcs[0] ? row.querySelector('[data-chip="' + f.svcs[0] + '"] > button') : null;
+    if (!row || !el) return;
+    const r = row.getBoundingClientRect(), e = el.getBoundingClientRect();
+    row.scrollBy({ left: (e.left + e.width / 2) - (r.left + r.width / 2), behavior: 'smooth' });
+  }, [f.svcs]);
   // Companies come in pages of PAGE: the next page loads as the end of the list nears the screen.
   const [shown, setShown] = useState(PAGE);
   useEffect(() => setShown(PAGE), [c, f]);
@@ -249,21 +258,14 @@ export function Listing() {
       </div>
       {/* The category's stories (they stay while searching or filtering, so the page doesn't jump). */}
       {c != null && <CategoryStoryRow cat={c} />}
-      {/* «مسح الفلاتر» while a chip or a search narrows the list, then the category's common services as chips: one at a
-          time (another chip switches to it; the selected one again clears it). The list is always in the «الأنسب» order. */}
-      {(f.svcs.length > 0 || f.q.trim()) && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '10px 20px 0' }}>
-          <button type="button" onClick={() => setF(DEFAULT_F)}
-            style={{ height: 28, display: 'inline-flex', alignItems: 'center', gap: 4, padding: 0, border: 'none', background: 'none', color: 'var(--brand)', font: 'var(--type-body-sm)', fontWeight: 700, fontFamily: 'var(--font-sans)', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-            <Icon name="x" size={15} />{t.clear}
-          </button>
-        </div>
-      )}
+      {/* The category's common services as chips: one at a time (another chip switches to it; the selected one again
+          clears it). The list is always in the «الأنسب» order (see listingCompanies). */}
       {chips.length >= 2 && (
-        <div className="mj-s" style={{ display: 'flex', gap: 8, alignItems: 'center', overflowX: 'auto', padding: (f.svcs.length || f.q.trim() ? '6px' : '12px') + ' 20px 2px', scrollbarWidth: 'none' }}>
+        // Spacing sets the chips apart: a clear gap after the stories, then close to the list they filter.
+        <div ref={chipRow} className="mj-s" style={{ display: 'flex', gap: 8, alignItems: 'center', overflowX: 'auto', marginTop: 16, padding: '0 20px', scrollbarWidth: 'none' }}>
           {chips.map(x => {
             const on = f.svcs.includes(x.key);
-            return <Chip key={x.key} size="sm" selected={on} onClick={() => set({ svcs: on ? [] : [x.key] })}>{x.label}</Chip>;
+            return <span key={x.key} data-chip={x.key} style={{ display: 'contents' }}><Chip size="sm" selected={on} onClick={() => set({ svcs: on ? [] : [x.key] })}>{x.label}</Chip></span>;
           })}
         </div>
       )}
@@ -273,7 +275,7 @@ export function Listing() {
           <div style={{ display: 'flex', justifyContent: 'center' }}><Button variant="secondary" onClick={() => setF(DEFAULT_F)}>{t.clear}</Button></div>
         </>
       )}
-      <div style={{ padding: '14px 20px 0', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ padding: '12px 20px 0', display: 'flex', flexDirection: 'column', gap: 14 }}>
         {results.slice(0, shown).map(co => (
           <div key={co.id} onClick={co.open} style={{ ...card, overflow: 'hidden', cursor: 'pointer' }}>
             {co.work.photos.length
