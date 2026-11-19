@@ -6,7 +6,7 @@ import type { Catalog, CustomerSeed } from './data/types';
 import { STR } from './i18n/strings';
 import { useDragScroll } from './app/useDragScroll';
 import { Categories, Explore, Home, LocationSheet } from './screens/Discover';
-import { ActivitySheet, AlbumPage, CompanyPage, CompanySheet, Listing, ReachSheets, ServicePage, SortSheet } from './screens/Provider';
+import { ActivitySheet, AlbumPage, CompanyPage, CompanySheet, Listing, OfferPage, ReachSheets, ServicePage, SortSheet } from './screens/Provider';
 import { BookingPage, DonePage } from './screens/Flows';
 import { StoryViewer } from './screens/Stories';
 import { PhotoViewer } from './screens/Photo';
@@ -160,6 +160,7 @@ function ScreenSwitch({ route }: { route: Route }) {
     case 'listing': return <Listing />;
     case 'company': return <CompanyPage />;
     case 'service': return <ServicePage />;
+    case 'offer': return <OfferPage />;
     case 'album': return <AlbumPage />;
     case 'booking': return <BookingPage />;
     case 'bkDone': return <DonePage />;

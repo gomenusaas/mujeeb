@@ -3,6 +3,7 @@ import { Avatar, Badge, BottomSheet, Button, EmptyState, Icon, IconButton, ListI
 import { useApp, type Filters, type ListView, type SheetKey } from '../app/store';
 import { ContactGrid, HScroll, Img, MetaLine, albumMedia, callPhone, card, companyGallery, helpers, listingCompanies, openDirections, openWhatsApp, serviceImage, type Media } from '../app/view';
 import { logoUrl, photo, remote } from '../data/api';
+import { OFFERS_PER_COMPANY } from '../app/links';
 import type { Album, Company } from '../data/types';
 import { WEEK_ORDER, dayName, fmtTime, isOpenNow, muscatToday, shifts } from '../app/hours';
 
@@ -294,6 +295,176 @@ const EmptyLine = ({ children }: { children: React.ReactNode }) => (
 );
 
 /**
+ * A company's offers. DEMO: made up from its services (OFFERS_PER_COMPANY of them) until companies can post
+ * offers; `i` is the offer's number, used in its link (/offer/<company>/<i>).
+ */
+type Lang2 = [string, string];
+const OFFER_DEMO: { kicker: Lang2; big: Lang2; on: (svc: Lang2) => Lang2; title: (svc: Lang2) => Lang2; days: number }[] = [
+  { kicker: ['خصم', 'Save'], big: ['١٥٪', '15%'], on: ([ar, en]) => ['على ' + ar, 'on ' + en.toLowerCase()], title: ([ar, en]) => ['خصم ١٥٪ على ' + ar, '15% off ' + en.toLowerCase()], days: 12 },
+  { kicker: ['تصميم ثلاثي الأبعاد', '3D design'], big: ['مجانًا', 'Free'], on: ([ar, en]) => ['مع ' + ar, 'with ' + en.toLowerCase()], title: ([ar, en]) => ['تصميم ثلاثي الأبعاد مجاني مع ' + ar, 'Free 3D design with ' + en.toLowerCase()], days: 20 },
+  { kicker: ['خصم', 'Save'], big: ['٢٠٪', '20%'], on: ([ar, en]) => ['على ' + ar, 'on ' + en.toLowerCase()], title: ([ar, en]) => ['خصم ٢٠٪ على ' + ar, '20% off ' + en.toLowerCase()], days: 6 },
+  { kicker: ['زيارة معاينة', 'Site visit'], big: ['مجانًا', 'Free'], on: ([ar, en]) => ['لخدمة ' + ar, 'for ' + en.toLowerCase()], title: ([ar, en]) => ['زيارة معاينة مجانية لخدمة ' + ar, 'Free site visit for ' + en.toLowerCase()], days: 30 },
+  { kicker: ['خصم', 'Save'], big: ['١٠٪', '10%'], on: ([ar, en]) => ['على ' + ar, 'on ' + en.toLowerCase()], title: ([ar, en]) => ['خصم ١٠٪ على ' + ar, '10% off ' + en.toLowerCase()], days: 9 },
+  { kicker: ['ضمان إضافي', 'Extra warranty'], big: ['سنة', '+1 year'], on: ([ar, en]) => ['على ' + ar, 'on ' + en.toLowerCase()], title: ([ar, en]) => ['سنة ضمان إضافية على ' + ar, 'An extra year of warranty on ' + en.toLowerCase()], days: 25 },
+];
+const OFFER_COLORS = ['violet', 'teal', 'coral', 'indigo', 'green', 'pink'];
+function companyOffers(a: ReturnType<typeof useApp>, co: Company) {
+  const { ar } = a;
+  const h = helpers(a);
+  const svcs = a.catalog.services.filter(s => s.co === co.id);
+  if (!svcs.length) return [];
+  const L = (x: Lang2) => x[ar ? 0 : 1];
+  return OFFER_DEMO.slice(0, OFFERS_PER_COMPANY).map((o, i) => {
+    const s = svcs[i % svcs.length];
+    const v = h.svcV(s);
+    const end = new Date(Date.now() + o.days * 864e5);
+    return {
+      i, svc: s, color: OFFER_COLORS[i % OFFER_COLORS.length], kicker: L(o.kicker), big: L(o.big), on: L(o.on([s.ar, s.en])), title: L(o.title([s.ar, s.en])),
+      img: v.img, days: o.days, until: end.toLocaleDateString(ar ? 'ar-OM' : 'en-GB', { day: 'numeric', month: 'long' }),
+      open: () => a.go('offer', { id: co.id, i }),
+    };
+  });
+}
+type Offer = ReturnType<typeof companyOffers>[number];
+/** The fade under an offer's text, in its colour; the text starts on the right in Arabic and on the left in English. */
+const offerFade = (ar: boolean, c: string) => {
+  const mix = (pct: number) => 'color-mix(in oklch, var(--cat-' + c + '-800) ' + pct + '%, transparent)';
+  return 'linear-gradient(' + (ar ? 'to left' : 'to right') + ', ' + mix(96) + ' 0%, ' + mix(80) + ' 45%, ' + mix(10) + ' 100%)';
+};
+
+/**
+ * «العروض»: the company's offers as a sideways row of advert cards the shape of an ID card (85.6 × 54): the
+ * service photo full bleed under a fade in the card's colour, a «عرض خاص» tag, the offer in big type, what it's
+ * for, the end date and a «التفاصيل» button; each opens the offer's page. `except` leaves one out.
+ */
+function OfferStrip({ co, title, except }: { co: Company; title?: string; except?: number }) {
+  const a = useApp();
+  const { t, ar } = a;
+  const offers = companyOffers(a, co).filter(o => o.i !== except);
+  if (!offers.length) return null;
+  return (
+    <section aria-label={title || t.offers} style={{ display: 'flex', flexDirection: 'column', gap: 12, margin: '0 -20px' }}>
+      <div style={{ padding: '0 20px' }}><SectionHeader title={title || t.offers} action={null} /></div>
+      <HScroll>
+        {offers.map(o => (
+          <button key={o.i} type="button" className="mj-press-sm" onClick={o.open} aria-label={o.title}
+            style={{ position: 'relative', flex: 'none', width: 240, aspectRatio: '85.6 / 54', scrollSnapAlign: 'start', padding: 0, border: 'none', borderRadius: 12, overflow: 'hidden', background: 'var(--cat-' + o.color + '-800)', cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'start', color: '#fff', boxShadow: '0 3px 10px oklch(0.2 0.03 285 / 0.16)' }}>
+            <Img src={o.img} style={{ position: 'absolute', inset: 0 }} />
+            <span aria-hidden="true" style={{ position: 'absolute', inset: 0, background: offerFade(ar, o.color) }} />
+            <span style={{ position: 'absolute', inset: 0, padding: '10px 12px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+              <OfferTag o={o} />
+              <span style={{ marginTop: 6, font: '700 12px var(--font-sans)', opacity: 0.9 }}>{o.kicker}</span>
+              <span style={{ font: '800 30px/1.05 var(--font-sans)', letterSpacing: '-0.01em' }}>{o.big}</span>
+              <span style={{ marginTop: 2, maxWidth: '70%', font: '600 12px/1.35 var(--font-sans)', opacity: 0.92, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{o.on}</span>
+              <span style={{ marginTop: 'auto', alignSelf: 'stretch', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, font: '600 10px var(--font-sans)', opacity: 0.85 }}><Icon name="clock" size={11} />{t.offerUntil} {o.until}</span>
+                <span style={{ height: 24, padding: '0 10px', borderRadius: 999, background: '#fff', color: 'var(--cat-' + o.color + '-800)', display: 'inline-flex', alignItems: 'center', gap: 3, font: '800 11px var(--font-sans)' }}>
+                  {t.offerCta}<Icon name="chevron-right" size={12} />
+                </span>
+              </span>
+            </span>
+          </button>
+        ))}
+      </HScroll>
+    </section>
+  );
+}
+const OfferTag = ({ o, big }: { o: Offer; big?: boolean }) => {
+  const { t, ar } = useApp();
+  return (
+    <span style={{ height: big ? 24 : 20, padding: big ? '0 10px' : '0 8px', borderRadius: 999, background: '#fff', color: 'var(--cat-' + o.color + '-600)', display: 'inline-flex', alignItems: 'center', font: '800 ' + (big ? 12 : 10) + 'px var(--font-sans)', letterSpacing: ar ? 0 : '0.04em' }}>{t.offerTag}</span>
+  );
+};
+
+const DAY_W: Words = { ar: ['يوم واحد', 'يومان', 'أيام', 'يومًا'], en: ['day', 'days'] };
+const OFFER_TERMS: ((until: string) => Lang2)[] = [
+  until => ['العرض ساري حتى ' + until + ' أو حتى اكتمال الحجوزات.', 'Valid until ' + until + ' or while bookings last.'],
+  () => ['يُطبَّق على المشاريع الجديدة التي يُتفق عليها خلال مدة العرض.', 'Applies to new projects agreed during the offer.'],
+  () => ['لا يُجمع مع عروض أو خصومات أخرى.', 'Can’t be combined with other offers or discounts.'],
+  () => ['اذكر العرض عند التواصل مع الشركة.', 'Mention the offer when you contact the company.'],
+];
+
+/**
+ * An offer's own page: the advert as the header (Back, share), who offers it (opens the company), the offer,
+ * how long it lasts, what it includes, contact buttons (WhatsApp starts with the offer's name), the terms,
+ * the service it's for, and the company's other offers.
+ */
+export function OfferPage() {
+  const a = useApp();
+  const { t, ar, page: top } = a;
+  const h = helpers(a);
+  const co = a.idx.co.get(top.id!)!;
+  const o = companyOffers(a, co).find(x => x.i === top.i)!;
+  const L = (x: Lang2) => x[ar ? 0 : 1];
+  const name = h.coName(co);
+  const about = ar
+    ? 'تقدّم ' + name + ' ' + o.title + ' لفترة محدودة. تواصل مع الشركة عبر واتساب أو الاتصال قبل ' + o.until + ' لحجز العرض ومعرفة التفاصيل.'
+    : name + ' is offering ' + o.title.charAt(0).toLowerCase() + o.title.slice(1) + ' for a limited time. Contact them on WhatsApp or by phone before ' + o.until + ' to book it and get the details.';
+  const wa = ar ? 'مرحبًا، أود الاستفسار عن عرض «' + o.title + '» في مجيب.' : 'Hello, I’d like to ask about the offer “' + o.title + '” on MUJEEB.';
+  const line = <div aria-hidden="true" style={{ height: 1, background: 'var(--border-default)', margin: '0 -20px' }} />;
+  const sv = h.svcV(o.svc);
+  return (
+    <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
+      {/* The advert, full width: photo, fade in the offer's colour and the offer in big type. */}
+      <div style={{ position: 'relative', height: HERO_H + 40, background: 'var(--cat-' + o.color + '-800)', color: '#fff', overflow: 'hidden' }}>
+        <img src={o.img.replace(/w=\d+/, 'w=900')} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+        <span aria-hidden="true" style={{ position: 'absolute', inset: 0, background: offerFade(ar, o.color) }} />
+        <div style={{ position: 'absolute', top: 'calc(var(--top-inset) + 4px)', insetInline: 16, display: 'flex', justifyContent: 'space-between' }}>
+          <IconButton icon="arrow-left" variant="glass" size={40} onClick={a.back} label="Back" />
+          <IconButton icon="share-2" variant="glass" size={40} label={t.share} onClick={() => a.sharePage(top, o.title + ' · ' + name, about)} />
+        </div>
+        <div style={{ position: 'absolute', insetInline: 22, bottom: 44, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+          <OfferTag o={o} big />
+          <span style={{ marginTop: 8, font: '700 15px var(--font-sans)', opacity: 0.92 }}>{o.kicker}</span>
+          <span style={{ font: '800 46px/1.05 var(--font-sans)', letterSpacing: '-0.01em' }}>{o.big}</span>
+          <span style={{ marginTop: 2, maxWidth: '75%', font: '600 15px/1.35 var(--font-sans)', opacity: 0.92 }}>{o.on}</span>
+        </div>
+      </div>
+      <div style={{ position: 'relative', marginTop: -28, borderRadius: '28px 28px 0 0', background: 'var(--bg-app)', padding: '22px 20px 28px', display: 'flex', flexDirection: 'column', gap: 16, flex: 1 }}>
+        {/* Who offers it (the row opens the company). */}
+        <div onClick={() => a.go('company', { id: co.id, act: o.svc.cat })} style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
+          <Avatar name={name} src={logoUrl(co.id)} size={44} verified={co.verified} />
+          <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+            <span style={{ font: 'var(--type-body-strong)' }}>{name}</span>
+            <span style={{ marginTop: 4 }}><CatTag color={a.catalog.cats[o.svc.cat]?.color ?? 'violet'} h={24} pad={10}>{h.cname(o.svc.cat)}</CatTag></span>
+          </span>
+          <Icon name="chevron-right" size={18} color="var(--text-tertiary)" />
+        </div>
+        <ContactGrid a={a} co={co} waText={wa} />
+        {line}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <h1 style={{ margin: 0, font: 'var(--type-h1)', fontSize: 22 }}>{o.title}</h1>
+          {/* How long it lasts. */}
+          <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, font: 'var(--type-body-sm)', fontWeight: 600, color: 'var(--text-secondary)' }}><Icon name="calendar-clock" size={16} />{t.offerValid} {o.until}</span>
+            <span style={{ height: 24, padding: '0 10px', borderRadius: 999, background: 'var(--cat-coral-100)', color: 'var(--cat-coral-800)', display: 'inline-flex', alignItems: 'center', font: '700 12px var(--font-sans)' }}>
+              {ar ? t.offerLeft + ' ' + countOf(a, o.days, DAY_W) : countOf(a, o.days, DAY_W) + ' ' + t.offerLeft}
+            </span>
+          </span>
+          <span style={{ font: 'var(--type-body)', color: 'var(--text-secondary)', textWrap: 'pretty' }}>{about}</span>
+        </div>
+        {line}
+        <section aria-label={t.offerTerms} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <SectionHeader title={t.offerTerms} action={null} />
+          {OFFER_TERMS.map((term, k) => (
+            <span key={k} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }}>
+              <Icon name="check" size={16} color="var(--brand)" style={{ flex: 'none', marginTop: 2 }} />{L(term(o.until))}
+            </span>
+          ))}
+        </section>
+        {line}
+        <section aria-label={t.offerService} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <SectionHeader title={t.offerService} action={null} />
+          <ServiceNavCard title={sv.title} img={sv.img} open={sv.open} sub={svcProjects(a, sv.id)} />
+        </section>
+        {line}
+        <OfferStrip co={co} title={t.moreOffers} except={o.i} />
+      </div>
+    </div>
+  );
+}
+
+/**
  * The activity selector: a pill centred on a hairline that runs from screen edge to screen edge. It separates the
  * company info from its work and filters everything below (services, featured projects, gallery). With several
  * activities it opens the activity sheet.
@@ -440,6 +611,8 @@ export function CompanyPage() {
         {services.length
           ? <ServiceStrip key={act ?? 'all'} items={services} />
           : <EmptyLine>{t.actNoSvc}</EmptyLine>}
+        {/* «العروض»: the company's offers (all activities), after the services. */}
+        <div style={{ marginTop: 10 }}><OfferStrip co={co} /></div>
         {/* «مشاريع مميزة»: the company's picks in this activity as a sideways row of cards. */}
         {featured.length > 0 && (
           <section aria-label={t.featuredPr} style={{ display: 'flex', flexDirection: 'column', gap: 12, margin: '10px -20px 0' }}>

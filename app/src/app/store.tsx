@@ -3,11 +3,11 @@ import type { Booking, Catalog, Company, CustomerSeed, GovId, Lang } from '../da
 import { auth, remote, type Me } from '../data/api';
 import { strings, STR, type T } from '../i18n/strings';
 import { bookingDays, type BookingDay } from './dates';
-import { pathToStack, routeToPath, shareLink } from './links';
+import { hasOffer, pathToStack, routeToPath, shareLink } from './links';
 import { STORIES } from '../data/stories';
 import { DEFAULT_WILAYAT, OMAN, findWilayat, wilayatLabel } from '../data/oman';
 
-export type Screen = 'home' | 'categories' | 'explore' | 'profile' | 'listing' | 'company' | 'service' | 'album'
+export type Screen = 'home' | 'categories' | 'explore' | 'profile' | 'listing' | 'company' | 'service' | 'offer' | 'album'
   | 'booking' | 'bkDone' | 'bookings' | 'notifs' | 'story' | 'photo';
 export type RootTab = 'home' | 'categories' | 'explore' | 'profile';
 /** `src` + `i`: which photo a `photo` route shows (of the album or service `id`). */
@@ -18,8 +18,8 @@ export interface Route { s: Screen; id?: string; cat?: number; co?: string; src?
   y?: number;      // scroll position
   f?: Filters }    // category page: search, filters and sort
 /** Pages that exist once in the back trail: opening one that's already there goes back to it. */
-const SINGLE: Screen[] = ['company', 'service', 'album', 'listing'];
-const samePage = (x: Route, y: Route) => x.s === y.s && (x.id ?? '') === (y.id ?? '') && (x.cat ?? '') === (y.cat ?? '');
+const SINGLE: Screen[] = ['company', 'service', 'offer', 'album', 'listing'];
+const samePage = (x: Route, y: Route) => x.s === y.s && (x.id ?? '') === (y.id ?? '') && (x.cat ?? '') === (y.cat ?? '') && (x.s !== 'offer' || x.i === y.i);
 /** Story and full-screen photo open over the page they were tapped on. */
 export const isOverlay = (r: Route) => r.s === 'story' || r.s === 'photo';
 export interface Filters { gov: 'all' | GovId; verified: boolean; sort: 'rel' | 'near' | 'recent' | 'verified'; q: string }
@@ -48,6 +48,7 @@ function restoreTrail(catalog: Catalog): { stack: Route[]; tab: RootTab } | null
     const ok = (r: Route) => gone.includes(r.s as string) ? false
       : r.s === 'company' ? has(catalog.companies, r.id) && !('svc' in r)
       : r.s === 'service' ? has(catalog.services, r.id)
+      : r.s === 'offer' ? hasOffer(catalog, r.id, r.i)
       : r.s === 'album' ? has(catalog.albums, r.id)
       : r.s === 'photo' ? (r.src === 'explore' || (r.src === 'gallery' ? has(catalog.companies, r.id) : r.src === 'service' ? has(catalog.services, r.id) : has(catalog.albums, r.id)))
       : r.s !== 'story' && r.s !== 'booking' && r.s !== 'bkDone';

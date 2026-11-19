@@ -1,11 +1,18 @@
 import type { Catalog, Story } from '../data/types';
 import type { RootTab, Route } from './store';
 
+/** How many demo offers each company shows (DEMO: offers are made up from its services). */
+export const OFFERS_PER_COMPANY = 6;
+/** Offer `i` of company `co` exists (the company exists and has services). */
+export const hasOffer = (catalog: Catalog, co?: string, i?: number) =>
+  !!co && i != null && i >= 0 && i < OFFERS_PER_COMPANY && catalog.companies.some(c => c.id === co) && catalog.services.some(s => s.co === co);
+
 /*
  * Page links. The address bar follows the screen on top, and opening a link rebuilds the screen
  * stack, so anything shared opens on the same page:
  *   /company/c4           company profile        /category/1             companies in a category
  *   /service/s7           service page           /service/s7/photo/0     one photo of a service
+ *   /offer/c4/0           one of a company's offers
  *   (old) /company/c4/service/s7 opens the service page
  *   /album/a3             project (album)        /album/a3/photo/2       one photo of a project
  *   /story/<id>           a story (photo or video)   /company/c4/gallery/3   one item of a company's gallery
@@ -18,6 +25,7 @@ export function routeToPath(r: Route): string {
   switch (r.s) {
     case 'company': return '/company/' + r.id;
     case 'service': return '/service/' + r.id;
+    case 'offer': return '/offer/' + r.id + '/' + (r.i ?? 0);
     case 'listing': return r.cat != null ? '/category/' + r.cat : '/companies';
     case 'album': return '/album/' + r.id;
     case 'photo': return r.src === 'gallery' ? '/company/' + r.id + '/gallery/' + (r.i ?? 0)
@@ -57,6 +65,8 @@ export function pathToStack(path: string, catalog: Catalog, stories: Story[]): {
     const base: Route[] = [home, ...atService(b)];
     return { stack: c === 'photo' ? [...base, { s: 'photo', src: 'service', id: b, i: Number(d) || 0 }] : base, tab: 'home' };
   }
+  // An offer opens over its company's page.
+  if (a === 'offer' && b && hasOffer(catalog, b, Number(c))) return { stack: [home, { s: 'company', id: b }, { s: 'offer', id: b, i: Number(c) }], tab: 'home' };
   if (a === 'album' && b && has.alb(b)) {
     const base: Route[] = [home, ...coOf(catalog.albums.find(x => x.id === b)?.co), { s: 'album', id: b }];
     return { stack: c === 'photo' ? [...base, { s: 'photo', src: 'album', id: b, i: Number(d) || 0 }] : base, tab: 'home' };
