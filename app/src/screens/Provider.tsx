@@ -168,6 +168,7 @@ export function WorkPreviewSheet() {
       )}
       footer={co && <Button fullWidth size="lg" onClick={() => a.go('company', { id: co.id, ...(cat != null ? { act: cat } : {}) })}>{t.visitProfile}</Button>}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <span style={{ font: 'var(--type-body-strong)', color: 'var(--text-secondary)', textAlign: 'center' }}>{t.workSamples}</span>
         {sheet === 'preview' && media.map(m => (
           <div key={m.src} style={{ position: 'relative', aspectRatio: '4/3', borderRadius: 14, overflow: 'hidden', background: 'var(--neutral-100)' }}>
             {m.video
@@ -181,6 +182,16 @@ export function WorkPreviewSheet() {
             )}
           </div>
         ))}
+        {/* Last card: an empty frame inviting the customer to the company page (opens it). */}
+        {sheet === 'preview' && co && media.length > 0 && (
+          <button type="button" onClick={() => a.go('company', { id: co.id, ...(cat != null ? { act: cat } : {}) })}
+            style={{ display: 'block', width: '100%', aspectRatio: '4/3', padding: 20, borderRadius: 14, border: '1.5px dashed var(--border-default)', background: 'var(--neutral-50)', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
+            <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, height: '100%', textAlign: 'center' }}>
+              <Icon name="images" size={30} color="var(--text-tertiary)" />
+              <span style={{ font: 'var(--type-body-strong)', color: 'var(--text-secondary)', maxWidth: 240 }}>{t.moreOnProfile}</span>
+            </span>
+          </button>
+        )}
       </div>
     </BottomSheet>
   );
