@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { Avatar, Badge, BottomSheet, Button, EmptyState, Icon, IconButton, ListItem, SearchBar, SectionHeader } from '../ds';
 import { useApp, type Filters, type ListView, type SheetKey } from '../app/store';
-import { ContactGrid, HScroll, Img, MetaLine, albumMedia, callPhone, card, companyGallery, helpers, listingCompanies, openDirections, openWhatsApp, serviceImage, type Media } from '../app/view';
+import { ContactGrid, HScroll, Img, MetaLine, albumMedia, callPhone, card, companyGallery, companyPreview, helpers, listingCompanies, openDirections, openWhatsApp, serviceImage, type Media } from '../app/view';
 import { logoUrl, photo, remote } from '../data/api';
 import { OFFERS_PER_COMPANY } from '../app/links';
 import type { Album, Company } from '../data/types';
@@ -124,33 +124,71 @@ function SquareGrid({ items, onOpen, per = 12 }: { items: Media[]; onOpen: (k: n
   );
 }
 
+/** How many photos and videos the work preview sheet shows. */
+const PREVIEW_MAX = 10;
 /**
- * Photos for a company card's mosaic: its projects in the category (all categories when null), newest first,
- * each project's main photo first, then more photos from the same projects. 5 or 3 of them (as many as
- * there are); fewer than 3 gives none, and the card keeps its cover.
+ * A company card's quick look at its work (category page): up to PREVIEW_MAX photos and videos from its projects
+ * in the category (see companyPreview); the mosaic shows the first 3 photos. Fewer than 3 photos: no mosaic, and
+ * the card keeps its cover.
  */
-function mosaicPhotos(a: ReturnType<typeof useApp>, co: Company, cat: number | null | undefined): string[] {
-  const works = a.catalog.albums.filter(al => al.co === co.id && (cat == null || al.cat === cat))
-    .sort((x, y) => (y.done || y.added || '').localeCompare(x.done || x.added || ''));
-  const out: string[] = [];
-  const add = (src: string, al: Album) => { if (out.length < 5 && !out.includes(src) && !al.hide?.includes(src)) out.push(src); };
-  works.forEach(al => add(al.img, al));
-  works.forEach(al => al.imgs.forEach(src => add(src, al)));
-  const n = out.length >= 5 ? 5 : out.length >= 3 ? 3 : 0;
-  return out.slice(0, n);
+function workPreview(a: ReturnType<typeof useApp>, co: Company, cat: number | null | undefined) {
+  const media = companyPreview(a, co.id, cat).slice(0, PREVIEW_MAX);
+  const photos = media.filter(m => !m.video).slice(0, 3).map(m => m.src);
+  return photos.length === 3 ? { photos, n: media.length } : { photos: [], n: 0 };
 }
 
-/** One large photo with 2 or 4 smaller ones beside it (in columns of two), all in the card's 200px band. */
-function Mosaic({ photos, bg }: { photos: string[]; bg: string }) {
-  const side = (photos.length - 1) / 2;
+const PHOTO_W: Words = { ar: ['صورة واحدة', 'صورتان', 'صور', 'صورة'], en: ['photo', 'photos'] };
+
+/**
+ * One large photo with two smaller ones stacked beside it, in the card's 200px band. Tapping it opens the work
+ * preview sheet (the rest of the card opens the company); `n` (how many it has) is only read out to screen readers.
+ */
+function Mosaic({ photos, n, bg, onOpen }: { photos: string[]; n: number; bg: string; onOpen: () => void }) {
+  const a = useApp();
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '2fr' + ' 1fr'.repeat(side), gridTemplateRows: '1fr 1fr', gap: 2, height: 200, background: 'var(--surface-card)' }}>
+    <button type="button" aria-label={countOf(a, n, PHOTO_W)} onClick={e => { e.stopPropagation(); onOpen(); }}
+      style={{ position: 'relative', display: 'grid', width: '100%', gridTemplateColumns: '2fr 1fr', gridTemplateRows: '1fr 1fr', gap: 2, height: 200, padding: 0, border: 'none', background: 'var(--surface-card)', cursor: 'zoom-in' }}>
       {photos.map((src, k) => (
-        <div key={src} style={{ position: 'relative', overflow: 'hidden', background: bg, ...(k === 0 ? { gridRow: 'span 2' } : {}) }}>
-          <Img src={photo(src, k === 0 ? 600 : 240)} style={{ position: 'absolute', inset: 0 }} />
-        </div>
+        <span key={src} style={{ position: 'relative', overflow: 'hidden', background: bg, ...(k === 0 ? { gridRow: 'span 2' } : {}) }}>
+          <Img src={photo(src, k === 0 ? 600 : 300)} style={{ position: 'absolute', inset: 0 }} />
+        </span>
       ))}
-    </div>
+    </button>
+  );
+}
+
+/**
+ * The work preview (from a category page card): a white sheet with the company's name and logo, its photos and
+ * videos large (no captions, nothing to tap) and «زيارة صفحة الشركة». It's only there to help decide whether
+ * the company is worth a visit.
+ */
+export function WorkPreviewSheet() {
+  const a = useApp();
+  const { t, sheet, setSheet, previewCo, page } = a;
+  const h = helpers(a);
+  const co = previewCo ? a.idx.co.get(previewCo) : undefined;
+  const cat = page.s === 'listing' ? page.cat : undefined;
+  const media = co ? companyPreview(a, co.id, cat).slice(0, PREVIEW_MAX) : [];
+  const fill: CSSProperties = { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' };
+  return (
+    <BottomSheet open={sheet === 'preview' && !!co} onClose={() => setSheet(null)}
+      title={co && (
+        <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Avatar name={h.coName(co)} src={logoUrl(co.id)} size={36} verified={co.verified} />
+          <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.coName(co)}</span>
+        </span>
+      )}
+      footer={co && <Button fullWidth size="lg" onClick={() => a.go('company', { id: co.id, ...(cat != null ? { act: cat } : {}) })}>{t.visitProfile}</Button>}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {sheet === 'preview' && media.map(m => (
+          <div key={m.src} style={{ position: 'relative', aspectRatio: '4/3', borderRadius: 14, overflow: 'hidden', background: 'var(--neutral-100)' }}>
+            {m.video
+              ? <video src={m.src + '#t=0.1'} muted loop playsInline autoPlay preload="metadata" style={fill} />
+              : <img src={photo(m.src, 900)} alt="" loading="lazy" decoding="async" style={fill} />}
+          </div>
+        ))}
+      </div>
+    </BottomSheet>
   );
 }
 
@@ -193,7 +231,7 @@ export function Listing() {
   const res = listingCompanies(a, c);
   const color = c == null ? 'violet' : catalog.cats[c].color;
   // Opening a company from here lands on this category's activity.
-  const results = res.map(co => ({ ...h.coV(co), mosaic: mosaicPhotos(a, co, c), open: () => a.go('company', { id: co.id, ...(c != null ? { act: c } : {}) }) }));
+  const results = res.map(co => ({ ...h.coV(co), work: workPreview(a, co, c), open: () => a.go('company', { id: co.id, ...(c != null ? { act: c } : {}) }) }));
 
   return (
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column', paddingBottom: 40 }}>
@@ -233,8 +271,8 @@ export function Listing() {
         <div style={{ padding: '14px 20px 0', display: 'flex', flexDirection: 'column', gap: 14 }}>
           {results.map(co => (
             <div key={co.id} onClick={co.open} style={{ ...card, overflow: 'hidden', cursor: 'pointer' }}>
-              {co.mosaic.length
-                ? <Mosaic photos={co.mosaic} bg={co.c100} />
+              {co.work.photos.length
+                ? <Mosaic photos={co.work.photos} n={co.work.n} bg={co.c100} onOpen={() => a.openPreview(co.id)} />
                 : (
                   <div style={{ position: 'relative', aspectRatio: '4/3', maxHeight: 200, width: '100%', background: co.c100 }}>
                     <Img src={co.cover} />

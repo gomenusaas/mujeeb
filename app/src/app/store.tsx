@@ -25,7 +25,7 @@ export const isOverlay = (r: Route) => r.s === 'story' || r.s === 'photo';
 export interface Filters { gov: 'all' | GovId; verified: boolean; sort: 'rel' | 'near' | 'recent' | 'verified'; q: string }
 /** How the company list is laid out: big cards or thin rows. */
 export type ListView = 'large' | 'rows';
-export type SheetKey = null | 'menu' | 'about' | 'hours' | 'branches' | 'address' | 'coverage' | 'contact' | 'website' | 'social' | 'sort' | 'directions' | 'activity' | 'location';
+export type SheetKey = null | 'menu' | 'about' | 'hours' | 'branches' | 'address' | 'coverage' | 'contact' | 'website' | 'social' | 'sort' | 'directions' | 'activity' | 'location' | 'preview';
 /** Sign-in sheet steps: sign in, create account, forgot password, choose a new password (from the reset email). */
 export type AuthStep = 'signin' | 'signup' | 'reset' | 'newpw';
 export interface BookingDraft { co: string; purpose: string; city: string; gov: GovId; day: number; time: string; notes: string; step: number }
@@ -77,6 +77,9 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
   const [fav, setFav] = useState<Record<string, boolean>>(auth.enabled ? {} : saved.fav || { c2: true, c4: true });
   const [f, setF] = useState<Filters>(DEFAULT_F);
   const [sheet, setSheet] = useState<SheetKey>(null);
+  /** The company whose work the «preview» sheet shows (from a category page card). */
+  const [previewCo, setPreviewCo] = useState<string | null>(null);
+  const openPreview = useCallback((id: string) => { setPreviewCo(id); setSheet('preview'); }, []);
   const [exCat, setExCat] = useState(-1);
   const [bookings, setBookings] = useState<Booking[]>(saved.bookings || seed.bookings);
   const [seq, setSeq] = useState({ bk: saved.seq?.bk ?? 57 });
@@ -292,7 +295,7 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
 
   return {
     catalog, idx, coById, sharePage, lang, setLang, ar, t, stack, top, page, scroller, tab, setTab, go, back, replace, reset, toast, showToast,
-    fav, toggleFav, f, setF, sheet, setSheet, exCat, setExCat,
+    fav, toggleFav, f, setF, sheet, setSheet, previewCo, openPreview, exCat, setExCat,
     bookings, setBookings,
     bk, setBk, startBk, submitBooking, days, seen, markSeen, listView, setListView, follows, toggleFollow,
     wilayat, setWilayat, places, locLabel: wilayatLabel(places, wilayat, ar),

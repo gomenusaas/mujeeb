@@ -160,8 +160,17 @@ export function exploreMedia(a: App, cat: number | null | undefined): Media[] {
   return mixedMedia(a.catalog.albums.filter(al => cat == null || al.cat === cat));
 }
 
+/**
+ * A company's work for a quick look from a category page: photos and videos from its projects in the category
+ * (all when null), minus what it hid from its gallery, in the daily mix order (so it changes daily, not on every look).
+ */
+export function companyPreview(a: App, coId: string, cat: number | null | undefined): Media[] {
+  // The company is part of each key, so two companies that share a photo don't come out in the same order.
+  return mixedMedia(a.catalog.albums.filter(al => al.co === coId && (cat == null || al.cat === cat)), coId + '|');
+}
+
 /** The photos and videos of these projects (each once, minus hidden ones) in the daily mix order. */
-function mixedMedia(albums: Album[]): Media[] {
+function mixedMedia(albums: Album[], keyPrefix = ''): Media[] {
   const seen = new Set<string>(); // the same photo used in two projects shows once
   const entries: MixEntry<Media>[] = [];
   for (const al of albums) {
@@ -169,7 +178,7 @@ function mixedMedia(albums: Album[]): Media[] {
     for (const m of al.imgs.map(src => ({ src, video: false, al })).concat((al.vids || []).map(src => ({ src, video: true, al })))) {
       if (hide.has(m.src) || seen.has(m.src)) continue;
       seen.add(m.src);
-      entries.push({ item: m, key: m.src, company: al.co, added: al.added });
+      entries.push({ item: m, key: keyPrefix + m.src, company: al.co, added: al.added });
     }
   }
   return dailyMix(entries);
