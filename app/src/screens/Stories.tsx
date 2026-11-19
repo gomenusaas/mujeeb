@@ -3,13 +3,13 @@ import { Avatar, Button, Icon, IconButton } from '../ds';
 import { useApp, type App } from '../app/store';
 import { helpers } from '../app/view';
 import { logoUrl, remote } from '../data/api';
-import { STORIES, type Story } from '../data/stories';
+import { shownStories, type Story } from '../data/stories';
 
 /** How long a photo story stays on screen. Videos play to their end. */
 const IMAGE_MS = 5000;
 
 /** Live stories posted by companies (Supabase), or the bundled demo stories. */
-const allStories = (a: App) => (a.catalog.stories ?? STORIES).filter(s => a.idx.co.has(s.co));
+const allStories = (a: App) => shownStories(a.catalog.stories).filter(s => a.idx.co.has(s.co));
 
 /** Most companies in a category page's stories row. */
 const CAT_STORY_MAX = 30;

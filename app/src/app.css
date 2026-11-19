@@ -33,6 +33,8 @@ input[type=search]::-webkit-search-cancel-button { -webkit-appearance: none; }
 [dir=rtl] .ds-mirror { transform: scaleX(-1); }
 
 .mj-s { scrollbar-width: none; }
+/* Search fields clear with the app's own ✕ (SearchBar), not the browser's. */
+input[type=search]::-webkit-search-cancel-button, input[type=search]::-webkit-search-decoration { -webkit-appearance: none; display: none; }
 .mj-s::-webkit-scrollbar { display: none; }
 .mj-press:active { transform: scale(.97); }
 .mj-press-sm:active { transform: scale(.98); }

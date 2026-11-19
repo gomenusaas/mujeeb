@@ -39,3 +39,9 @@ export const STORIES: Story[] = [
   img('1615873968403-89e068629265', 'g1-4', 18, 'تنسيق أثاث لشقة جديدة', 'Furnishing a new apartment'),
   img('1618221195710-dd6b41faaea6', 'g1-5', 20, 'غرفة جلوس بطابع عصري', 'A modern sitting room'),
 ];
+
+/**
+ * The stories the app shows: the live ones, or the demo ones above while the database has none (so the stories
+ * rows aren't empty before companies start posting). PRE-LAUNCH: drop the demo fallback (return `live ?? []`).
+ */
+export const shownStories = (live?: Story[]): Story[] => (live?.length ? live : STORIES);

@@ -134,8 +134,8 @@ export function listingCompanies(a: App, c: number | undefined): Company[] {
   const idx = words.length ? searchIndex(catalog) : null;
   const g = myGov(a);
   const score = new Map<string, number>();
-  // A sub-service chip: companies with a service in this category that covers it.
-  const svcOf = f.svc ? new Set(catalog.services.filter(s => (c == null || s.cat === c) && s.sub?.includes(f.svc)).map(s => s.co)) : null;
+  // Sub-service chips: companies that cover every selected one (each by some service in this category).
+  const coversSub = (co: Company, id: string) => catalog.services.some(s => s.co === co.id && (c == null || s.cat === c) && s.sub?.includes(id));
   let res = catalog.companies.filter(co => {
     if (!((c == null || co.cats.includes(c)) &&
       // Coverage, not branch location, decides whether a company appears for a governorate.
@@ -143,7 +143,7 @@ export function listingCompanies(a: App, c: number | undefined): Company[] {
       (!f.verified || co.verified) &&
       (!f.mine || covers(co, g)) &&
       (!f.open || (!!co.hrs && isOpenNow(co.hrs))) &&
-      (!svcOf || svcOf.has(co.id)))) return false;
+      f.svcs.every(id => coversSub(co, id)))) return false;
     if (!idx) return true;
     const { strong, weak } = idx.get(co.id)!;
     if (!words.every(w => strong.includes(w) || weak.includes(w))) return false;

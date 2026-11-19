@@ -78,7 +78,7 @@ export interface Catalog {
   companies: Company[]; services: Service[]; albums: Album[];
   /** Each category's sub-services (active ones, in order). */
   subs: SubService[];
-  /** Live stories from Supabase; undefined in demo mode (the bundled demo stories are used). */
+  /** Live stories from Supabase; undefined in demo mode. While there are none, the bundled demo stories show (see shownStories). */
   stories?: Story[];
   /** Followers per company (not counting the person viewing); missing = none yet. */
   followers?: Record<string, number>;

@@ -198,27 +198,6 @@ export function WorkPreviewSheet() {
   );
 }
 
-type Sort = Filters['sort'];
-const SORTS: { v: Sort; icon: string }[] = [{ v: 'rel', icon: 'star' }, { v: 'near', icon: 'map-pin' }, { v: 'recent', icon: 'clock' }, { v: 'verified', icon: 'badge-check' }];
-const sortLabel = (t: ReturnType<typeof useApp>['t'], v: Sort) => (v === 'near' ? t.nearest : v === 'recent' ? t.recent : v === 'verified' ? t.verifiedSort : t.relevance);
-
-/** Bottom sheet listing the sort options for the company list (opened from the sort button). */
-export function SortSheet() {
-  const a = useApp();
-  const { t, f, setF, sheet, setSheet } = a;
-  return (
-    <BottomSheet open={sheet === 'sort'} onClose={() => setSheet(null)} title={t.sortBy}>
-      {SORTS.map(s => {
-        const on = f.sort === s.v;
-        return (
-          <ListItem key={s.v} icon={s.icon} color={on ? 'violet' : undefined} title={sortLabel(t, s.v)} chevron={false}
-            trailing={on ? <Icon name="check" size={20} color="var(--brand)" /> : null}
-            onClick={() => { setF(x => ({ ...x, sort: s.v })); setSheet(null); }} />
-        );
-      })}
-    </BottomSheet>
-  );
-}
 
 
 /** Companies per page on a category page. */
@@ -268,24 +247,30 @@ export function Listing() {
           <SearchBar placeholder={t.search} value={f.q} onChange={e => set({ q: e.target.value })} onFilter={null} elevated />
         </div>
       </div>
-      {/* The category's stories (hidden while searching or filtering: then only results show). */}
-      {c != null && !f.q && !f.mine && !f.verified && !f.open && !f.svc && <CategoryStoryRow cat={c} />}
-      {/* The order, then the category's common services. */}
-      <div className="mj-s" style={{ display: 'flex', gap: 8, alignItems: 'center', overflowX: 'auto', padding: '10px 20px 2px', scrollbarWidth: 'none' }}>
-        <button type="button" aria-haspopup="dialog" aria-label={t.sortBy + ': ' + sortLabel(t, f.sort)} onClick={() => a.setSheet('sort')}
-          style={{ flex: 'none', height: 38, display: 'flex', alignItems: 'center', gap: 6, padding: '0 14px', border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--neutral-100)', color: 'var(--text-primary)', font: 'var(--type-body-sm)', fontWeight: 700, fontFamily: 'var(--font-sans)', cursor: 'pointer' }}>
-          <Icon name="arrow-down-up" size={15} />{sortLabel(t, f.sort)}<Icon name="chevron-down" size={15} color="var(--text-secondary)" />
-        </button>
-      </div>
+      {/* The category's stories (they stay while searching or filtering, so the page doesn't jump). */}
+      {c != null && <CategoryStoryRow cat={c} />}
+      {/* «مسح الفلاتر» while a chip or a search narrows the list, then the category's common services as chips: one at a
+          time (another chip switches to it; the selected one again clears it). The list is always in the «الأنسب» order. */}
+      {(f.svcs.length > 0 || f.q.trim()) && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '10px 20px 0' }}>
+          <button type="button" onClick={() => setF(DEFAULT_F)}
+            style={{ height: 28, display: 'inline-flex', alignItems: 'center', gap: 4, padding: 0, border: 'none', background: 'none', color: 'var(--brand)', font: 'var(--type-body-sm)', fontWeight: 700, fontFamily: 'var(--font-sans)', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            <Icon name="x" size={15} />{t.clear}
+          </button>
+        </div>
+      )}
       {chips.length >= 2 && (
-        <div className="mj-s" style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '8px 20px 2px', scrollbarWidth: 'none' }}>
-          {chips.map(x => <Chip key={x.key} size="sm" selected={f.svc === x.key} onClick={() => set({ svc: f.svc === x.key ? '' : x.key })}>{x.label}</Chip>)}
+        <div className="mj-s" style={{ display: 'flex', gap: 8, alignItems: 'center', overflowX: 'auto', padding: (f.svcs.length || f.q.trim() ? '6px' : '12px') + ' 20px 2px', scrollbarWidth: 'none' }}>
+          {chips.map(x => {
+            const on = f.svcs.includes(x.key);
+            return <Chip key={x.key} size="sm" selected={on} onClick={() => set({ svcs: on ? [] : [x.key] })}>{x.label}</Chip>;
+          })}
         </div>
       )}
       {!res.length && (
         <>
           <EmptyState icon="search-x" color={color} title={t.noResults} body={t.noResultsBody} />
-          <div style={{ display: 'flex', justifyContent: 'center' }}><Button variant="secondary" onClick={() => setF(x => ({ ...DEFAULT_F, sort: x.sort }))}>{t.clear}</Button></div>
+          <div style={{ display: 'flex', justifyContent: 'center' }}><Button variant="secondary" onClick={() => setF(DEFAULT_F)}>{t.clear}</Button></div>
         </>
       )}
       <div style={{ padding: '14px 20px 0', display: 'flex', flexDirection: 'column', gap: 14 }}>

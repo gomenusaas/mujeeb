@@ -274,14 +274,22 @@ export function Radio({ checked, onChange, label, description, card, style }: {
   );
 }
 
-export function SearchBar({ placeholder, value, onChange, onFilter, elevated = true, style }: {
-  placeholder?: string; value?: string; onChange?: (e: ChangeEvent<HTMLInputElement>) => void; onFilter?: (() => void) | null; elevated?: boolean; style?: Style;
+/** A rounded search field. `onClear`: a small ✕ appears while there's text and empties it. */
+export function SearchBar({ placeholder, value, onChange, onFilter, onClear, clearLabel = 'Clear', elevated = true, style }: {
+  placeholder?: string; value?: string; onChange?: (e: ChangeEvent<HTMLInputElement>) => void; onFilter?: (() => void) | null;
+  onClear?: () => void; clearLabel?: string; elevated?: boolean; style?: Style;
 }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, height: 52, paddingInline: '18px 6px', borderRadius: 'var(--radius-pill)', background: 'var(--surface-card)', boxShadow: elevated ? 'var(--shadow-md)' : 'inset 0 0 0 1.5px var(--border-default)', fontFamily: 'var(--font-sans)', ...style }}>
       <Icon name="search" size={20} color="var(--text-tertiary)" />
       <input type="search" value={value} onChange={onChange} placeholder={placeholder} aria-label={placeholder}
         style={{ flex: 1, minWidth: 0, height: '100%', border: 'none', outline: 'none', background: 'transparent', font: 'var(--type-body)', fontWeight: 500, color: 'var(--text-primary)' }} />
+      {onClear && value && (
+        <button type="button" onClick={onClear} aria-label={clearLabel}
+          style={{ flex: 'none', width: 28, height: 28, marginInlineEnd: 8, borderRadius: '50%', border: 'none', background: 'var(--neutral-100)', color: 'var(--text-secondary)', display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
+          <Icon name="x" size={15} />
+        </button>
+      )}
       {onFilter != null && (
         <button type="button" onClick={onFilter} aria-label="Filters" style={{ width: 40, height: 40, borderRadius: '50%', border: 'none', background: 'var(--brand)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
           <Icon name="sliders-horizontal" size={18} />

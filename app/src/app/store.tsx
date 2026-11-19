@@ -4,7 +4,7 @@ import { auth, remote, type Me } from '../data/api';
 import { strings, STR, type T } from '../i18n/strings';
 import { bookingDays, type BookingDay } from './dates';
 import { hasOffer, pathToStack, routeToPath, shareLink } from './links';
-import { STORIES } from '../data/stories';
+import { shownStories } from '../data/stories';
 import { DEFAULT_WILAYAT, OMAN, findWilayat, wilayatLabel } from '../data/oman';
 
 export type Screen = 'home' | 'categories' | 'explore' | 'profile' | 'listing' | 'company' | 'service' | 'offer' | 'album'
@@ -24,15 +24,15 @@ const samePage = (x: Route, y: Route) => x.s === y.s && (x.id ?? '') === (y.id ?
 export const isOverlay = (r: Route) => r.s === 'story' || r.s === 'photo';
 /**
  * A category page's search, quick filters and order. `mine`: only companies that cover the customer's service
- * location; `open`: only companies open now; `svc`: only companies covering this sub-service (its id).
+ * location; `open`: only companies open now; `svcs`: only companies covering every one of these sub-services (ids).
  */
-export interface Filters { gov: 'all' | GovId; verified: boolean; sort: 'rel' | 'near' | 'recent' | 'verified'; q: string; mine: boolean; open: boolean; svc: string }
+export interface Filters { gov: 'all' | GovId; verified: boolean; sort: 'rel' | 'near' | 'recent' | 'verified'; q: string; mine: boolean; open: boolean; svcs: string[] }
 export type SheetKey = null | 'menu' | 'about' | 'hours' | 'branches' | 'address' | 'coverage' | 'contact' | 'website' | 'social' | 'sort' | 'directions' | 'activity' | 'location' | 'preview' | 'services' | 'gallery';
 /** Sign-in sheet steps: sign in, create account, forgot password, choose a new password (from the reset email). */
 export type AuthStep = 'signin' | 'signup' | 'reset' | 'newpw';
 export interface BookingDraft { co: string; purpose: string; city: string; gov: GovId; day: number; time: string; notes: string; step: number }
 
-export const DEFAULT_F: Filters = { gov: 'all', verified: false, sort: 'rel', q: '', mine: false, open: false, svc: '' };
+export const DEFAULT_F: Filters = { gov: 'all', verified: false, sort: 'rel', q: '', mine: false, open: false, svcs: [] };
 const LS = 'mujeeb.v1';
 const TRAIL = 'mujeeb.trail';
 
@@ -70,7 +70,7 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
   // Opening a shared link (e.g. /company/c4) starts on that screen.
   // After a reload in the same tab, pick the back trail up where it was (kept in sessionStorage); a new
   // tab or a shared link builds one from the address instead.
-  const initial = useRef(restoreTrail(catalog) ?? pathToStack(location.pathname, catalog, catalog.stories ?? STORIES)).current;
+  const initial = useRef(restoreTrail(catalog) ?? pathToStack(location.pathname, catalog, shownStories(catalog.stories))).current;
   const [stack, setStack] = useState<Route[]>(initial.stack);
   const [tab, setTabState] = useState<RootTab>(initial.tab);
   const [toast, setToast] = useState<{ msg: string; tone: string } | null>(null);
@@ -173,7 +173,7 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
   function popTo(k: number) {
     const st = stackRef.current.slice(0, k + 1);
     const r = st[st.length - 1];
-    if (r.s === 'listing') setF({ ...DEFAULT_F, ...r.f }); // older saved pages lack the newer filters
+    if (r.s === 'listing') setF({ ...DEFAULT_F, ...r.f, svcs: Array.isArray(r.f?.svcs) ? r.f!.svcs : [] }); // older saved pages lack the newer filters
     setStack(st);
   }
   const go = useCallback((s: Screen, p: Omit<Route, 's'> & { q?: string } = {}) => {

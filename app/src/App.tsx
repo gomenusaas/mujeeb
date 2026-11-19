@@ -6,7 +6,7 @@ import type { Catalog, CustomerSeed } from './data/types';
 import { STR } from './i18n/strings';
 import { useDragScroll } from './app/useDragScroll';
 import { Categories, Explore, Home, LocationSheet } from './screens/Discover';
-import { ActivitySheet, AlbumPage, CompanyPage, CompanySheet, GallerySheet, Listing, OfferPage, ReachSheets, ServicePage, ServicesSheet, SortSheet, WorkPreviewSheet } from './screens/Provider';
+import { ActivitySheet, AlbumPage, CompanyPage, CompanySheet, GallerySheet, Listing, OfferPage, ReachSheets, ServicePage, ServicesSheet, WorkPreviewSheet } from './screens/Provider';
 import { BookingPage, DonePage } from './screens/Flows';
 import { StoryViewer } from './screens/Stories';
 import { PhotoViewer } from './screens/Photo';
@@ -136,7 +136,6 @@ function Phone() {
         )}
         {reachCo && <CompanySheet co={reachCo} />}
         {reachCo && <ReachSheets co={reachCo} />}
-        {top.s === 'listing' && <SortSheet />}
         {top.s === 'listing' && <WorkPreviewSheet />}
         {top.s === 'company' && <ActivitySheet />}
         {top.s === 'company' && <ServicesSheet />}
