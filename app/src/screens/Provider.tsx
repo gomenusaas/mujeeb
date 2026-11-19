@@ -130,13 +130,17 @@ const PHOTO_W: Words = { ar: ['صورة واحدة', 'صورتان', 'صور', '
 function Mosaic({ photos, n, bg, onOpen }: { photos: string[]; n: number; bg: string; onOpen: () => void }) {
   const a = useApp();
   return (
+    // The grid is a div inside the button: Safari on iPhone doesn't lay out a <button> as a grid, which left the
+    // photos with no size there.
     <button type="button" aria-label={countOf(a, n, PHOTO_W)} onClick={e => { e.stopPropagation(); onOpen(); }}
-      style={{ position: 'relative', display: 'grid', width: '100%', gridTemplateColumns: '2fr 1fr', gridTemplateRows: '1fr 1fr', gap: 2, height: 200, padding: 0, border: 'none', background: 'var(--surface-card)', cursor: 'zoom-in' }}>
-      {photos.map((src, k) => (
-        <span key={src} style={{ position: 'relative', overflow: 'hidden', background: bg, ...(k === 0 ? { gridRow: 'span 2' } : {}) }}>
-          <Img src={photo(src, k === 0 ? 600 : 300)} style={{ position: 'absolute', inset: 0 }} />
-        </span>
-      ))}
+      style={{ display: 'block', width: '100%', height: 200, padding: 0, border: 'none', background: 'var(--surface-card)', cursor: 'zoom-in' }}>
+      <div style={{ display: 'grid', width: '100%', height: '100%', gridTemplateColumns: '2fr 1fr', gridTemplateRows: '1fr 1fr', gap: 2 }}>
+        {photos.map((src, k) => (
+          <div key={src} style={{ position: 'relative', minWidth: 0, minHeight: 0, overflow: 'hidden', background: bg, ...(k === 0 ? { gridRow: 'span 2' } : {}) }}>
+            <Img src={photo(src, k === 0 ? 600 : 300)} style={{ position: 'absolute', inset: 0 }} />
+          </div>
+        ))}
+      </div>
     </button>
   );
 }
