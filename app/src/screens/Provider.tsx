@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { Avatar, Badge, BottomSheet, Button, Chip, EmptyState, Icon, IconButton, ListItem, SearchBar, SectionHeader } from '../ds';
 import { DEFAULT_F, useApp, type Filters, type SheetKey } from '../app/store';
-import { ContactGrid, HScroll, Img, MetaLine, albumMedia, callPhone, card, categoryServiceChips, companyGallery, companyPreview, helpers, listingCompanies, openDirections, openWhatsApp, serviceImage, type Media } from '../app/view';
+import { ContactGrid, HScroll, Img, MetaLine, preloadPhotos, useNear, albumMedia, callPhone, card, categoryServiceChips, companyGallery, companyPreview, helpers, listingCompanies, openDirections, openWhatsApp, serviceImage, type Media } from '../app/view';
 import { logoUrl, photo, remote } from '../data/api';
 import { OFFERS_PER_COMPANY } from '../app/links';
 import type { Album, Company } from '../data/types';
@@ -110,6 +110,8 @@ function projectNumber(a: ReturnType<typeof useApp>, al: Album) {
 
 /** How many photos and videos the work preview sheet shows. */
 const PREVIEW_MAX = 10;
+/** Width the work preview sheet's photos are fetched at (its 350px column on a 2× screen). */
+const SHEET_W = 700;
 /**
  * A company card's quick look at its work (category page): up to PREVIEW_MAX photos and videos from its projects
  * in the category (see companyPreview); the mosaic shows the first 3 photos. Fewer than 3 photos: no mosaic, and
@@ -127,17 +129,22 @@ const PHOTO_W: Words = { ar: ['صورة واحدة', 'صورتان', 'صور', '
  * One large photo with two smaller ones stacked beside it, in the card's 200px band. Tapping it opens the work
  * preview sheet (the rest of the card opens the company); `n` (how many it has) is only read out to screen readers.
  */
-function Mosaic({ photos, n, bg, onOpen }: { photos: string[]; n: number; bg: string; onOpen: () => void }) {
+function Mosaic({ photos, n, bg, onOpen, onPress }: { photos: string[]; n: number; bg: string; onOpen: () => void; onPress?: () => void }) {
   const a = useApp();
+  const box = useRef<HTMLButtonElement>(null);
+  // Photos start loading well before the card scrolls into view (see useNear).
+  const near = useNear(box);
   return (
     // The grid is a div inside the button: Safari on iPhone doesn't lay out a <button> as a grid, which left the
     // photos with no size there.
-    <button type="button" aria-label={countOf(a, n, PHOTO_W)} onClick={e => { e.stopPropagation(); onOpen(); }}
+    <button ref={box} type="button" aria-label={countOf(a, n, PHOTO_W)} onClick={e => { e.stopPropagation(); onOpen(); }}
+      onPointerDown={onPress}
       style={{ display: 'block', width: '100%', height: 200, padding: 0, border: 'none', background: 'var(--surface-card)', cursor: 'zoom-in' }}>
       <div style={{ display: 'grid', width: '100%', height: '100%', gridTemplateColumns: '2fr 1fr', gridTemplateRows: '1fr 1fr', gap: 2 }}>
         {photos.map((src, k) => (
           <div key={src} style={{ position: 'relative', minWidth: 0, minHeight: 0, overflow: 'hidden', background: bg, ...(k === 0 ? { gridRow: 'span 2' } : {}) }}>
-            <Img src={photo(src, k === 0 ? 600 : 300)} style={{ position: 'absolute', inset: 0 }} />
+            {/* The large one at the sheet's size, so opening the sheet reuses it. */}
+            {near && <Img eager src={photo(src, k === 0 ? SHEET_W : 300)} style={{ position: 'absolute', inset: 0 }} />}
           </div>
         ))}
       </div>
@@ -169,11 +176,11 @@ export function WorkPreviewSheet() {
       footer={co && <Button fullWidth size="lg" onClick={() => a.go('company', { id: co.id, ...(cat != null ? { act: cat } : {}) })}>{t.visitProfile}</Button>}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         <span style={{ font: 'var(--type-body-strong)', color: 'var(--text-secondary)', textAlign: 'center' }}>{t.workSamples}</span>
-        {sheet === 'preview' && media.map(m => (
+        {sheet === 'preview' && media.map((m, k) => (
           <div key={m.src} style={{ position: 'relative', aspectRatio: '4/3', borderRadius: 14, overflow: 'hidden', background: 'var(--neutral-100)' }}>
             {m.video
               ? <video src={m.src + '#t=0.1'} muted loop playsInline autoPlay preload="metadata" style={fill} />
-              : <img src={photo(m.src, 900)} alt="" loading="lazy" decoding="async" style={fill} />}
+              : <img src={photo(m.src, SHEET_W)} alt="" loading={k < 4 ? 'eager' : 'lazy'} decoding="async" style={fill} />}
             {m.al && (
               <span style={{ position: 'absolute', insetInline: 0, bottom: 0, padding: '36px 14px 12px', background: 'linear-gradient(to top, oklch(0.12 0.02 285 / 0.78), oklch(0.12 0.02 285 / 0.4) 55%, transparent)', color: '#fff', display: 'flex', flexDirection: 'column', gap: 2, pointerEvents: 'none' }}>
                 <span style={{ font: '700 15px/1.3 var(--font-sans)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.ar ? m.al.ar : m.al.en}</span>
@@ -291,7 +298,9 @@ export function Listing() {
         {results.slice(0, shown).map(co => (
           <div key={co.id} onClick={co.open} style={{ ...card, overflow: 'hidden', cursor: 'pointer' }}>
             {co.work.photos.length
-              ? <Mosaic photos={co.work.photos} n={co.work.n} bg={co.c100} onOpen={() => a.openPreview(co.id)} />
+              ? <Mosaic photos={co.work.photos} n={co.work.n} bg={co.c100} onOpen={() => a.openPreview(co.id)}
+                  // As the finger lands, start fetching the sheet's first photos (it then opens with them ready).
+                  onPress={() => preloadPhotos(companyPreview(a, co.id, c).slice(0, 4).filter(m => !m.video).map(m => photo(m.src, SHEET_W)))} />
               : (
                 <div style={{ position: 'relative', aspectRatio: '4/3', maxHeight: 200, width: '100%', background: co.c100 }}>
                   <Img src={co.cover} />

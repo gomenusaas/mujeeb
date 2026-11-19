@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from 'react';
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import { AppBar, Icon } from '../ds';
 import { logoUrl, photo, remote } from '../data/api';
 import type { Album, Branch, Catalog, Company, GovId, Service } from '../data/types';
@@ -306,9 +306,33 @@ export function StepBars({ step }: { step: number }) {
   );
 }
 
-export const Img = ({ src, style }: { src: string; style?: CSSProperties }) => (
-  <img src={src} alt="" loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', ...style }} />
+/** A photo filling its box. `eager`: load it now instead of when the browser decides it's close to the screen. */
+export const Img = ({ src, style, eager }: { src: string; style?: CSSProperties; eager?: boolean }) => (
+  <img src={src} alt="" loading={eager ? 'eager' : 'lazy'} decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', ...style }} />
 );
+
+/**
+ * True once the element comes within `margin` px of the visible part of the page's scroller (and stays true).
+ * Used to start loading photos well before they scroll into view: Safari's own lazy loading starts late,
+ * so photos popped in a moment after scrolling to them.
+ */
+export function useNear(ref: { current: Element | null }, margin = 900): boolean {
+  const [near, setNear] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || near) return;
+    const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { setNear(true); io.disconnect(); } },
+      { root: el.closest('.mj-scroll'), rootMargin: margin + 'px 0px' });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [ref, margin, near]);
+  return near;
+}
+
+/** Starts downloading photos now (e.g. a sheet's first photos as the finger touches what opens it). */
+export function preloadPhotos(urls: string[]) {
+  for (const u of urls) { const im = new Image(); im.decoding = 'async'; im.src = u; }
+}
 
 export const MetaLine = ({ icon, children, size = 13, style }: { icon: string; children: ReactNode; size?: number; style?: CSSProperties }) => (
   <span style={{ display: 'flex', alignItems: 'center', gap: 4, font: 'var(--type-caption)', color: 'var(--text-tertiary)', ...style }}>
