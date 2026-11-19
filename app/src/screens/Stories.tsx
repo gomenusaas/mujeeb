@@ -9,7 +9,32 @@ import { STORIES, type Story } from '../data/stories';
 const IMAGE_MS = 5000;
 
 /** Live stories posted by companies (Supabase), or the bundled demo stories. */
-const storiesFor = (a: App) => (a.catalog.stories ?? STORIES).filter(s => a.idx.co.has(s.co));
+const allStories = (a: App) => (a.catalog.stories ?? STORIES).filter(s => a.idx.co.has(s.co));
+
+/** Most companies in a category page's stories row. */
+const CAT_STORY_MAX = 30;
+/**
+ * A category page's stories row: one entry per company in the category that has live stories (its stories newest
+ * first), at most CAT_STORY_MAX companies. Companies with a story this customer hasn't watched come first, those
+ * where everything is watched last; within each, companies the customer follows first, then the rest, each by
+ * their newest story (newest first).
+ */
+export function categoryStories(a: App, cat: number): { co: string; stories: Story[]; seen: boolean }[] {
+  const by = new Map<string, Story[]>();
+  for (const s of allStories(a)) {
+    if (!a.idx.co.get(s.co)!.cats.includes(cat)) continue;
+    by.set(s.co, [...(by.get(s.co) ?? []), s]);
+  }
+  const groups = [...by].map(([co, list]) => {
+    const stories = list.slice().sort((x, y) => x.h - y.h);
+    return { co, stories, seen: stories.every(s => a.seen[s.id]), followed: !!a.follows[co], newest: stories[0].h };
+  });
+  groups.sort((x, y) => Number(x.seen) - Number(y.seen) || Number(y.followed) - Number(x.followed) || x.newest - y.newest);
+  return groups.slice(0, CAT_STORY_MAX).map(({ co, stories, seen }) => ({ co, stories, seen }));
+}
+
+/** The stories the viewer steps through: a category page's row in its order (`cat`), or all of them (Home). */
+const storiesFor = (a: App, cat?: number) => (cat != null ? categoryStories(a, cat).flatMap(g => g.stories) : allStories(a));
 const ago = (a: App, s: Story) => a.t.hoursAgo.replace('{n}', helpers(a).num(s.h));
 
 /** The circular company logo with a story ring: brand gradient while unseen, muted once seen. */
@@ -64,6 +89,51 @@ export function StoryRow() {
 }
 
 /**
+ * A category page's stories: like Home's row, 9:16 thumbnails three per view (a swipe moves a whole set of
+ * three), but one card per company showing its latest story, with the logo ring (brand gradient while something
+ * is unwatched, muted once all is watched), name and how long ago. Tapping plays the company's stories, then
+ * the next companies' in the row's order. See categoryStories for who shows and in what order.
+ */
+export function CategoryStoryRow({ cat }: { cat: number }) {
+  const a = useApp();
+  const h = helpers(a);
+  const groups = categoryStories(a, cat);
+  if (!groups.length) return null;
+  return (
+    <section aria-label={a.t.stories} className="mj-s"
+      style={{ display: 'grid', gridAutoFlow: 'column', gridAutoColumns: 'calc((100% - 20px) / 3 - 8px)', gap: 10, overflowX: 'auto', scrollSnapType: 'x mandatory', scrollPaddingInline: 20, padding: '16px 20px 4px', scrollbarWidth: 'none' }}>
+      {groups.map((g, i) => {
+        const co = a.idx.co.get(g.co)!;
+        const name = h.coName(co);
+        const latest = g.stories[0];
+        // Start at its newest story not watched yet (or its newest).
+        const first = g.stories.find(s => !a.seen[s.id]) ?? latest;
+        return (
+          <button key={g.co} type="button" className="mj-press-sm" onClick={() => a.go('story', { id: first.id, cat })}
+            aria-label={name + ' — ' + (a.ar ? latest.ar : latest.en)}
+            style={{ position: 'relative', aspectRatio: '9 / 16', border: 'none', padding: 0, borderRadius: 16, overflow: 'hidden', background: 'var(--neutral-200)', cursor: 'pointer', scrollSnapAlign: i % 3 === 0 ? 'start' : 'none', fontFamily: 'var(--font-sans)', textAlign: 'start', boxShadow: 'var(--shadow-sm)' }}>
+            <img src={latest.poster} alt="" loading="lazy" decoding="async" draggable={false} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+            <span style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, oklch(0 0 0 / .35), transparent 30%, transparent 55%, oklch(0 0 0 / .7))' }} />
+            <span style={{ position: 'absolute', top: 8, insetInlineStart: 8 }}>
+              <StoryLogo src={logoUrl(co.id)} name={name} size={38} seen={g.seen} />
+            </span>
+            {latest.kind === 'video' && (
+              <span aria-hidden="true" style={{ position: 'absolute', top: 11, insetInlineEnd: 8, width: 22, height: 22, borderRadius: '50%', background: 'oklch(0 0 0 / .35)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}>
+                <Icon name="play" size={10} filled />
+              </span>
+            )}
+            <span style={{ position: 'absolute', insetInline: 8, bottom: 9, display: 'flex', flexDirection: 'column', gap: 1, color: '#fff' }}>
+              <span style={{ font: '700 12px/15px var(--font-sans)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{name}</span>
+              <span style={{ font: '500 11px/14px var(--font-sans)', opacity: 0.8 }}>{ago(a, latest)}</span>
+            </span>
+          </button>
+        );
+      })}
+    </section>
+  );
+}
+
+/**
  * Full-screen story viewer (route `story`). Swipe sideways between companies' stories;
  * tap the far side for the next one and the near side for the previous one; press and
  * hold to pause. Photos show for 5 s, videos play to the end, then it moves on and
@@ -73,7 +143,8 @@ export function StoryViewer() {
   const a = useApp();
   const { t, ar, top } = a;
   const h = helpers(a);
-  const list = storiesFor(a);
+  // From a category page the viewer steps through that page's row; from Home, through every story.
+  const list = storiesFor(a, top.cat);
   const start = Math.max(0, list.findIndex(s => s.id === top.id));
   const [i, setI] = useState(start);
   const [prog, setProg] = useState(0);
@@ -100,7 +171,7 @@ export function StoryViewer() {
     a.markSeen(story.id);
     remote.track(story.co, 'story_view', story.id);
     // Keep the address on the story being shown, so Share and reloads point at it.
-    if (top.id !== story.id) a.replace('story', { id: story.id });
+    if (top.id !== story.id) a.replace('story', { id: story.id, ...(top.cat != null ? { cat: top.cat } : {}) });
   }, [story?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Play the current story (and only it), and drive its progress bar.

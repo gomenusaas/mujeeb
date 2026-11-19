@@ -6,6 +6,7 @@ import { logoUrl, photo, remote } from '../data/api';
 import { OFFERS_PER_COMPANY } from '../app/links';
 import type { Album, Company } from '../data/types';
 import { WEEK_ORDER, dayName, fmtTime, isOpenNow, muscatToday, shifts } from '../app/hours';
+import { CategoryStoryRow } from './Stories';
 
 /** Height of the photo at the top of the company page and its service pages (kept the same on both). */
 const HERO_H = 250;
@@ -254,6 +255,8 @@ export function Listing() {
           <SearchBar placeholder={t.search} value={f.q} onChange={e => set({ q: e.target.value })} onFilter={null} elevated />
         </div>
       </div>
+      {/* The category's stories (hidden while searching or filtering: then only results show). */}
+      {c != null && !f.q && !f.mine && !f.verified && !f.open && !f.svc && <CategoryStoryRow cat={c} />}
       {/* Order and quick filters in one sideways row, then the category's common services. */}
       <div className="mj-s" style={{ display: 'flex', gap: 8, alignItems: 'center', overflowX: 'auto', padding: '10px 20px 2px', scrollbarWidth: 'none' }}>
         <button type="button" aria-haspopup="dialog" aria-label={t.sortBy + ': ' + sortLabel(t, f.sort)} onClick={() => a.setSheet('sort')}
