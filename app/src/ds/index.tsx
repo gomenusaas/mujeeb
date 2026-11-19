@@ -4,7 +4,7 @@
  * only changes are TypeScript props, bundled Lucide icons (no runtime fetch) and
  * logical `text-align: start` so the components lay out correctly in RTL.
  */
-import { useRef, useState, type CSSProperties, type ReactNode, type ChangeEvent } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type ChangeEvent } from 'react';
 import { ICONS } from './icons';
 
 type Style = CSSProperties;
@@ -154,11 +154,33 @@ export function ImageSlot({ label = 'photo', tone = 'neutral', radius = 0, heigh
  * A sheet that slides up from the bottom. It closes from the scrim, or by pulling it down: drag the handle or
  * title, or drag the content down while it's scrolled to the top. Let go past 90px (or with a quick flick) and
  * it closes; otherwise it springs back.
+ *
+ * It glides the whole way in both directions: on opening, the content is laid out first and the sheet slides up a
+ * frame later; on closing, it keeps showing what it showed while open until it has slid out (callers usually
+ * render their content only while their sheet is open, which made it shrink and vanish at once).
  */
 export function BottomSheet({ open, onClose, title, children, footer, style }: {
   open: boolean; onClose: () => void; title?: ReactNode; children?: ReactNode; footer?: ReactNode; style?: Style;
 }) {
   const [dy, setDy] = useState(0);
+  // `shown`: slid in. `kept`: content still on screen (open, or sliding out).
+  const [shown, setShown] = useState(open);
+  const [kept, setKept] = useState(open);
+  const last = useRef({ title, children, footer });
+  if (open) last.current = { title, children, footer };
+  useEffect(() => {
+    if (open) {
+      setKept(true);
+      // Slide up once the content has been laid out (a short timer rather than animation frames, which a
+      // background tab never runs).
+      const t = setTimeout(() => setShown(true), 30);
+      return () => clearTimeout(t);
+    }
+    setShown(false);
+    const t = setTimeout(() => setKept(false), 620);
+    return () => clearTimeout(t);
+  }, [open]);
+  const view = open ? { title, children, footer } : kept ? last.current : { title: undefined, children: null, footer: undefined };
   const drag = useRef<{ y: number; t: number; body: boolean } | null>(null);
   const body = useRef<HTMLDivElement>(null);
   const start = (y: number, isBody: boolean) => {
@@ -190,23 +212,24 @@ export function BottomSheet({ open, onClose, title, children, footer, style }: {
     onPointerCancel: () => { drag.current = null; setDy(0); },
   };
   const dragging = dy > 0;
-  // Opening and closing glide slowly and settle softly (like iOS sheets); the scrim fades with it.
-  const glide = '560ms cubic-bezier(0.32, 0.72, 0, 1)';
+  // Opening glides up and settles softly; closing eases in and out so it doesn't drop away at once. The scrim fades
+  // with it.
+  const glide = shown ? '600ms cubic-bezier(0.25, 0.8, 0.25, 1)' : '520ms cubic-bezier(0.55, 0, 0.45, 1)';
   return (
     // Closed sheets stay parked below the screen; `inert` keeps keyboard focus and screen readers out of them.
     <div inert={!open} style={{ position: 'absolute', inset: 0, zIndex: 50, pointerEvents: open ? 'auto' : 'none', fontFamily: 'var(--font-sans)' }}>
-      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'var(--surface-scrim)', opacity: open ? Math.max(0.3, 1 - dy / 400) : 0, transition: dragging ? 'none' : 'opacity ' + glide }} />
-      <div role="dialog" aria-modal="true" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, maxHeight: '88%', display: 'flex', flexDirection: 'column', borderRadius: 'var(--radius-sheet) var(--radius-sheet) 0 0', background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)', transform: !open ? 'translateY(105%)' : dragging ? 'translateY(' + dy + 'px)' : 'none', transition: dragging ? 'none' : 'transform ' + glide, ...style }}>
+      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'var(--surface-scrim)', opacity: shown ? Math.max(0.3, 1 - dy / 400) : 0, transition: dragging ? 'none' : 'opacity ' + glide }} />
+      <div role="dialog" aria-modal="true" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, maxHeight: '88%', display: 'flex', flexDirection: 'column', borderRadius: 'var(--radius-sheet) var(--radius-sheet) 0 0', background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)', transform: !shown ? 'translateY(105%)' : dragging ? 'translateY(' + dy + 'px)' : 'none', transition: dragging ? 'none' : 'transform ' + glide, ...style }}>
         {/* The handle and title: drag them down to close. */}
         <div {...head} style={{ touchAction: 'none', cursor: 'grab' }}>
           <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0 4px' }}><span style={{ width: 40, height: 5, borderRadius: 5, background: 'var(--neutral-200)' }} /></div>
-          {title && <div style={{ padding: '8px 20px 4px', font: 'var(--type-h3)', color: 'var(--text-primary)' }}>{title}</div>}
+          {view.title && <div style={{ padding: '8px 20px 4px', font: 'var(--type-h3)', color: 'var(--text-primary)' }}>{view.title}</div>}
         </div>
         {/* No scroll bar (mj-s hides it in WebKit too), like the app's other scrolling areas. */}
         <div ref={body} className="mj-s"
           onTouchStart={e => start(e.touches[0].clientY, true)} onTouchMove={e => move(e.touches[0].clientY)} onTouchEnd={e => end(e.changedTouches[0].clientY)}
-          style={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain', padding: '12px 20px 20px', scrollbarWidth: 'none' }}>{children}</div>
-        {footer && <div style={{ padding: '12px 20px 28px', borderTop: '1px solid var(--border-subtle)' }}>{footer}</div>}
+          style={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain', padding: '12px 20px 20px', scrollbarWidth: 'none' }}>{view.children}</div>
+        {view.footer && <div style={{ padding: '12px 20px 28px', borderTop: '1px solid var(--border-subtle)' }}>{view.footer}</div>}
       </div>
     </div>
   );
