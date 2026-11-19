@@ -152,13 +152,13 @@ export function listingCompanies(a: App, c: number | undefined): Company[] {
   });
   const projects = (co: Company) => catalog.albums.filter(al => al.co === co.id && (c == null || al.cat === c)).length;
   const by = (...keys: ((co: Company) => number)[]) => (x: Company, y: Company) => { for (const k of keys) { const d = k(y) - k(x); if (d) return d; } return 0; };
-  if (f.sort === 'rel') res = res.slice().sort(by(co => score.get(co.id) ?? 0, co => Number(covers(co, g)), co => Number(co.verified), projects));
-  // «الأقرب»: companies that cover the customer's area, those based in it first.
-  if (f.sort === 'near') res = res.slice().sort(by(co => Number(covers(co, g)), co => Number(!!g && co.gov === g)));
-  if (f.sort === 'recent') res = res.slice().reverse();
-  // Verified companies first; the rest keep their relevance order.
-  if (f.sort === 'verified') res = res.slice().sort((x, y) => Number(y.verified) - Number(x.verified));
-  return res;
+  // «الأحدث أعمالًا»: the company with the latest project in this category first.
+  const latest = (co: Company) => { let d = ''; for (const al of catalog.albums) if (al.co === co.id && (c == null || al.cat === c) && (al.added || '') > d) d = al.added || ''; return d; };
+  if (f.sort === 'recent') { const l = new Map(res.map(co => [co.id, latest(co)])); return res.slice().sort((x, y) => l.get(y.id)!.localeCompare(l.get(x.id)!)); }
+  if (f.sort === 'projects') return res.slice().sort(by(projects, co => Number(covers(co, g))));
+  if (f.sort === 'followers') return res.slice().sort(by(co => catalog.followers?.[co.id] ?? 0, projects));
+  // «الأنسب» (also for an order saved by an older version).
+  return res.slice().sort(by(co => score.get(co.id) ?? 0, co => Number(covers(co, g)), co => Number(co.verified), projects));
 }
 
 /** Projects added within this many days count as new and move toward the top of Explore. */

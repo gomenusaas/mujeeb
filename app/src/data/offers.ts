@@ -33,3 +33,6 @@ export function offerServices(catalog: Catalog, coId: string): Service[] {
 /** The company has an offer in this category (any category when null). */
 export const hasOfferIn = (catalog: Catalog, coId: string, cat: number | null | undefined) =>
   offerServices(catalog, coId).some(s => cat == null || s.cat === cat);
+
+/** How many days ago a company's demo offer `i` was posted (0 to 20), for «الأحدث». */
+export const offerAge = (coId: string, i: number) => hash(coId + ':' + i) % 21;
