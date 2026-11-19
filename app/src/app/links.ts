@@ -1,11 +1,10 @@
 import type { Catalog, Story } from '../data/types';
 import type { RootTab, Route } from './store';
+import { offerServices } from '../data/offers';
 
-/** How many demo offers each company shows (DEMO: offers are made up from its services). */
-export const OFFERS_PER_COMPANY = 6;
-/** Offer `i` of company `co` exists (the company exists and has services). */
+/** Offer `i` of company `co` exists (see the demo offers in data/offers.ts). */
 export const hasOffer = (catalog: Catalog, co?: string, i?: number) =>
-  !!co && i != null && i >= 0 && i < OFFERS_PER_COMPANY && catalog.companies.some(c => c.id === co) && catalog.services.some(s => s.co === co);
+  !!co && i != null && i >= 0 && catalog.companies.some(c => c.id === co) && i < offerServices(catalog, co).length;
 
 /*
  * Page links. The address bar follows the screen on top, and opening a link rebuilds the screen

@@ -24,15 +24,16 @@ const samePage = (x: Route, y: Route) => x.s === y.s && (x.id ?? '') === (y.id ?
 export const isOverlay = (r: Route) => r.s === 'story' || r.s === 'photo';
 /**
  * A category page's search, quick filters and order. `mine`: only companies that cover the customer's service
- * location; `open`: only companies open now; `svcs`: only companies covering every one of these sub-services (ids).
+ * location; `open`: only companies open now; `svcs`: only companies covering every one of these sub-services (ids); `offers`: show the category's offers instead of
+ * its companies.
  */
-export interface Filters { gov: 'all' | GovId; verified: boolean; sort: 'rel' | 'near' | 'recent' | 'verified'; q: string; mine: boolean; open: boolean; svcs: string[] }
+export interface Filters { gov: 'all' | GovId; verified: boolean; sort: 'rel' | 'near' | 'recent' | 'verified'; q: string; mine: boolean; open: boolean; svcs: string[]; offers: boolean }
 export type SheetKey = null | 'menu' | 'about' | 'hours' | 'branches' | 'address' | 'coverage' | 'contact' | 'website' | 'social' | 'sort' | 'directions' | 'activity' | 'location' | 'preview' | 'services' | 'gallery';
 /** Sign-in sheet steps: sign in, create account, forgot password, choose a new password (from the reset email). */
 export type AuthStep = 'signin' | 'signup' | 'reset' | 'newpw';
 export interface BookingDraft { co: string; purpose: string; city: string; gov: GovId; day: number; time: string; notes: string; step: number }
 
-export const DEFAULT_F: Filters = { gov: 'all', verified: false, sort: 'rel', q: '', mine: false, open: false, svcs: [] };
+export const DEFAULT_F: Filters = { gov: 'all', verified: false, sort: 'rel', q: '', mine: false, open: false, svcs: [], offers: false };
 const LS = 'mujeeb.v1';
 const TRAIL = 'mujeeb.trail';
 

@@ -1,9 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { Avatar, Badge, BottomSheet, Button, Chip, EmptyState, Icon, IconButton, ListItem, SearchBar, SectionHeader } from '../ds';
 import { DEFAULT_F, useApp, type Filters, type SheetKey } from '../app/store';
-import { ContactGrid, HScroll, Img, MetaLine, preloadPhotos, useNear, albumMedia, callPhone, card, categoryServiceChips, companyGallery, companyPreview, helpers, listingCompanies, openDirections, openWhatsApp, serviceImage, type Media } from '../app/view';
+import { ContactGrid, HScroll, Img, MetaLine, preloadPhotos, useNear, albumMedia, callPhone, card, categoryServiceChips, companyGallery, companyPreview, covers, helpers, listingCompanies, myGov, openDirections, openWhatsApp, serviceImage, type Media } from '../app/view';
 import { logoUrl, photo, remote } from '../data/api';
-import { OFFERS_PER_COMPANY } from '../app/links';
+import { hasOfferIn, offerKind, offerServices } from '../data/offers';
 import type { Album, Company } from '../data/types';
 import { WEEK_ORDER, dayName, fmtTime, isOpenNow, muscatToday, shifts } from '../app/hours';
 import { CategoryStoryRow } from './Stories';
@@ -211,6 +211,20 @@ export function Listing() {
   const set = (p: Partial<Filters>) => setF(x => ({ ...x, ...p }));
   const res = listingCompanies(a, c);
   const chips = categoryServiceChips(a, c);
+  // «العروض»: shown when at least one of the category's companies has an offer in it.
+  const offersHere = catalog.companies.some(co => (c == null || co.cats.includes(c)) && hasOfferIn(catalog, co.id, c));
+  // «العروض» view: every offer here from the listed companies. Companies covering the customer's area first, then by
+  // their soonest-ending offer; companies take turns (each one's first offer, then each one's second…) so a company
+  // with many offers can't fill the top; each company's offers soonest-ending first.
+  const g = myGov(a);
+  const offerList = f.offers ? (() => {
+    const per = res.map(co => ({ co, list: companyOffers(a, co).filter(o => c == null || o.svc.cat === c).sort((x, y) => x.days - y.days) }))
+      .filter(x => x.list.length)
+      .sort((x, y) => Number(covers(y.co, g)) - Number(covers(x.co, g)) || x.list[0].days - y.list[0].days);
+    const out: { co: Company; o: Offer }[] = [];
+    for (let k = 0; per.some(x => x.list[k]); k++) for (const x of per) if (x.list[k]) out.push({ co: x.co, o: x.list[k] });
+    return out;
+  })() : [];
   // Slide the chips row so the selected chip sits in the middle (as far as the row can scroll).
   const chipRow = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -249,7 +263,7 @@ export function Listing() {
           </span>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
             <span style={{ font: 'var(--type-h1)' }}>{c == null ? t.allServices : h.cname(c)}</span>
-            <span style={{ font: 'var(--type-body-sm)', fontWeight: 600, opacity: 0.9 }}>{res.length} {t.results}</span>
+            <span style={{ font: 'var(--type-body-sm)', fontWeight: 600, opacity: 0.9 }}>{f.offers ? countOf(a, offerList.length, OFFER_W) : res.length + ' ' + t.results}</span>
           </div>
         </div>
         <div style={{ position: 'relative', padding: '0 20px 20px' }}>
@@ -260,22 +274,50 @@ export function Listing() {
       {c != null && <CategoryStoryRow cat={c} />}
       {/* The category's common services as chips: one at a time (another chip switches to it; the selected one again
           clears it). The list is always in the «الأنسب» order (see listingCompanies). */}
-      {chips.length >= 2 && (
+      {(chips.length >= 2 || offersHere) && (
         // Spacing sets the chips apart: a clear gap after the stories, then close to the list they filter.
         <div ref={chipRow} className="mj-s" style={{ display: 'flex', gap: 8, alignItems: 'center', overflowX: 'auto', marginTop: 16, padding: '0 20px', scrollbarWidth: 'none' }}>
-          {chips.map(x => {
+          {/* «العروض» first, in coral: it switches the list to the category's offers. It and the service chips take turns:
+              choosing one clears the other. */}
+          {offersHere && (
+            <Chip size="sm" icon="badge-percent" selected={f.offers} onClick={() => set({ offers: !f.offers, svcs: [] })}
+              style={f.offers ? { background: 'var(--accent)', color: '#fff' } : { color: 'var(--accent)' }}>{t.offers}</Chip>
+          )}
+          {chips.length >= 2 && chips.map(x => {
             const on = f.svcs.includes(x.key);
-            return <span key={x.key} data-chip={x.key} style={{ display: 'contents' }}><Chip size="sm" selected={on} onClick={() => set({ svcs: on ? [] : [x.key] })}>{x.label}</Chip></span>;
+            return <span key={x.key} data-chip={x.key} style={{ display: 'contents' }}><Chip size="sm" selected={on} onClick={() => set({ svcs: on ? [] : [x.key], offers: false })}>{x.label}</Chip></span>;
           })}
         </div>
       )}
-      {!res.length && (
+      {(f.offers ? !offerList.length : !res.length) && (
         <>
           <EmptyState icon="search-x" color={color} title={t.noResults} body={t.noResultsBody} />
           <div style={{ display: 'flex', justifyContent: 'center' }}><Button variant="secondary" onClick={() => setF(DEFAULT_F)}>{t.clear}</Button></div>
         </>
       )}
-      <div style={{ padding: '12px 20px 0', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {/* The offers view: each offer as a full-width advert with the company under it (opens the company). */}
+      {f.offers && (
+        <div style={{ padding: '12px 20px 0', display: 'flex', flexDirection: 'column', gap: 22 }}>
+          {offerList.map(({ co, o }) => {
+            const v = h.coV(co);
+            return (
+              <div key={co.id + '-' + o.i} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <OfferCard o={o} lg />
+                <button type="button" onClick={() => a.go('company', { id: co.id, ...(c != null ? { act: c } : {}) })}
+                  style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 4px', border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'start' }}>
+                  <Avatar name={v.name} src={v.logo} size={32} verified={v.verified} />
+                  <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ font: 'var(--type-body-sm)', fontWeight: 700, color: 'var(--text-primary)' }}>{v.name}</span>
+                    <span style={{ font: 'var(--type-caption)', color: 'var(--text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.city}</span>
+                  </span>
+                  <Icon name="chevron-right" size={16} color="var(--text-tertiary)" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      {!f.offers && <div style={{ padding: '12px 20px 0', display: 'flex', flexDirection: 'column', gap: 14 }}>
         {results.slice(0, shown).map(co => (
           <div key={co.id} onClick={co.open} style={{ ...card, overflow: 'hidden', cursor: 'pointer' }}>
             {co.work.photos.length
@@ -300,7 +342,7 @@ export function Listing() {
         ))}
         {/* Loads the next PAGE companies when this comes near the screen. */}
         {shown < results.length && <div ref={more} aria-hidden="true" style={{ height: 1 }} />}
-      </div>
+      </div>}
     </div>
   );
 }
@@ -316,6 +358,7 @@ const activeAct = (co: Company, r: { act?: number }) => (co.cats.length < 2 ? nu
 type Words = { ar: [string, string, string, string]; en: [string, string] };
 const SVC_W: Words = { ar: ['خدمة واحدة', 'خدمتان', 'خدمات', 'خدمة'], en: ['service', 'services'] };
 const PRJ_W: Words = { ar: ['مشروع واحد', 'مشروعان', 'مشاريع', 'مشروعًا'], en: ['project', 'projects'] };
+const OFFER_W: Words = { ar: ['عرض واحد', 'عرضان', 'عروض', 'عرضًا'], en: ['offer', 'offers'] };
 function countOf(a: ReturnType<typeof useApp>, n: number, w: Words) {
   if (!a.ar) return n + ' ' + (n === 1 ? w.en[0] : w.en[1]);
   return n === 1 ? w.ar[0] : n === 2 ? w.ar[1] : helpers(a).num(n) + ' ' + (n <= 10 ? w.ar[2] : w.ar[3]);
@@ -326,31 +369,29 @@ const EmptyLine = ({ children }: { children: React.ReactNode }) => (
 );
 
 /**
- * A company's offers. DEMO: made up from its services (OFFERS_PER_COMPANY of them) until companies can post
+ * A company's offers. DEMO: made up from its services (see data/offers.ts for which companies have how many) until companies can post
  * offers; `i` is the offer's number, used in its link (/offer/<company>/<i>).
  */
 type Lang2 = [string, string];
-const OFFER_DEMO: { kicker: Lang2; big: Lang2; on: (svc: Lang2) => Lang2; title: (svc: Lang2) => Lang2; days: number }[] = [
-  { kicker: ['خصم', 'Save'], big: ['١٥٪', '15%'], on: ([ar, en]) => ['على ' + ar, 'on ' + en.toLowerCase()], title: ([ar, en]) => ['خصم ١٥٪ على ' + ar, '15% off ' + en.toLowerCase()], days: 12 },
-  { kicker: ['تصميم ثلاثي الأبعاد', '3D design'], big: ['مجانًا', 'Free'], on: ([ar, en]) => ['مع ' + ar, 'with ' + en.toLowerCase()], title: ([ar, en]) => ['تصميم ثلاثي الأبعاد مجاني مع ' + ar, 'Free 3D design with ' + en.toLowerCase()], days: 20 },
-  { kicker: ['خصم', 'Save'], big: ['٢٠٪', '20%'], on: ([ar, en]) => ['على ' + ar, 'on ' + en.toLowerCase()], title: ([ar, en]) => ['خصم ٢٠٪ على ' + ar, '20% off ' + en.toLowerCase()], days: 6 },
-  { kicker: ['زيارة معاينة', 'Site visit'], big: ['مجانًا', 'Free'], on: ([ar, en]) => ['لخدمة ' + ar, 'for ' + en.toLowerCase()], title: ([ar, en]) => ['زيارة معاينة مجانية لخدمة ' + ar, 'Free site visit for ' + en.toLowerCase()], days: 30 },
-  { kicker: ['خصم', 'Save'], big: ['١٠٪', '10%'], on: ([ar, en]) => ['على ' + ar, 'on ' + en.toLowerCase()], title: ([ar, en]) => ['خصم ١٠٪ على ' + ar, '10% off ' + en.toLowerCase()], days: 9 },
-  { kicker: ['ضمان إضافي', 'Extra warranty'], big: ['سنة', '+1 year'], on: ([ar, en]) => ['على ' + ar, 'on ' + en.toLowerCase()], title: ([ar, en]) => ['سنة ضمان إضافية على ' + ar, 'An extra year of warranty on ' + en.toLowerCase()], days: 25 },
+const OFFER_DEMO: { kicker: Lang2; big: Lang2; short: Lang2; on: (svc: Lang2) => Lang2; title: (svc: Lang2) => Lang2; days: number }[] = [
+  { kicker: ['خصم', 'Save'], big: ['١٥٪', '15%'], short: ['خصم ١٥٪', '15% off'], on: ([ar, en]) => ['على ' + ar, 'on ' + en.toLowerCase()], title: ([ar, en]) => ['خصم ١٥٪ على ' + ar, '15% off ' + en.toLowerCase()], days: 12 },
+  { kicker: ['تصميم ثلاثي الأبعاد', '3D design'], big: ['مجانًا', 'Free'], short: ['تصميم مجاني', 'Free design'], on: ([ar, en]) => ['مع ' + ar, 'with ' + en.toLowerCase()], title: ([ar, en]) => ['تصميم ثلاثي الأبعاد مجاني مع ' + ar, 'Free 3D design with ' + en.toLowerCase()], days: 20 },
+  { kicker: ['خصم', 'Save'], big: ['٢٠٪', '20%'], short: ['خصم ٢٠٪', '20% off'], on: ([ar, en]) => ['على ' + ar, 'on ' + en.toLowerCase()], title: ([ar, en]) => ['خصم ٢٠٪ على ' + ar, '20% off ' + en.toLowerCase()], days: 6 },
+  { kicker: ['زيارة معاينة', 'Site visit'], big: ['مجانًا', 'Free'], short: ['معاينة مجانية', 'Free visit'], on: ([ar, en]) => ['لخدمة ' + ar, 'for ' + en.toLowerCase()], title: ([ar, en]) => ['زيارة معاينة مجانية لخدمة ' + ar, 'Free site visit for ' + en.toLowerCase()], days: 30 },
+  { kicker: ['خصم', 'Save'], big: ['١٠٪', '10%'], short: ['خصم ١٠٪', '10% off'], on: ([ar, en]) => ['على ' + ar, 'on ' + en.toLowerCase()], title: ([ar, en]) => ['خصم ١٠٪ على ' + ar, '10% off ' + en.toLowerCase()], days: 9 },
+  { kicker: ['ضمان إضافي', 'Extra warranty'], big: ['سنة', '+1 year'], short: ['ضمان إضافي', 'Extra warranty'], on: ([ar, en]) => ['على ' + ar, 'on ' + en.toLowerCase()], title: ([ar, en]) => ['سنة ضمان إضافية على ' + ar, 'An extra year of warranty on ' + en.toLowerCase()], days: 25 },
 ];
 const OFFER_COLORS = ['violet', 'teal', 'coral', 'indigo', 'green', 'pink'];
 function companyOffers(a: ReturnType<typeof useApp>, co: Company) {
   const { ar } = a;
   const h = helpers(a);
-  const svcs = a.catalog.services.filter(s => s.co === co.id);
-  if (!svcs.length) return [];
   const L = (x: Lang2) => x[ar ? 0 : 1];
-  return OFFER_DEMO.slice(0, OFFERS_PER_COMPANY).map((o, i) => {
-    const s = svcs[i % svcs.length];
+  return offerServices(a.catalog, co.id).map((s, i) => {
+    const o = OFFER_DEMO[offerKind(co.id, i)];
     const v = h.svcV(s);
     const end = new Date(Date.now() + o.days * 864e5);
     return {
-      i, svc: s, color: OFFER_COLORS[i % OFFER_COLORS.length], kicker: L(o.kicker), big: L(o.big), on: L(o.on([s.ar, s.en])), title: L(o.title([s.ar, s.en])),
+      i, svc: s, color: OFFER_COLORS[i % OFFER_COLORS.length], kicker: L(o.kicker), big: L(o.big), short: L(o.short), on: L(o.on([s.ar, s.en])), title: L(o.title([s.ar, s.en])),
       img: v.img, days: o.days, until: end.toLocaleDateString(ar ? 'ar-OM' : 'en-GB', { day: 'numeric', month: 'long' }),
       open: () => a.go('offer', { id: co.id, i }),
     };
@@ -370,36 +411,47 @@ const offerFade = (ar: boolean, c: string) => {
  */
 function OfferStrip({ co, title, except }: { co: Company; title?: string; except?: number }) {
   const a = useApp();
-  const { t, ar } = a;
+  const { t } = a;
   const offers = companyOffers(a, co).filter(o => o.i !== except);
   if (!offers.length) return null;
   return (
     <section aria-label={title || t.offers} style={{ display: 'flex', flexDirection: 'column', gap: 12, margin: '0 -20px' }}>
       <div style={{ padding: '0 20px' }}><SectionHeader title={title || t.offers} action={null} /></div>
       <HScroll>
-        {offers.map(o => (
-          <button key={o.i} type="button" className="mj-press-sm" onClick={o.open} aria-label={o.title}
-            style={{ position: 'relative', flex: 'none', width: 240, aspectRatio: '85.6 / 54', scrollSnapAlign: 'start', padding: 0, border: 'none', borderRadius: 12, overflow: 'hidden', background: 'var(--cat-' + o.color + '-800)', cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'start', color: '#fff', boxShadow: '0 3px 10px oklch(0.2 0.03 285 / 0.16)' }}>
-            <Img src={o.img} style={{ position: 'absolute', inset: 0 }} />
-            <span aria-hidden="true" style={{ position: 'absolute', inset: 0, background: offerFade(ar, o.color) }} />
-            <span style={{ position: 'absolute', inset: 0, padding: '10px 12px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-              <OfferTag o={o} />
-              <span style={{ marginTop: 6, font: '700 12px var(--font-sans)', opacity: 0.9 }}>{o.kicker}</span>
-              <span style={{ font: '800 30px/1.05 var(--font-sans)', letterSpacing: '-0.01em' }}>{o.big}</span>
-              <span style={{ marginTop: 2, maxWidth: '70%', font: '600 12px/1.35 var(--font-sans)', opacity: 0.92, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{o.on}</span>
-              <span style={{ marginTop: 'auto', alignSelf: 'stretch', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, font: '600 10px var(--font-sans)', opacity: 0.85 }}><Icon name="clock" size={11} />{t.offerUntil} {o.until}</span>
-                <span style={{ height: 24, padding: '0 10px', borderRadius: 999, background: '#fff', color: 'var(--cat-' + o.color + '-800)', display: 'inline-flex', alignItems: 'center', gap: 3, font: '800 11px var(--font-sans)' }}>
-                  {t.offerCta}<Icon name="chevron-right" size={12} />
-                </span>
-              </span>
-            </span>
-          </button>
-        ))}
+        {offers.map(o => <OfferCard key={o.i} o={o} />)}
       </HScroll>
     </section>
   );
 }
+/**
+ * One offer as an advert the shape of an ID card (85.6 × 54): the service photo full bleed under a fade in the
+ * offer's colour, «عرض خاص», the offer in big type, what it's for, the end date and «التفاصيل»; opens the offer.
+ * Small (240px) in a company's strip; `lg`: the full width of the page (a category page's offers).
+ */
+function OfferCard({ o, lg }: { o: Offer; lg?: boolean }) {
+  const { t, ar } = useApp();
+  const z = (n: number) => Math.round(n * (lg ? 1.4 : 1)); // sizes scale with the card
+  return (
+    <button type="button" className="mj-press-sm" onClick={o.open} aria-label={o.title}
+      style={{ position: 'relative', flex: 'none', width: lg ? '100%' : 240, aspectRatio: '85.6 / 54', scrollSnapAlign: 'start', padding: 0, border: 'none', borderRadius: lg ? 16 : 12, overflow: 'hidden', background: 'var(--cat-' + o.color + '-800)', cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'start', color: '#fff', boxShadow: '0 3px 10px oklch(0.2 0.03 285 / 0.16)', display: 'block' }}>
+      <Img src={o.img} style={{ position: 'absolute', inset: 0 }} />
+      <span aria-hidden="true" style={{ position: 'absolute', inset: 0, background: offerFade(ar, o.color) }} />
+      <span style={{ position: 'absolute', inset: 0, padding: z(10) + 'px ' + z(12) + 'px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+        <OfferTag o={o} big={lg} />
+        <span style={{ marginTop: z(6), font: '700 ' + z(12) + 'px var(--font-sans)', opacity: 0.9 }}>{o.kicker}</span>
+        <span style={{ font: '800 ' + z(30) + 'px/1.05 var(--font-sans)', letterSpacing: '-0.01em' }}>{o.big}</span>
+        <span style={{ marginTop: 2, maxWidth: '70%', font: '600 ' + z(12) + 'px/1.35 var(--font-sans)', opacity: 0.92, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{o.on}</span>
+        <span style={{ marginTop: 'auto', alignSelf: 'stretch', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, font: '600 ' + z(10) + 'px var(--font-sans)', opacity: 0.85 }}><Icon name="clock" size={z(11)} />{t.offerUntil} {o.until}</span>
+          <span style={{ height: z(24), padding: '0 ' + z(10) + 'px', borderRadius: 999, background: '#fff', color: 'var(--cat-' + o.color + '-800)', display: 'inline-flex', alignItems: 'center', gap: 3, font: '800 ' + z(11) + 'px var(--font-sans)' }}>
+            {t.offerCta}<Icon name="chevron-right" size={z(12)} />
+          </span>
+        </span>
+      </span>
+    </button>
+  );
+}
+
 const OfferTag = ({ o, big }: { o: Offer; big?: boolean }) => {
   const { t, ar } = useApp();
   return (
