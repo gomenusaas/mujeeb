@@ -741,29 +741,17 @@ export function ServicesSheet() {
  * A company's services as cards: up to 3 stacked in one column; more become a sideways strip of columns
  * (2 cards each for 4 services, 3 each for 5 or more), the next column peeking in at the edge. Services with
  * projects come first, those without any last (each group in the company's own order), shown with their
- * category icon instead of a photo. Once the strip is scrolled past its first two columns, a narrow tab at the
- * screen's start edge (in the page margin, so it covers no card) brings it back to the start.
+ * category icon instead of a photo.
  */
 function ServiceStrip({ items }: { items: ReturnType<ReturnType<typeof helpers>['svcV']>[] }) {
   const a = useApp();
-  const strip = useRef<HTMLDivElement>(null);
-  const [far, setFar] = useState(false);
   const cards = servicesInOrder(a, items).map(x => <ServiceCard key={x.id} x={x} />);
   if (items.length <= 3) return <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{cards}</div>;
   // 4 services: two columns of two. 5 or more: columns of three (5 = three and two).
   const rows = items.length === 4 ? 2 : 3;
-  const onScroll = () => { const el = strip.current; if (el) setFar(Math.abs(el.scrollLeft) > el.clientWidth * 1.4); };
   return (
-    <div style={{ position: 'relative', margin: '0 -20px' }}>
-      <div ref={strip} onScroll={onScroll} className="mj-s" style={{ display: 'grid', gridTemplateRows: 'repeat(' + rows + ', auto)', gridAutoFlow: 'column', gridAutoColumns: 'calc(100% - 56px)', gap: '8px 10px', overflowX: 'auto', scrollSnapType: 'x mandatory', scrollPaddingInline: 20, padding: '0 20px', scrollbarWidth: 'none' }}>
-        {cards}
-      </div>
-      <button type="button" aria-label={a.t.backToStart} tabIndex={far ? 0 : -1} onClick={() => strip.current?.scrollTo({ left: 0, behavior: 'smooth' })}
-        style={{ position: 'absolute', top: '50%', insetInlineStart: 0, width: 18, height: 72, marginTop: -36, padding: 0, border: 'none', borderStartStartRadius: 0, borderEndStartRadius: 0, borderStartEndRadius: 10, borderEndEndRadius: 10,
-          background: 'var(--surface-card)', color: 'var(--text-primary)', boxShadow: '0 2px 10px oklch(0.2 0.02 285 / 0.2)', display: 'grid', placeItems: 'center', cursor: 'pointer',
-          opacity: far ? 1 : 0, pointerEvents: far ? 'auto' : 'none', transition: 'opacity var(--dur-base) var(--ease-out)' }}>
-        <Icon name="chevron-left" size={14} />
-      </button>
+    <div className="mj-s" style={{ display: 'grid', gridTemplateRows: 'repeat(' + rows + ', auto)', gridAutoFlow: 'column', gridAutoColumns: 'calc(100% - 56px)', gap: '8px 10px', overflowX: 'auto', scrollSnapType: 'x mandatory', scrollPaddingInline: 20, margin: '0 -20px', padding: '0 20px', scrollbarWidth: 'none' }}>
+      {cards}
     </div>
   );
 }
