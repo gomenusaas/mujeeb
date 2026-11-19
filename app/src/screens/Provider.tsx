@@ -1,15 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
-import { Avatar, Badge, BottomSheet, Button, EmptyState, Icon, IconButton, ListItem, SearchBar, SectionHeader } from '../ds';
-import { useApp, type Filters, type ListView, type SheetKey } from '../app/store';
-import { ContactGrid, HScroll, Img, MetaLine, albumMedia, callPhone, card, companyGallery, companyPreview, helpers, listingCompanies, openDirections, openWhatsApp, serviceImage, type Media } from '../app/view';
+import { Avatar, Badge, BottomSheet, Button, Chip, EmptyState, Icon, IconButton, ListItem, SearchBar, SectionHeader } from '../ds';
+import { DEFAULT_F, useApp, type Filters, type SheetKey } from '../app/store';
+import { ContactGrid, HScroll, Img, MetaLine, albumMedia, callPhone, card, categoryServiceChips, companyGallery, companyPreview, helpers, listingCompanies, myGov, openDirections, openWhatsApp, serviceImage, type Media } from '../app/view';
 import { logoUrl, photo, remote } from '../data/api';
 import { OFFERS_PER_COMPANY } from '../app/links';
 import type { Album, Company } from '../data/types';
 import { WEEK_ORDER, dayName, fmtTime, isOpenNow, muscatToday, shifts } from '../app/hours';
-
-const VIEWS: { v: ListView; icon: string; label: 'viewLarge' | 'viewRows' }[] = [
-  { v: 'large', icon: 'gallery-vertical', label: 'viewLarge' }, { v: 'rows', icon: 'layout-list', label: 'viewRows' },
-];
 
 /** Height of the photo at the top of the company page and its service pages (kept the same on both). */
 const HERO_H = 250;
@@ -71,24 +67,6 @@ export function Masonry({ items, onOpen, cols = 2 }: { items: Media[]; onOpen: (
   );
 }
 
-/** Two-icon switch for the company list layout (large cards or compact rows); sits beside the sort control and matches its height. */
-function ViewSwitch() {
-  const a = useApp();
-  return (
-    <div role="radiogroup" aria-label={a.t.viewAs} style={{ flex: 'none', display: 'flex', gap: 4, padding: 4, borderRadius: 'var(--radius-pill)', background: 'var(--neutral-100)' }}>
-      {VIEWS.map(x => {
-        const on = a.listView === x.v;
-        return (
-          <button key={x.v} type="button" role="radio" aria-checked={on} aria-label={a.t[x.label]} title={a.t[x.label]} onClick={() => a.setListView(x.v)}
-            style={{ width: 38, height: 38, border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: on ? 'var(--brand)' : 'transparent', color: on ? '#fff' : 'var(--text-secondary)', transition: 'all var(--dur-base) var(--ease-out)' }}>
-            <Icon name={x.icon} size={18} />
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
 /**
  * The company page's gallery: square photos and videos, three across with thin gaps (like a business profile).
  * More than `per` become a sideways strip of pages of `per` (3 × 4), the next page peeking in at the edge.
@@ -122,6 +100,11 @@ function SquareGrid({ items, onOpen, per = 12 }: { items: Media[]; onOpen: (k: n
       {pages.map(from => grid(items.slice(from, from + per), from, { flex: 'none', width: 'calc(100% - 32px)', scrollSnapAlign: 'start' }))}
     </div>
   );
+}
+
+/** A project's number within its company («مشروع رقم N»): its place when the company's projects are in the order they were added. */
+function projectNumber(a: ReturnType<typeof useApp>, al: Album) {
+  return a.catalog.albums.filter(x => x.co === al.co).sort((x, y) => x.added.localeCompare(y.added) || x.id.localeCompare(y.id)).findIndex(x => x.id === al.id) + 1;
 }
 
 /** How many photos and videos the work preview sheet shows. */
@@ -159,8 +142,8 @@ function Mosaic({ photos, n, bg, onOpen }: { photos: string[]; n: number; bg: st
 
 /**
  * The work preview (from a category page card): a white sheet with the company's name and logo, its photos and
- * videos large (no captions, nothing to tap) and «زيارة صفحة الشركة». It's only there to help decide whether
- * the company is worth a visit.
+ * videos large, each with its project's name and number over a dark fade at the bottom (nothing to tap), and
+ * «زيارة صفحة الشركة». It's only there to help decide whether the company is worth a visit.
  */
 export function WorkPreviewSheet() {
   const a = useApp();
@@ -173,7 +156,7 @@ export function WorkPreviewSheet() {
   return (
     <BottomSheet open={sheet === 'preview' && !!co} onClose={() => setSheet(null)}
       title={co && (
-        <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
           <Avatar name={h.coName(co)} src={logoUrl(co.id)} size={36} verified={co.verified} />
           <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.coName(co)}</span>
         </span>
@@ -185,6 +168,12 @@ export function WorkPreviewSheet() {
             {m.video
               ? <video src={m.src + '#t=0.1'} muted loop playsInline autoPlay preload="metadata" style={fill} />
               : <img src={photo(m.src, 900)} alt="" loading="lazy" decoding="async" style={fill} />}
+            {m.al && (
+              <span style={{ position: 'absolute', insetInline: 0, bottom: 0, padding: '36px 14px 12px', background: 'linear-gradient(to top, oklch(0.12 0.02 285 / 0.78), oklch(0.12 0.02 285 / 0.4) 55%, transparent)', color: '#fff', display: 'flex', flexDirection: 'column', gap: 2, pointerEvents: 'none' }}>
+                <span style={{ font: '700 15px/1.3 var(--font-sans)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.ar ? m.al.ar : m.al.en}</span>
+                <span style={{ font: '600 12px var(--font-sans)', opacity: 0.85 }}>{t.projectNo.replace('{n}', h.num(projectNumber(a, m.al)))}</span>
+              </span>
+            )}
           </div>
         ))}
       </div>
@@ -214,13 +203,9 @@ export function SortSheet() {
   );
 }
 
-/** Company name with a small verified tick, for the compact list layouts. */
-const CoName = ({ name, verified, size }: { name: string; verified: boolean; size: number }) => (
-  <span style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
-    <span style={{ font: '700 ' + size + 'px/' + (size + 4) + 'px var(--font-sans)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>
-    {verified && <Icon name="badge-check" size={size} color="var(--brand)" style={{ flex: 'none' }} />}
-  </span>
-);
+
+/** Companies per page on a category page. */
+const PAGE = 20;
 
 export function Listing() {
   const a = useApp();
@@ -229,6 +214,21 @@ export function Listing() {
   const c = top.cat;
   const set = (p: Partial<Filters>) => setF(x => ({ ...x, ...p }));
   const res = listingCompanies(a, c);
+  const chips = categoryServiceChips(a, c);
+  // «يخدم مسقط»: the governorate of the customer's service location (none when it isn't known).
+  const g = myGov(a);
+  const area = g ? (catalog.gov as Record<string, [string, string]>)[g]?.[a.ar ? 0 : 1] : '';
+  // Companies come in pages of PAGE: the next page loads as the end of the list nears the screen.
+  const [shown, setShown] = useState(PAGE);
+  useEffect(() => setShown(PAGE), [c, f]);
+  const more = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = more.current;
+    if (!el) return;
+    const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) setShown(n => n + PAGE); }, { rootMargin: '600px 0px' });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [shown, res.length]);
   const color = c == null ? 'violet' : catalog.cats[c].color;
   // Opening a company from here lands on this category's activity.
   const results = res.map(co => ({ ...h.coV(co), work: workPreview(a, co, c), open: () => a.go('company', { id: co.id, ...(c != null ? { act: c } : {}) }) }));
@@ -254,60 +254,51 @@ export function Listing() {
           <SearchBar placeholder={t.search} value={f.q} onChange={e => set({ q: e.target.value })} onFilter={null} elevated />
         </div>
       </div>
-      <div style={{ padding: '8px 20px 0', display: 'flex', gap: 8, alignItems: 'center' }}>
-        <ViewSwitch />
+      {/* Order and quick filters in one sideways row, then the category's common services. */}
+      <div className="mj-s" style={{ display: 'flex', gap: 8, alignItems: 'center', overflowX: 'auto', padding: '10px 20px 2px', scrollbarWidth: 'none' }}>
         <button type="button" aria-haspopup="dialog" aria-label={t.sortBy + ': ' + sortLabel(t, f.sort)} onClick={() => a.setSheet('sort')}
-          style={{ marginInlineStart: 'auto', height: 46, display: 'flex', alignItems: 'center', gap: 8, padding: '0 16px', border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--neutral-100)', color: 'var(--text-primary)', font: 'var(--type-body-sm)', fontWeight: 700, fontFamily: 'var(--font-sans)', cursor: 'pointer' }}>
-          <Icon name="arrow-down-up" size={16} />{sortLabel(t, f.sort)}<Icon name="chevron-down" size={16} color="var(--text-secondary)" />
+          style={{ flex: 'none', height: 38, display: 'flex', alignItems: 'center', gap: 6, padding: '0 14px', border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--neutral-100)', color: 'var(--text-primary)', font: 'var(--type-body-sm)', fontWeight: 700, fontFamily: 'var(--font-sans)', cursor: 'pointer' }}>
+          <Icon name="arrow-down-up" size={15} />{sortLabel(t, f.sort)}<Icon name="chevron-down" size={15} color="var(--text-secondary)" />
         </button>
+        {area && <Chip icon="map-pin" selected={f.mine} onClick={() => set({ mine: !f.mine })}>{t.servesArea.replace('{g}', area)}</Chip>}
+        <Chip icon="badge-check" selected={f.verified} onClick={() => set({ verified: !f.verified })}>{t.verifiedChip}</Chip>
+        <Chip icon="clock" selected={f.open} onClick={() => set({ open: !f.open })}>{t.openNow}</Chip>
       </div>
+      {chips.length >= 2 && (
+        <div className="mj-s" style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '8px 20px 2px', scrollbarWidth: 'none' }}>
+          {chips.map(x => <Chip key={x.key} size="sm" selected={f.svc === x.key} onClick={() => set({ svc: f.svc === x.key ? '' : x.key })}>{x.label}</Chip>)}
+        </div>
+      )}
       {!res.length && (
         <>
           <EmptyState icon="search-x" color={color} title={t.noResults} body={t.noResultsBody} />
-          <div style={{ display: 'flex', justifyContent: 'center' }}><Button variant="secondary" onClick={() => set({ gov: 'all', verified: false, q: '' })}>{t.clear}</Button></div>
+          <div style={{ display: 'flex', justifyContent: 'center' }}><Button variant="secondary" onClick={() => setF(x => ({ ...DEFAULT_F, sort: x.sort }))}>{t.clear}</Button></div>
         </>
       )}
-      {a.listView === 'large' && (
-        <div style={{ padding: '14px 20px 0', display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {results.map(co => (
-            <div key={co.id} onClick={co.open} style={{ ...card, overflow: 'hidden', cursor: 'pointer' }}>
-              {co.work.photos.length
-                ? <Mosaic photos={co.work.photos} n={co.work.n} bg={co.c100} onOpen={() => a.openPreview(co.id)} />
-                : (
-                  <div style={{ position: 'relative', aspectRatio: '4/3', maxHeight: 200, width: '100%', background: co.c100 }}>
-                    <Img src={co.cover} />
-                  </div>
-                )}
-              <div style={{ padding: '14px 16px 16px', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                <Avatar name={co.name} src={co.logo} size={48} verified={co.verified} />
-                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <span style={{ font: 'var(--type-title)' }}>{co.name}</span>
-                  <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }}>{co.cats}</span>
-                  <MetaLine icon="map-pin">{co.city}</MetaLine>
-                  <MetaLine icon="route">{co.covers}</MetaLine>
+      <div style={{ padding: '14px 20px 0', display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {results.slice(0, shown).map(co => (
+          <div key={co.id} onClick={co.open} style={{ ...card, overflow: 'hidden', cursor: 'pointer' }}>
+            {co.work.photos.length
+              ? <Mosaic photos={co.work.photos} n={co.work.n} bg={co.c100} onOpen={() => a.openPreview(co.id)} />
+              : (
+                <div style={{ position: 'relative', aspectRatio: '4/3', maxHeight: 200, width: '100%', background: co.c100 }}>
+                  <Img src={co.cover} />
                 </div>
+              )}
+            <div style={{ padding: '14px 16px 16px', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+              <Avatar name={co.name} src={co.logo} size={48} verified={co.verified} />
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={{ font: 'var(--type-title)' }}>{co.name}</span>
+                <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }}>{co.cats}</span>
+                <MetaLine icon="map-pin">{co.city}</MetaLine>
+                <MetaLine icon="route">{co.covers}</MetaLine>
               </div>
             </div>
-          ))}
-        </div>
-      )}
-      {a.listView === 'rows' && (
-        <div style={{ padding: '14px 20px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {results.map(co => (
-            <div key={co.id} onClick={co.open} style={{ ...card, overflow: 'hidden', cursor: 'pointer', display: 'flex', minHeight: 96 }}>
-              <div style={{ position: 'relative', flex: 'none', width: '36%', background: co.c100 }}><Img src={co.cover} style={{ position: 'absolute', inset: 0 }} /></div>
-              <div style={{ flex: 1, minWidth: 0, padding: '10px 12px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 5 }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Avatar name={co.name} src={co.logo} size={24} />
-                  <CoName name={co.name} verified={co.verified} size={14} />
-                </span>
-                <span style={{ font: 'var(--type-caption)', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{co.cat}</span>
-                <MetaLine icon="map-pin" size={12}>{co.city}</MetaLine>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+          </div>
+        ))}
+        {/* Loads the next PAGE companies when this comes near the screen. */}
+        {shown < results.length && <div ref={more} aria-hidden="true" style={{ height: 1 }} />}
+      </div>
     </div>
   );
 }
@@ -960,7 +951,7 @@ export function AlbumPage() {
   const done = al.done ? new Date(al.done + 'T12:00:00').toLocaleDateString(ar ? 'ar-OM' : 'en-GB', { month: 'long', year: 'numeric' }) : '';
   const photos = media.filter(m => !m.video).length, vids = media.length - photos;
   // The project's number among this company's projects, oldest first (the first project they added is no. 1).
-  const projNo = a.catalog.albums.filter(x => x.co === al.co).sort((x, y) => x.added.localeCompare(y.added) || x.id.localeCompare(y.id)).findIndex(x => x.id === al.id) + 1;
+  const projNo = projectNumber(a, al);
   // WhatsApp opens with a message naming this project and linking back to it.
   const link = location.origin + '/album/' + al.id;
   const waText = t.waProject.replace('{p}', title).replace('{url}', link);

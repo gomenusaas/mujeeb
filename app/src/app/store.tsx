@@ -22,15 +22,17 @@ const SINGLE: Screen[] = ['company', 'service', 'offer', 'album', 'listing'];
 const samePage = (x: Route, y: Route) => x.s === y.s && (x.id ?? '') === (y.id ?? '') && (x.cat ?? '') === (y.cat ?? '') && (x.s !== 'offer' || x.i === y.i);
 /** Story and full-screen photo open over the page they were tapped on. */
 export const isOverlay = (r: Route) => r.s === 'story' || r.s === 'photo';
-export interface Filters { gov: 'all' | GovId; verified: boolean; sort: 'rel' | 'near' | 'recent' | 'verified'; q: string }
-/** How the company list is laid out: big cards or thin rows. */
-export type ListView = 'large' | 'rows';
+/**
+ * A category page's search, quick filters and order. `mine`: only companies that cover the customer's service
+ * location; `open`: only companies open now; `svc`: only companies with this service (a folded title, see fold()).
+ */
+export interface Filters { gov: 'all' | GovId; verified: boolean; sort: 'rel' | 'near' | 'recent' | 'verified'; q: string; mine: boolean; open: boolean; svc: string }
 export type SheetKey = null | 'menu' | 'about' | 'hours' | 'branches' | 'address' | 'coverage' | 'contact' | 'website' | 'social' | 'sort' | 'directions' | 'activity' | 'location' | 'preview';
 /** Sign-in sheet steps: sign in, create account, forgot password, choose a new password (from the reset email). */
 export type AuthStep = 'signin' | 'signup' | 'reset' | 'newpw';
 export interface BookingDraft { co: string; purpose: string; city: string; gov: GovId; day: number; time: string; notes: string; step: number }
 
-const DEFAULT_F: Filters = { gov: 'all', verified: false, sort: 'rel', q: '' };
+export const DEFAULT_F: Filters = { gov: 'all', verified: false, sort: 'rel', q: '', mine: false, open: false, svc: '' };
 const LS = 'mujeeb.v1';
 const TRAIL = 'mujeeb.trail';
 
@@ -56,7 +58,7 @@ function restoreTrail(catalog: Catalog): { stack: Route[]; tab: RootTab } | null
   } catch { return null; }
 }
 
-interface Persisted { lang: Lang; fav: Record<string, boolean>; bookings: Booking[]; seq: { bk: number }; seen: Record<string, boolean>; listView: ListView; follows: Record<string, boolean>; wilayat: string }
+interface Persisted { lang: Lang; fav: Record<string, boolean>; bookings: Booking[]; seq: { bk: number }; seen: Record<string, boolean>; follows: Record<string, boolean>; wilayat: string }
 
 function readPersisted(): Partial<Persisted> {
   try { return JSON.parse(localStorage.getItem(LS) || '{}'); } catch { return {}; }
@@ -89,7 +91,6 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
   const [wilayat, setWilayat] = useState<string>(saved.wilayat || DEFAULT_WILAYAT);
   /** Governorates and wilayats to pick from (the admin's list, or the bundled one). */
   const places = catalog.places ?? OMAN;
-  const [listView, setListView] = useState<ListView>(saved.listView === 'rows' ? 'rows' : 'large'); // an old saved 'grid' becomes large cards
   /** Companies the customer follows (also sent to Supabase when it's configured). */
   const [follows, setFollows] = useState<Record<string, boolean>>(auth.enabled ? {} : saved.follows || {});
   /** The signed-in customer (null when signed out, and always in demo mode). */
@@ -112,8 +113,8 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
   fRef.current = f;
 
   useEffect(() => {
-    try { localStorage.setItem(LS, JSON.stringify({ lang, fav, bookings, seq, seen, listView, follows, wilayat } satisfies Persisted)); } catch { /* storage unavailable */ }
-  }, [lang, fav, bookings, seq, seen, listView, follows, wilayat]);
+    try { localStorage.setItem(LS, JSON.stringify({ lang, fav, bookings, seq, seen, follows, wilayat } satisfies Persisted)); } catch { /* storage unavailable */ }
+  }, [lang, fav, bookings, seq, seen, follows, wilayat]);
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -172,7 +173,7 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
   function popTo(k: number) {
     const st = stackRef.current.slice(0, k + 1);
     const r = st[st.length - 1];
-    if (r.s === 'listing') setF(r.f ?? DEFAULT_F);
+    if (r.s === 'listing') setF({ ...DEFAULT_F, ...r.f }); // older saved pages lack the newer filters
     setStack(st);
   }
   const go = useCallback((s: Screen, p: Omit<Route, 's'> & { q?: string } = {}) => {
@@ -297,7 +298,7 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
     catalog, idx, coById, sharePage, lang, setLang, ar, t, stack, top, page, scroller, tab, setTab, go, back, replace, reset, toast, showToast,
     fav, toggleFav, f, setF, sheet, setSheet, previewCo, openPreview, exCat, setExCat,
     bookings, setBookings,
-    bk, setBk, startBk, submitBooking, days, seen, markSeen, listView, setListView, follows, toggleFollow,
+    bk, setBk, startBk, submitBooking, days, seen, markSeen, follows, toggleFollow,
     wilayat, setWilayat, places, locLabel: wilayatLabel(places, wilayat, ar),
     me, authStep, setAuthStep, closeAuth, signOut,
   };

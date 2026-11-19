@@ -160,7 +160,8 @@ export function BottomSheet({ open, onClose, title, children, footer, style }: {
       <div role="dialog" aria-modal="true" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, maxHeight: '88%', display: 'flex', flexDirection: 'column', borderRadius: 'var(--radius-sheet) var(--radius-sheet) 0 0', background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)', transform: open ? 'none' : 'translateY(105%)', transition: 'transform var(--dur-slow) var(--ease-out)', ...style }}>
         <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0 4px' }}><span style={{ width: 40, height: 5, borderRadius: 5, background: 'var(--neutral-200)' }} /></div>
         {title && <div style={{ padding: '8px 20px 4px', font: 'var(--type-h3)', color: 'var(--text-primary)' }}>{title}</div>}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '12px 20px 20px' }}>{children}</div>
+        {/* No scroll bar (mj-s hides it in WebKit too), like the app's other scrolling areas. */}
+        <div className="mj-s" style={{ flex: 1, overflowY: 'auto', padding: '12px 20px 20px', scrollbarWidth: 'none' }}>{children}</div>
         {footer && <div style={{ padding: '12px 20px 28px', borderTop: '1px solid var(--border-subtle)' }}>{footer}</div>}
       </div>
     </div>

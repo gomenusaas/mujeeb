@@ -1,8 +1,10 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { AppBar, Icon } from '../ds';
 import { logoUrl, photo, remote } from '../data/api';
-import type { Album, Branch, Catalog, Company, Service } from '../data/types';
+import type { Album, Branch, Catalog, Company, GovId, Service } from '../data/types';
 import type { App } from './store';
+import { findWilayat } from '../data/oman';
+import { isOpenNow } from './hours';
 import { arDigits } from '../i18n/strings';
 
 /** Bilingual field helpers bound to the current language. */
@@ -99,29 +101,64 @@ function searchIndex(catalog: Catalog) {
 /** The words of a search, folded. A leading «ال» is dropped from longer words, so «المطابخ» also finds «مطابخ». */
 const searchWords = (q: string) => fold(q).trim().split(' ').filter(Boolean).map(w => (w.length > 4 && w.startsWith('ال') ? w.slice(2) : w));
 
+/** The governorate of the customer's service location (what company coverage is checked against); null when unknown. */
+export function myGov(a: App): GovId | null {
+  return findWilayat(a.places, a.wilayat).g.region ?? null;
+}
+/** The company works in this governorate. */
+export const covers = (co: Company, g: GovId | null) => !!g && (co.cov.includes('all') || co.cov.includes(g));
+
 /**
- * Companies on a category page (all categories when `c` is empty) after the customer's
- * search and filters, in the chosen sort order. A search matches when every word appears in the company's
- * text (see searchIndex); for «الأنسب», companies whose names, titles or keywords hold the words come first.
+ * The services customers can narrow a category page to: titles (folded, see fold()) that at least two of the
+ * category's companies offer, most offered first, up to 12. `label` is how the first company wrote it.
+ */
+export function categoryServiceChips(a: App, c: number | undefined): { key: string; label: string; n: number }[] {
+  if (c == null) return [];
+  const { catalog, ar } = a;
+  const by = new Map<string, { label: string; cos: Set<string> }>();
+  for (const s of catalog.services) {
+    if (s.cat !== c) continue;
+    const key = fold(ar ? s.ar : s.en).trim();
+    const e = by.get(key) ?? { label: ar ? s.ar : s.en, cos: new Set<string>() };
+    e.cos.add(s.co);
+    by.set(key, e);
+  }
+  return [...by].filter(([, e]) => e.cos.size >= 2).map(([key, e]) => ({ key, label: e.label, n: e.cos.size }))
+    .sort((x, y) => y.n - x.n || x.label.localeCompare(y.label, ar ? 'ar' : 'en')).slice(0, 12);
+}
+
+/**
+ * Companies on a category page (all categories when `c` is empty) after the customer's search and filters,
+ * in the chosen order. A search matches when every word appears in the company's text (see searchIndex).
+ * «الأنسب»: search hits in names, titles or keywords first, then companies that cover the customer's area,
+ * then verified ones, then those with more projects in the category; ties keep the catalogue order.
  */
 export function listingCompanies(a: App, c: number | undefined): Company[] {
   const { catalog, f } = a;
   const words = searchWords(f.q);
   const idx = words.length ? searchIndex(catalog) : null;
+  const g = myGov(a);
   const score = new Map<string, number>();
+  const svcOf = f.svc ? new Set(catalog.services.filter(s => s.cat === c && fold(a.ar ? s.ar : s.en).trim() === f.svc).map(s => s.co)) : null;
   let res = catalog.companies.filter(co => {
     if (!((c == null || co.cats.includes(c)) &&
       // Coverage, not branch location, decides whether a company appears for a governorate.
       (f.gov === 'all' || co.cov.includes('all') || co.cov.includes(f.gov)) &&
-      (!f.verified || co.verified))) return false;
+      (!f.verified || co.verified) &&
+      (!f.mine || covers(co, g)) &&
+      (!f.open || (!!co.hrs && isOpenNow(co.hrs))) &&
+      (!svcOf || svcOf.has(co.id)))) return false;
     if (!idx) return true;
     const { strong, weak } = idx.get(co.id)!;
     if (!words.every(w => strong.includes(w) || weak.includes(w))) return false;
     score.set(co.id, words.filter(w => strong.includes(w)).length);
     return true;
   });
-  if (idx && f.sort === 'rel') res = res.slice().sort((x, y) => score.get(y.id)! - score.get(x.id)!);
-  if (f.sort === 'near') res = res.slice().sort((x, y) => Number(y.gov === 'muscat') - Number(x.gov === 'muscat'));
+  const projects = (co: Company) => catalog.albums.filter(al => al.co === co.id && (c == null || al.cat === c)).length;
+  const by = (...keys: ((co: Company) => number)[]) => (x: Company, y: Company) => { for (const k of keys) { const d = k(y) - k(x); if (d) return d; } return 0; };
+  if (f.sort === 'rel') res = res.slice().sort(by(co => score.get(co.id) ?? 0, co => Number(covers(co, g)), co => Number(co.verified), projects));
+  // «الأقرب»: companies that cover the customer's area, those based in it first.
+  if (f.sort === 'near') res = res.slice().sort(by(co => Number(covers(co, g)), co => Number(!!g && co.gov === g)));
   if (f.sort === 'recent') res = res.slice().reverse();
   // Verified companies first; the rest keep their relevance order.
   if (f.sort === 'verified') res = res.slice().sort((x, y) => Number(y.verified) - Number(x.verified));
