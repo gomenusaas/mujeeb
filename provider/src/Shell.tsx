@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Avatar, Button, Icon, Toast } from './shared/ds';
-import { logoOf, type Category, type Company, type Location, type Repo } from './data';
+import { logoOf, type Company, type Refs, type Repo } from './data';
 import { SECTIONS, StateProvider, useP, useProviderState } from './state';
 import { Dashboard } from './screens/Dashboard';
 import { Branches, Profile } from './screens/Company';
@@ -10,7 +10,7 @@ import { Hours } from './screens/Hours';
 import { Modal } from './ui';
 
 export function Shell({ repo, email, company, refs, onSignOut }: {
-  repo: Repo; email: string; company: Company; refs: { categories: Category[]; locations: Location[] }; onSignOut: () => void;
+  repo: Repo; email: string; company: Company; refs: Refs; onSignOut: () => void;
 }) {
   const state = useProviderState(repo, company, refs, email);
   return <StateProvider value={state}><Layout onSignOut={onSignOut} /></StateProvider>;

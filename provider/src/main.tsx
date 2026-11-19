@@ -1,7 +1,7 @@
 import { StrictMode, useCallback, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './styles.css';
-import { repoPromise, type Category, type Company, type Location, type Repo } from './data';
+import { repoPromise, type Company, type Refs, type Repo } from './data';
 import { strings } from './i18n';
 import { Login, RegisterCompany, SetPassword } from './screens/Auth';
 import { Shell } from './Shell';
@@ -10,7 +10,6 @@ const lang = (() => { try { return JSON.parse(localStorage.getItem('mujeeb.provi
 document.documentElement.lang = lang;
 document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
 
-type Refs = { categories: Category[]; locations: Location[] };
 
 type Boot =
   | { s: 'loading' }

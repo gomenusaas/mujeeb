@@ -28,7 +28,12 @@ export interface Service {
   cover?: string;
   /** Search keywords from the company (up to 7, Arabic or English). Only search uses them; customers don't see them. */
   kw?: string[];
+  /** Sub-services it covers: ids from its category's fixed list (`sub`) and ones the company typed (`csub`). */
+  sub?: string[]; csub?: string[];
 }
+
+/** A sub-service in a category's fixed list (managed in the admin app), in the admin's order. */
+export interface SubService { id: string; cat: number; ar: string; en: string }
 
 export interface Album {
   id: string; co: string; cat: number; ar: string; en: string; pAr: string; pEn: string; n: number; img: string; imgs: string[];
@@ -71,6 +76,8 @@ export interface Story {
 export interface Catalog {
   cats: Category[]; gov: Record<GovId, Pair>; hours: [string, string, string | null][];
   companies: Company[]; services: Service[]; albums: Album[];
+  /** Each category's sub-services (active ones, in order). */
+  subs: SubService[];
   /** Live stories from Supabase; undefined in demo mode (the bundled demo stories are used). */
   stories?: Story[];
   /** Followers per company (not counting the person viewing); missing = none yet. */

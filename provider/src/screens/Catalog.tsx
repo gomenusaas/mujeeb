@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button, EmptyState, Icon } from '../shared/ds';
-import { FEATURED_MAX, isFeaturedLimit, logoOf, photoUrl, type Album, type Service } from '../data';
+import { FEATURED_MAX, isFeaturedLimit, logoOf, photoUrl, type Album, type Service, type SubService } from '../data';
 import { useList, useP } from '../state';
 import { Confirm, Field, KeywordsField, Modal, PageHeader, PhotoEditor, Pill, Select, ServiceCoverEditor, Spinner, Toggle, VideoEditor, card } from '../ui';
 
@@ -16,6 +16,8 @@ type Item = {
   cover?: string | null;
   /** Services only: search keywords (up to 7). */
   kw?: string[];
+  /** Services only: sub-services from the category's list (ids, up to 5) and typed ones (up to 3). */
+  subs?: string[]; csub?: string[];
   /** Projects only: the service it shows under. */
   service_id?: string | null;
   /** Projects only: page details. done = "YYYY-MM"; area and weeks as typed. */
@@ -111,8 +113,17 @@ function Editor({ title, initial, isProject, onClose, onSave, services, linked, 
             </div>
           </>
         )}
-        <Select label={t.category} value={x.category_id} onChange={v => set({ category_id: v, ...(isProject ? { service_id: svcFor(v, x.service_id) } : {}) })}
+        <Select label={t.category} value={x.category_id} onChange={v => set({ category_id: v, ...(isProject ? { service_id: svcFor(v, x.service_id) } : { subs: [] }) })}
           options={company.categories.map(id => ({ value: id, label: p.pick(p.cat(id)?.name_ar || '', p.cat(id)?.name_en || '') }))} />
+        {/* Services: which of the category's sub-services it covers, and any the list doesn't have. */}
+        {!isProject && (
+          <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <SubPicker cat={x.category_id} value={x.subs || []} onChange={(subs, picked) => set({ subs,
+              // A new service with no title yet takes the first sub-service picked as its title.
+              ...(picked && !x.title_ar.trim() && !x.title_en.trim() ? { title_ar: picked.name_ar, title_en: picked.name_en } : {}) })} />
+            <KeywordsField label={t.customSubs} value={x.csub || []} onChange={csub => set({ csub })} max={3} placeholder={t.customSubsPh} help={t.customSubsHelp} />
+          </div>
+        )}
         {isProject && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <Select label={t.projService} value={x.service_id || ''} onChange={v => set({ service_id: v || null })}
@@ -174,9 +185,43 @@ function Editor({ title, initial, isProject, onClose, onSave, services, linked, 
   );
 }
 
+/**
+ * Toggle chips for a category's sub-services (its fixed list from the admin app); at most `max` picked. `onChange`
+ * also says which one was just picked (none when one was removed).
+ */
+function SubPicker({ cat, value, onChange, max = 5 }: { cat: number; value: string[]; onChange: (v: string[], picked?: SubService) => void; max?: number }) {
+  const p = useP();
+  const { t } = p;
+  const list = p.refs.subs.filter(s => s.category_id === cat);
+  if (!list.length) return null;
+  const full = value.length >= max;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <span style={{ display: 'flex', justifyContent: 'space-between', gap: 8, font: 'var(--type-body-sm)', fontWeight: 600 }}>
+        <span>{t.subServices}</span>
+        <span style={{ color: full ? 'var(--brand)' : 'var(--text-tertiary)' }}>{p.num(value.length)} / {p.num(max)}</span>
+      </span>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+        {list.map(s => {
+          const on = value.includes(s.id);
+          return (
+            <button key={s.id} type="button" aria-pressed={on} disabled={!on && full}
+              onClick={() => (on ? onChange(value.filter(x => x !== s.id)) : onChange([...value, s.id], s))}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 34, padding: '0 12px', borderRadius: 999, cursor: !on && full ? 'not-allowed' : 'pointer', opacity: !on && full ? 0.45 : 1, font: '600 13px var(--font-sans)',
+                border: on ? '1.5px solid var(--brand)' : '1px solid var(--border-default)', background: on ? 'var(--brand-tint)' : 'var(--surface-card)', color: on ? 'var(--brand)' : 'var(--text-primary)' }}>
+              {on && <Icon name="check" size={14} />}{p.pick(s.name_ar, s.name_en)}
+            </button>
+          );
+        })}
+      </div>
+      <span style={{ font: 'var(--type-caption)', fontWeight: 500, color: 'var(--text-tertiary)' }}>{t.subServicesHelp}</span>
+    </div>
+  );
+}
+
 /* ───────────────────────── Services ───────────────────────── */
 
-const svcToItem = (s: Service): Item => ({ id: s.id, title_ar: s.title_ar, title_en: s.title_en, category_id: s.category_id, photos: s.photos, is_published: s.is_published, a_ar: s.description_ar, a_en: s.description_en, cover: s.cover_url, kw: s.keywords || [] });
+const svcToItem = (s: Service): Item => ({ id: s.id, title_ar: s.title_ar, title_en: s.title_en, category_id: s.category_id, photos: s.photos, is_published: s.is_published, a_ar: s.description_ar, a_en: s.description_en, cover: s.cover_url, kw: s.keywords || [], subs: s.sub_services || [], csub: s.custom_subs || [] });
 
 export function Services() {
   const p = useP();
@@ -191,7 +236,9 @@ export function Services() {
   const blank: Item = { title_ar: '', title_en: '', category_id: company.categories[0], photos: [], is_published: true, a_ar: '', a_en: '' };
   const save = async (x: Item) => {
     const base = edit && edit !== 'new' ? edit : { company_id: company.id, position: items?.length || 0 };
-    await repo.saveService({ ...base, id: x.id, company_id: company.id, category_id: x.category_id, title_ar: x.title_ar, title_en: x.title_en, description_ar: x.a_ar.trim(), description_en: x.a_en.trim(), photos: x.photos, is_published: x.is_published, cover_url: x.cover ?? null, keywords: x.kw || [] } as Service);
+    await repo.saveService({ ...base, id: x.id, company_id: company.id, category_id: x.category_id, title_ar: x.title_ar, title_en: x.title_en, description_ar: x.a_ar.trim(), description_en: x.a_en.trim(), photos: x.photos, is_published: x.is_published, cover_url: x.cover ?? null, keywords: x.kw || [],
+      // Only ids still in this category's list (one the admin deleted is dropped).
+      sub_services: (x.subs || []).filter(id => p.refs.subs.some(s => s.id === id && s.category_id === x.category_id)), custom_subs: x.csub || [] } as Service);
     p.showToast(t.saved); setEdit(null); reload();
   };
   const remove = async () => {

@@ -102,6 +102,8 @@ export const STR = {
   featuredOn: ['أُضيف إلى المشاريع المميزة', 'Added to featured projects'], featuredOff: ['أُزيل من المشاريع المميزة', 'Removed from featured projects'],
   featuredFull: ['وصلت إلى ٧ مشاريع مميزة. أزل النجمة عن مشروع أولًا.', 'You already feature 7 projects. Remove the star from one first.'],
   feature: ['تمييز المشروع', 'Feature project'], unfeature: ['إلغاء التمييز', 'Unfeature project'],
+  subServices: ['الخدمات الفرعية', 'Sub-services'], subServicesHelp: ['اختر ما تشمله هذه الخدمة من قائمة الفئة (حتى ٥). يجدك العملاء بها في صفحة الفئة.', 'Pick what this service covers from the category’s list (up to 5). Customers find you by them on the category page.'],
+  customSubs: ['خدمات فرعية أخرى', 'Other sub-services'], customSubsPh: ['مثال: ديكورات الجبس', 'e.g. gypsum decor'], customSubsHelp: ['لم تجد ما تقدمه في القائمة؟ اكتبه هنا (حتى ٣) واضغط Enter. نراجعها لإضافتها إلى القائمة.', 'Not in the list? Type it here (up to 3) and press Enter. We review them to add to the list.'],
   keywords: ['كلمات البحث', 'Search keywords'], keywordsPh: ['مثال: عشب صناعي', 'e.g. artificial grass'],
   keywordsHelp: ['حتى ٧ كلمات يكتبها العملاء عند البحث عن هذه الخدمة (عربي أو إنجليزي). اضغط Enter بعد كل كلمة. لا تظهر للعملاء.', 'Up to 7 words customers type when looking for this service (Arabic or English). Press Enter after each. Customers don’t see them.'],
   noProjects: ['لا توجد مشاريع بعد', 'No projects yet'], noProjectsBody: ['اعرض أعمالك المنجزة لتظهر في «آخر المشاريع».', 'Show finished work; new projects appear in “Last projects”.'],

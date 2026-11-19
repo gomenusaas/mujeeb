@@ -4,6 +4,10 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 export interface Category { id: number; name_ar: string; name_en: string; color: string; icon: string }
 export interface Location { id: string; name_ar: string; name_en: string }
+/** A sub-service in a category's fixed list (managed in the admin app). */
+export interface SubService { id: string; category_id: number; name_ar: string; name_en: string }
+/** Reference lists the app loads once: categories, coverage locations and each category's sub-services. */
+export type Refs = { categories: Category[]; locations: Location[]; subs: SubService[] };
 export interface Company {
   id: string; name_ar: string; name_en: string; description_ar: string; description_en: string;
   city_ar: string; city_en: string; governorate: string; cover_photo: string; logo_url: string | null;
@@ -28,6 +32,8 @@ export interface Service {
   description_ar: string; description_en: string; photos: string[]; is_published: boolean; position: number;
   /** Header image of the service page, already cropped to the header shape. Null = first photo, then the company cover. */
   cover_url: string | null;
+  /** Sub-services it covers, from its category's fixed list (up to 5), and ones the company typed itself (up to 3). */
+  sub_services: string[]; custom_subs: string[];
   /** Search keywords (up to 7, each up to 30 characters; the database enforces it). Customers don't see them. */
   keywords: string[];
 }
@@ -82,7 +88,7 @@ export interface Repo {
   recovering(): boolean;
   setPassword(pw: string): Promise<void>;
   myCompanyIds(): Promise<string[]>;
-  refs(): Promise<{ categories: Category[]; locations: Location[] }>;
+  refs(): Promise<Refs>;
   company(id: string): Promise<Company>;
   saveCompany(id: string, patch: CompanyPatch): Promise<void>;
   branches(cid: string): Promise<Branch[]>;
@@ -163,8 +169,11 @@ function supabaseRepo(sb: SupabaseClient): Repo {
     },
     async myCompanyIds() { return ok(await sb.from('company_members').select('company_id')).map(r => r.company_id as string); },
     async refs() {
-      const [c, l] = await Promise.all([sb.from('categories').select('id, name_ar, name_en, color, icon').order('sort_order'), sb.from('locations').select('id, name_ar, name_en').order('sort_order')]);
-      return { categories: ok(c) as Category[], locations: (ok(l) as Location[]).filter(x => x.id !== 'all') };
+      const [c, l, s] = await Promise.all([
+        sb.from('categories').select('id, name_ar, name_en, color, icon').order('sort_order'), sb.from('locations').select('id, name_ar, name_en').order('sort_order'),
+        sb.from('sub_services').select('id, category_id, name_ar, name_en').order('position'),
+      ]);
+      return { categories: ok(c) as Category[], locations: (ok(l) as Location[]).filter(x => x.id !== 'all'), subs: ok(s) as SubService[] };
     },
     async company(id) {
       const [c, cc] = await Promise.all([sb.from('companies').select('*').eq('id', id).single(), sb.from('company_categories').select('category_id').eq('company_id', id).order('position')]);
@@ -228,7 +237,8 @@ type DemoData = {
   cats: { i: number; ar: string; en: string; color: string; icon: string }[];
   gov: Record<string, [string, string]>;
   companies: { id: string; ar: string; en: string; cats: number[]; hrs?: (string[] | null)[]; cityAr: string; cityEn: string; gov: string; img: string; verified: boolean; phone: string; since: number; dar: string; den: string; branches: [string, string, boolean][] }[];
-  services: { id: string; co: string; cat: number; ar: string; en: string; imgs: string[]; dar: string; den: string; cover?: string; kw?: string[] }[];
+  services: { id: string; co: string; cat: number; ar: string; en: string; imgs: string[]; dar: string; den: string; cover?: string; kw?: string[]; sub?: string[]; csub?: string[] }[];
+  subs: { id: string; cat: number; ar: string; en: string }[];
   albums: { svc?: string; dAr?: string; dEn?: string; done?: string; area?: number; weeks?: number; feat?: boolean; id: string; co: string; cat: number; ar: string; en: string; pAr: string; pEn: string; img: string; imgs: string[]; vids?: string[]; added: string }[];
 };
 
@@ -248,7 +258,7 @@ async function demoRepo(): Promise<Repo> {
     lat: k === 0 ? 23.6143 : null, lng: k === 0 ? 58.4734 : null, is_primary: b[2], position: k,
   }));
   let services: Service[] = d.services.filter(s => s.co === CID).map((s, k) => ({
-    id: s.id, company_id: CID, category_id: s.cat, title_ar: s.ar, title_en: s.en, description_ar: s.dar, description_en: s.den, photos: s.imgs, is_published: true, position: k, cover_url: s.cover ?? null, keywords: s.kw || [],
+    id: s.id, company_id: CID, category_id: s.cat, title_ar: s.ar, title_en: s.en, description_ar: s.dar, description_en: s.den, photos: s.imgs, is_published: true, position: k, cover_url: s.cover ?? null, keywords: s.kw || [], sub_services: s.sub || [], custom_subs: s.csub || [],
   }));
   let albums: Album[] = d.albums.filter(a => a.co === CID).map((a, k) => ({
     id: a.id, company_id: CID, category_id: a.cat, title_ar: a.ar, title_en: a.en, place_ar: a.pAr, place_en: a.pEn, photos: a.imgs, cover_photo: a.img, is_published: true, position: k, created_at: a.added,
@@ -281,6 +291,7 @@ async function demoRepo(): Promise<Repo> {
     refs: async () => ({
       categories: d.cats.map(c => ({ id: c.i, name_ar: c.ar, name_en: c.en, color: c.color, icon: c.icon })),
       locations: Object.entries(d.gov).filter(([k]) => k !== 'all').map(([id, [ar, en]]) => ({ id, name_ar: ar, name_en: en })),
+      subs: d.subs.map(x => ({ id: x.id, category_id: x.cat, name_ar: x.ar, name_en: x.en })),
     }),
     company: async () => wait(company),
     saveCompany: async (_id, patch) => { company = { ...company, ...patch }; await wait(0); },

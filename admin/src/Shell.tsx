@@ -6,6 +6,7 @@ import { Overview } from './screens/Overview';
 import { Companies } from './screens/Companies';
 import { Users } from './screens/Users';
 import { Locations } from './screens/Locations';
+import { SubServices } from './screens/SubServices';
 import { Admins } from './screens/Admins';
 
 export function Shell({ me, refs, onSignOut }: { me: { id: string; email: string }; refs: Refs; onSignOut: () => void }) {
@@ -37,6 +38,7 @@ function Layout({ onSignOut }: { onSignOut: () => void }) {
           {section === 'overview' && <Overview />}
           {section === 'companies' && <Companies />}
           {section === 'users' && <Users />}
+          {section === 'subServices' && <SubServices />}
           {section === 'locations' && <Locations />}
           {section === 'admins' && <Admins />}
         </main>

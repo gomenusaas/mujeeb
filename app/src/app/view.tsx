@@ -79,19 +79,21 @@ export const fold = (s: string) => s.toLowerCase()
   .replace(/[٠-٩]/g, d => String(d.charCodeAt(0) - 0x660)).replace(/\s+/g, ' ');
 
 /**
- * Each company's searchable text, built once per catalog. `strong`: its names, categories, service titles and
- * the services' keywords. `weak`: service descriptions and its projects' titles and descriptions.
+ * Each company's searchable text, built once per catalog. `strong`: its names, categories, service titles,
+ * the services' keywords and sub-services (from the list and typed). `weak`: service descriptions and its projects' titles and descriptions.
  */
 const searchIndexes = new WeakMap<Catalog, Map<string, { strong: string; weak: string }>>();
 function searchIndex(catalog: Catalog) {
   let idx = searchIndexes.get(catalog);
   if (idx) return idx;
   idx = new Map();
+  const subName = new Map(catalog.subs.map(x => [x.id, x.ar + ' ' + x.en]));
   for (const co of catalog.companies) {
     const svcs = catalog.services.filter(s => s.co === co.id);
     const albs = catalog.albums.filter(al => al.co === co.id);
     idx.set(co.id, {
-      strong: fold([co.ar, co.en, ...co.cats.map(i => catalog.cats[i].ar + ' ' + catalog.cats[i].en), ...svcs.map(s => [s.ar, s.en, ...(s.kw || [])].join(' '))].join(' | ')),
+      strong: fold([co.ar, co.en, ...co.cats.map(i => catalog.cats[i].ar + ' ' + catalog.cats[i].en),
+        ...svcs.map(s => [s.ar, s.en, ...(s.kw || []), ...(s.sub || []).map(id => subName.get(id) || ''), ...(s.csub || [])].join(' '))].join(' | ')),
       weak: fold([...svcs.map(s => s.dar + ' ' + s.den), ...albs.map(al => [al.ar, al.en, al.dAr || '', al.dEn || ''].join(' '))].join(' | ')),
     });
   }
@@ -109,22 +111,15 @@ export function myGov(a: App): GovId | null {
 export const covers = (co: Company, g: GovId | null) => !!g && (co.cov.includes('all') || co.cov.includes(g));
 
 /**
- * The services customers can narrow a category page to: titles (folded, see fold()) that at least two of the
- * category's companies offer, most offered first, up to 12. `label` is how the first company wrote it.
+ * The chips a category page can be narrowed by: its sub-services (the admin's fixed list, in order) that at least
+ * one of the category's companies offers, with how many do. `key` is the sub-service id.
  */
 export function categoryServiceChips(a: App, c: number | undefined): { key: string; label: string; n: number }[] {
   if (c == null) return [];
   const { catalog, ar } = a;
-  const by = new Map<string, { label: string; cos: Set<string> }>();
-  for (const s of catalog.services) {
-    if (s.cat !== c) continue;
-    const key = fold(ar ? s.ar : s.en).trim();
-    const e = by.get(key) ?? { label: ar ? s.ar : s.en, cos: new Set<string>() };
-    e.cos.add(s.co);
-    by.set(key, e);
-  }
-  return [...by].filter(([, e]) => e.cos.size >= 2).map(([key, e]) => ({ key, label: e.label, n: e.cos.size }))
-    .sort((x, y) => y.n - x.n || x.label.localeCompare(y.label, ar ? 'ar' : 'en')).slice(0, 12);
+  const cos = new Map<string, Set<string>>();
+  for (const s of catalog.services) if (s.cat === c) for (const id of s.sub || []) cos.set(id, (cos.get(id) ?? new Set()).add(s.co));
+  return catalog.subs.filter(x => x.cat === c && cos.has(x.id)).map(x => ({ key: x.id, label: ar ? x.ar : x.en, n: cos.get(x.id)!.size }));
 }
 
 /**
@@ -139,7 +134,8 @@ export function listingCompanies(a: App, c: number | undefined): Company[] {
   const idx = words.length ? searchIndex(catalog) : null;
   const g = myGov(a);
   const score = new Map<string, number>();
-  const svcOf = f.svc ? new Set(catalog.services.filter(s => s.cat === c && fold(a.ar ? s.ar : s.en).trim() === f.svc).map(s => s.co)) : null;
+  // A sub-service chip: companies with a service in this category that covers it.
+  const svcOf = f.svc ? new Set(catalog.services.filter(s => (c == null || s.cat === c) && s.sub?.includes(f.svc)).map(s => s.co)) : null;
   let res = catalog.companies.filter(co => {
     if (!((c == null || co.cats.includes(c)) &&
       // Coverage, not branch location, decides whether a company appears for a governorate.

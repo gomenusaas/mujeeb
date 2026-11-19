@@ -62,6 +62,11 @@ async function rpc<T>(fn: string, args?: Record<string, unknown>): Promise<T> {
   return data as T;
 }
 
+/** A sub-service in a category's fixed list (hidden ones included for the admin). */
+export interface SubService { id: string; category_id: number; name_ar: string; name_en: string; position: number; is_active: boolean }
+/** A sub-service a company typed itself, with how many services use it. */
+export interface CustomSub { category_id: number; name: string; uses: number }
+
 /** A governorate with its wilayats, as the admin sees them (hidden ones included). */
 export interface PlaceGov { id: string; name_ar: string; name_en: string; region: string | null; position: number; is_active: boolean; wilayats: PlaceWil[] }
 export interface PlaceWil { id: string; governorate_id: string; name_ar: string; name_en: string; position: number; is_active: boolean }
@@ -93,8 +98,16 @@ export const api = {
   },
   deleteGov: async (id: string) => { await ok(client().from('governorates').delete().eq('id', id)); },
   deleteWil: async (id: string) => { await ok(client().from('wilayats').delete().eq('id', id)); },
+  /* ── Sub-services (table sub_services; only platform admins may write) ── */
+  subs: async () => (await ok(client().from('sub_services').select('id, category_id, name_ar, name_en, position, is_active').order('position'))) as SubService[],
+  customSubs: () => rpc<CustomSub[]>('admin_custom_subs'),
+  async saveSub(x: { id?: string; category_id: number; name_ar: string; name_en: string; is_active: boolean; position?: number }) {
+    if (x.id) await ok(client().from('sub_services').update({ name_ar: x.name_ar, name_en: x.name_en, is_active: x.is_active }).eq('id', x.id));
+    else await ok(client().from('sub_services').insert({ id: x.category_id + '-' + newId('s'), category_id: x.category_id, name_ar: x.name_ar, name_en: x.name_en, is_active: x.is_active, position: x.position ?? 999 }));
+  },
+  deleteSub: async (id: string) => { await ok(client().from('sub_services').delete().eq('id', id)); },
   /** Saves a new order: each id gets its index as its position. */
-  async reorder(table: 'governorates' | 'wilayats', ids: string[]) {
+  async reorder(table: 'governorates' | 'wilayats' | 'sub_services', ids: string[]) {
     await Promise.all(ids.map((id, k) => ok(client().from(table).update({ position: k }).eq('id', id))));
   },
 

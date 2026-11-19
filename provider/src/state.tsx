@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import type { Category, Company, Location, Repo } from './data';
+import type { Company, Refs, Repo } from './data';
 import { arDigits, strings, type T } from './i18n';
 
 export type Section = 'dashboard' | 'profile' | 'hours' | 'branches' | 'services' | 'projects' | 'stories';
@@ -20,7 +20,7 @@ const sectionFromHash = (): Section => {
   return SECTIONS.some(x => x.id === s) ? s : 'dashboard';
 };
 
-export function useProviderState(repo: Repo, initial: Company, refs: { categories: Category[]; locations: Location[] }, email: string) {
+export function useProviderState(repo: Repo, initial: Company, refs: Refs, email: string) {
   const [lang, setLang] = useState<'ar' | 'en'>(readLang);
   const ar = lang === 'ar';
   const t = useMemo(() => strings(ar), [ar]);

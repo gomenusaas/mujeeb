@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { Avatar, Badge, BottomSheet, Button, Chip, EmptyState, Icon, IconButton, ListItem, SearchBar, SectionHeader } from '../ds';
 import { DEFAULT_F, useApp, type Filters, type SheetKey } from '../app/store';
-import { ContactGrid, HScroll, Img, MetaLine, albumMedia, callPhone, card, categoryServiceChips, companyGallery, companyPreview, helpers, listingCompanies, myGov, openDirections, openWhatsApp, serviceImage, type Media } from '../app/view';
+import { ContactGrid, HScroll, Img, MetaLine, albumMedia, callPhone, card, categoryServiceChips, companyGallery, companyPreview, helpers, listingCompanies, openDirections, openWhatsApp, serviceImage, type Media } from '../app/view';
 import { logoUrl, photo, remote } from '../data/api';
 import { OFFERS_PER_COMPANY } from '../app/links';
 import type { Album, Company } from '../data/types';
@@ -216,9 +216,6 @@ export function Listing() {
   const set = (p: Partial<Filters>) => setF(x => ({ ...x, ...p }));
   const res = listingCompanies(a, c);
   const chips = categoryServiceChips(a, c);
-  // «يخدم مسقط»: the governorate of the customer's service location (none when it isn't known).
-  const g = myGov(a);
-  const area = g ? (catalog.gov as Record<string, [string, string]>)[g]?.[a.ar ? 0 : 1] : '';
   // Companies come in pages of PAGE: the next page loads as the end of the list nears the screen.
   const [shown, setShown] = useState(PAGE);
   useEffect(() => setShown(PAGE), [c, f]);
@@ -257,15 +254,12 @@ export function Listing() {
       </div>
       {/* The category's stories (hidden while searching or filtering: then only results show). */}
       {c != null && !f.q && !f.mine && !f.verified && !f.open && !f.svc && <CategoryStoryRow cat={c} />}
-      {/* Order and quick filters in one sideways row, then the category's common services. */}
+      {/* The order, then the category's common services. */}
       <div className="mj-s" style={{ display: 'flex', gap: 8, alignItems: 'center', overflowX: 'auto', padding: '10px 20px 2px', scrollbarWidth: 'none' }}>
         <button type="button" aria-haspopup="dialog" aria-label={t.sortBy + ': ' + sortLabel(t, f.sort)} onClick={() => a.setSheet('sort')}
           style={{ flex: 'none', height: 38, display: 'flex', alignItems: 'center', gap: 6, padding: '0 14px', border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--neutral-100)', color: 'var(--text-primary)', font: 'var(--type-body-sm)', fontWeight: 700, fontFamily: 'var(--font-sans)', cursor: 'pointer' }}>
           <Icon name="arrow-down-up" size={15} />{sortLabel(t, f.sort)}<Icon name="chevron-down" size={15} color="var(--text-secondary)" />
         </button>
-        {area && <Chip icon="map-pin" selected={f.mine} onClick={() => set({ mine: !f.mine })}>{t.servesArea.replace('{g}', area)}</Chip>}
-        <Chip icon="badge-check" selected={f.verified} onClick={() => set({ verified: !f.verified })}>{t.verifiedChip}</Chip>
-        <Chip icon="clock" selected={f.open} onClick={() => set({ open: !f.open })}>{t.openNow}</Chip>
       </div>
       {chips.length >= 2 && (
         <div className="mj-s" style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '8px 20px 2px', scrollbarWidth: 'none' }}>
@@ -640,8 +634,15 @@ export function CompanyPage() {
         </div>
         {/* The activity pill on a full-width line (opens the activity list), then everything it filters, with no lines between, so it reads as one block: its services (a 3-row sideways strip when there are more than 3), featured projects and gallery. */}
         <ActivityPicker co={co} act={act} />
+        {/* «الخدمات ١٢»: the activity's services, with how many there are (like «معرض الأعمال»). */}
         {services.length
-          ? <ServiceStrip key={act ?? 'all'} items={services} />
+          ? (
+            <section aria-label={t.services} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <SectionHeader title={<>{t.services} <span style={{ color: 'var(--text-tertiary)' }}>{h.num(services.length)}</span></>}
+                action={services.length > 3 ? t.seeAll : null} onAction={() => a.setSheet('services')} />
+              <ServiceStrip key={act ?? 'all'} items={services} />
+            </section>
+          )
           : <EmptyLine>{t.actNoSvc}</EmptyLine>}
         {/* «العروض»: the company's offers (all activities), after the services. */}
         <div style={{ marginTop: 10 }}><OfferStrip co={co} /></div>
@@ -682,33 +683,87 @@ export function CompanyPage() {
   );
 }
 
-/** A service card: small landscape photo, then name (up to two lines) and project count; opens the service page. */
-function ServiceNavCard({ title, img, open, sub }: { title: string; img: string; open: () => void; sub: string }) {
+/**
+ * A service card: small landscape photo, then name (up to two lines) and project count; opens the service page.
+ * `icon`: the service has no projects yet, so a grey square with this (category) icon stands in for the photo.
+ */
+function ServiceNavCard({ title, img, open, sub, icon }: { title: string; img: string; open: () => void; sub: string; icon?: string }) {
   return (
     <button type="button" className="mj-press-sm" onClick={open}
       style={{ minWidth: 0, minHeight: 64, display: 'flex', alignItems: 'center', gap: 10, padding: 8, paddingInlineEnd: 12, border: '1px solid var(--border-default)', borderRadius: 12, background: 'var(--surface-card)', cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'start', scrollSnapAlign: 'start' }}>
-      <span style={{ position: 'relative', flex: 'none', width: 72, height: 50, borderRadius: 8, overflow: 'hidden', background: 'var(--neutral-100)' }}><Img src={img} style={{ position: 'absolute', inset: 0 }} /></span>
+      <span style={{ position: 'relative', flex: 'none', width: 72, height: 50, borderRadius: 8, overflow: 'hidden', background: 'var(--neutral-100)', display: 'grid', placeItems: 'center' }}>
+        {icon ? <Icon name={icon} size={22} color="var(--text-tertiary)" /> : <Img src={img} style={{ position: 'absolute', inset: 0 }} />}
+      </span>
       <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
         <span style={{ font: 'var(--type-body-sm)', fontWeight: 700, lineHeight: 1.35, color: 'var(--text-primary)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{title}</span>
-        <span style={{ font: 'var(--type-caption)', color: 'var(--text-secondary)' }}>{sub}</span>
+        <span style={{ font: 'var(--type-caption)', color: icon ? 'var(--text-tertiary)' : 'var(--text-secondary)' }}>{sub}</span>
       </span>
     </button>
   );
 }
 
+/** Services with projects first, those without any last (each group in the company's own order). */
+function servicesInOrder<T extends { id: string }>(a: ReturnType<typeof useApp>, items: T[]): T[] {
+  const has = (id: string) => a.catalog.albums.some(al => al.svc === id);
+  return [...items.filter(x => has(x.id)), ...items.filter(x => !has(x.id))];
+}
+
+/** One service card, with the category icon in place of a photo when it has no projects yet. */
+function ServiceCard({ x }: { x: ReturnType<ReturnType<typeof helpers>['svcV']> }) {
+  const a = useApp();
+  const s = a.idx.svc.get(x.id);
+  const empty = !a.catalog.albums.some(al => al.svc === x.id);
+  return <ServiceNavCard title={x.title} img={x.img} open={x.open} sub={svcProjects(a, x.id)} icon={empty ? (s ? a.catalog.cats[s.cat]?.icon : undefined) || 'briefcase' : undefined} />;
+}
+
+/**
+ * «عرض الكل» from the company page's «الخدمات»: every service of the activity on screen as a plain list (same
+ * order and cards as the strip). Tapping one opens its page.
+ */
+export function ServicesSheet() {
+  const a = useApp();
+  const { t, sheet, setSheet, page } = a;
+  const h = helpers(a);
+  const co = page.s === 'company' ? a.idx.co.get(page.id!) : undefined;
+  const act = co ? activeAct(co, page) : null;
+  const items = co ? servicesInOrder(a, a.catalog.services.filter(s => s.co === co.id && (act == null || s.cat === act)).map(h.svcV)) : [];
+  return (
+    <BottomSheet open={sheet === 'services' && !!co} onClose={() => setSheet(null)}
+      title={<>{t.services} <span style={{ color: 'var(--text-tertiary)' }}>{h.num(items.length)}</span></>}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {sheet === 'services' && items.map(x => <ServiceCard key={x.id} x={x} />)}
+      </div>
+    </BottomSheet>
+  );
+}
+
 /**
  * A company's services as cards: up to 3 stacked in one column; more become a sideways strip of columns
- * (2 cards each for 4 services, 3 each for 5 or more), the next column peeking in at the edge.
+ * (2 cards each for 4 services, 3 each for 5 or more), the next column peeking in at the edge. Services with
+ * projects come first, those without any last (each group in the company's own order), shown with their
+ * category icon instead of a photo. Once the strip is scrolled past its first two columns, a narrow tab at the
+ * screen's start edge (in the page margin, so it covers no card) brings it back to the start.
  */
 function ServiceStrip({ items }: { items: ReturnType<ReturnType<typeof helpers>['svcV']>[] }) {
   const a = useApp();
-  const cards = items.map(x => <ServiceNavCard key={x.id} title={x.title} img={x.img} open={x.open} sub={svcProjects(a, x.id)} />);
+  const strip = useRef<HTMLDivElement>(null);
+  const [far, setFar] = useState(false);
+  const cards = servicesInOrder(a, items).map(x => <ServiceCard key={x.id} x={x} />);
   if (items.length <= 3) return <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{cards}</div>;
   // 4 services: two columns of two. 5 or more: columns of three (5 = three and two).
   const rows = items.length === 4 ? 2 : 3;
+  const onScroll = () => { const el = strip.current; if (el) setFar(Math.abs(el.scrollLeft) > el.clientWidth * 1.4); };
   return (
-    <div className="mj-s" style={{ display: 'grid', gridTemplateRows: 'repeat(' + rows + ', auto)', gridAutoFlow: 'column', gridAutoColumns: 'calc(100% - 56px)', gap: '8px 10px', overflowX: 'auto', scrollSnapType: 'x mandatory', scrollPaddingInline: 20, margin: '0 -20px', padding: '0 20px', scrollbarWidth: 'none' }}>
-      {cards}
+    <div style={{ position: 'relative', margin: '0 -20px' }}>
+      <div ref={strip} onScroll={onScroll} className="mj-s" style={{ display: 'grid', gridTemplateRows: 'repeat(' + rows + ', auto)', gridAutoFlow: 'column', gridAutoColumns: 'calc(100% - 56px)', gap: '8px 10px', overflowX: 'auto', scrollSnapType: 'x mandatory', scrollPaddingInline: 20, padding: '0 20px', scrollbarWidth: 'none' }}>
+        {cards}
+      </div>
+      <button type="button" aria-label={a.t.backToStart} tabIndex={far ? 0 : -1} onClick={() => strip.current?.scrollTo({ left: 0, behavior: 'smooth' })}
+        style={{ position: 'absolute', top: '50%', insetInlineStart: 0, width: 18, height: 72, marginTop: -36, padding: 0, border: 'none', borderStartStartRadius: 0, borderEndStartRadius: 0, borderStartEndRadius: 10, borderEndEndRadius: 10,
+          background: 'var(--surface-card)', color: 'var(--text-primary)', boxShadow: '0 2px 10px oklch(0.2 0.02 285 / 0.2)', display: 'grid', placeItems: 'center', cursor: 'pointer',
+          opacity: far ? 1 : 0, pointerEvents: far ? 'auto' : 'none', transition: 'opacity var(--dur-base) var(--ease-out)' }}>
+        <Icon name="chevron-left" size={14} />
+      </button>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient, type User } from '@supabase/supabase-js';
 import type { Governorate } from './oman';
-import type { Album, Branch, Catalog, Category, Company, CustomerSeed, GovId, Pair, Service, Story, WeekHours } from './types';
+import type { Album, Branch, Catalog, Category, Company, CustomerSeed, GovId, Pair, Service, Story, SubService, WeekHours } from './types';
 
 const URL_ = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
@@ -31,7 +31,7 @@ export async function loadCustomerSeed(): Promise<CustomerSeed> {
 export async function loadCatalog(): Promise<Catalog> {
   if (!supabase) {
     const d = await demo();
-    return { cats: d.cats, gov: d.gov, hours: d.hours, companies: d.companies, services: d.services, albums: d.albums };
+    return { cats: d.cats, gov: d.gov, hours: d.hours, companies: d.companies, services: d.services, albums: d.albums, subs: d.subs };
   }
   const sb = supabase;
   const get = async <R,>(table: string, order?: string) => {
@@ -43,10 +43,11 @@ export async function loadCatalog(): Promise<Catalog> {
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped DB rows mapped field-by-field below
   type Row = Record<string, any>;
-  const [locs, cats, hours, cos, cc, areas, branches, svcs, albs] = await Promise.all([
+  const [locs, cats, hours, cos, cc, areas, branches, svcs, albs, subRows] = await Promise.all([
     get<Row>('locations', 'sort_order'), get<Row>('categories', 'sort_order'), get<Row>('working_hours', 'id'),
     get<Row>('companies', 'created_at'), get<Row>('company_categories', 'position'), get<Row>('company_service_areas'),
     get<Row>('company_branches', 'position'), get<Row>('services', 'position'), get<Row>('portfolio_albums', 'position'),
+    get<Row>('sub_services', 'position'),
   ]);
   const by = <T,>(rows: Row[], key: string, map: (r: Row) => T) => {
     const m: Record<string, T[]> = {};
@@ -74,7 +75,9 @@ export async function loadCatalog(): Promise<Catalog> {
     branches: brBy[c.id] || [], hrs: hrsBy[c.id],
   })).sort((a, b) => sortKey(a.id) - sortKey(b.id));
   const categories: Category[] = cats.map(c => ({ i: c.id, ar: c.name_ar, en: c.name_en, sar: c.short_ar, sen: c.short_en, icon: c.icon, color: c.color, art: c.art_url }));
-  const services: Service[] = svcs.map(s => ({ id: s.id, co: s.company_id, cat: s.category_id, ar: s.title_ar, en: s.title_en, imgs: s.photos, dar: s.description_ar, den: s.description_en, cover: s.cover_url || undefined, kw: s.keywords?.length ? s.keywords : undefined }));
+  const services: Service[] = svcs.map(s => ({ id: s.id, co: s.company_id, cat: s.category_id, ar: s.title_ar, en: s.title_en, imgs: s.photos, dar: s.description_ar, den: s.description_en, cover: s.cover_url || undefined, kw: s.keywords?.length ? s.keywords : undefined,
+    sub: s.sub_services?.length ? s.sub_services : undefined, csub: s.custom_subs?.length ? s.custom_subs : undefined }));
+  const subs: SubService[] = subRows.map(r => ({ id: r.id, cat: r.category_id, ar: r.name_ar, en: r.name_en }));
   const albums: Album[] = albs.map(a => ({ id: a.id, co: a.company_id, cat: a.category_id, ar: a.title_ar, en: a.title_en, pAr: a.place_ar, pEn: a.place_en, n: a.photo_count, img: a.cover_photo, imgs: a.photos, added: a.created_at, vids: a.videos || [], hide: a.gallery_hidden || [], svc: a.service_id || undefined,
     dAr: a.description_ar || '', dEn: a.description_en || '', done: a.completed_on || undefined, area: a.area_m2 ?? undefined, weeks: a.duration_weeks ?? undefined, feat: a.is_featured || undefined }));
   // Live stories (RLS only returns ones that haven't expired). A video without a poster uses the company cover.
@@ -97,7 +100,7 @@ export async function loadCatalog(): Promise<Catalog> {
   // Follower counts per company (numbers only; the viewer's own follow is added back by the app).
   const { data: fc } = await sb.rpc('follower_counts');
   const followers = Object.fromEntries(((fc || []) as Row[]).map(r => [r.company_id as string, r.n as number]));
-  return { cats: categories, gov, hours: hours.map(h => [h.days_ar, h.days_en, h.hours]), companies, services, albums, stories, followers, ...(places.length ? { places } : {}) };
+  return { cats: categories, gov, hours: hours.map(h => [h.days_ar, h.days_en, h.hours]), companies, services, albums, subs, stories, followers, ...(places.length ? { places } : {}) };
 }
 
 function sortKey(id: string) {

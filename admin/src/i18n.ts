@@ -15,6 +15,12 @@ export const STR = {
   // Navigation
   overview: ['نظرة عامة', 'Overview'], companies: ['الشركات', 'Companies'], users: ['المستخدمون', 'Users'], admins: ['المشرفون', 'Admins'],
   locations: ['المواقع', 'Locations'],
+  subServices: ['الخدمات الفرعية', 'Sub-services'],
+  subServicesSub: ['قائمة ثابتة لكل فئة. تختار الشركات منها عند إضافة خدمة، وتظهر للعملاء كأزرار تصفية في صفحة الفئة بالترتيب الذي تراه هنا. المخفية لا تظهر.', 'A fixed list per category. Companies pick from it when they add a service, and customers see it as filter chips on the category page, in the order shown here. Hidden ones aren’t shown.'],
+  addSub: ['إضافة خدمة فرعية', 'Add sub-service'], editSub: ['تعديل الخدمة الفرعية', 'Edit sub-service'], noSubs: ['لا توجد خدمات فرعية بعد.', 'No sub-services yet.'],
+  deleteSubBody: ['ستُزال من الخدمات التي اختارتها. يمكنك إخفاؤها بدل حذفها.', 'It’s removed from the services that picked it. You can hide it instead.'],
+  customSubsT: ['كتبتها الشركات', 'Typed by companies'], customSubsHelp: ['خدمات فرعية كتبتها الشركات لأنها لم تجدها في القائمة. أضف المفيد منها إلى القائمة.', 'Sub-services companies typed because they weren’t in the list. Add the useful ones to the list.'],
+  usesN: ['{n} خدمة', '{n} services'], addToList: ['إضافة للقائمة', 'Add to list'],
   locationsSub: ['المحافظات والولايات التي يختار منها العملاء «موقع الخدمة»، بالترتيب الذي تراه هنا. المخفية لا تظهر للعملاء.', 'The governorates and wilayats customers pick their service location from, in the order shown here. Hidden ones aren’t shown to customers.'],
   addGov: ['إضافة محافظة', 'Add governorate'], editGov: ['تعديل المحافظة', 'Edit governorate'], addWil: ['إضافة ولاية', 'Add wilayat'], editWil: ['تعديل الولاية', 'Edit wilayat'],
   region: ['منطقة التغطية', 'Coverage region'], regionHelp: ['تربط المحافظة بمناطق تغطية الشركات في التطبيق.', 'Links the governorate to the companies’ coverage regions in the app.'], noRegion: ['بدون', 'None'],
