@@ -671,7 +671,8 @@ export function CompanyPage() {
         )}
         {allMedia.length > 0 && (
             <section aria-label={t.gallery} style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 10 }}>
-              <SectionHeader title={<>{t.workGallery} <span style={{ color: 'var(--text-tertiary)' }}>{h.num(gallery.length)}</span></>} action={null} />
+              <SectionHeader title={<>{t.workGallery} <span style={{ color: 'var(--text-tertiary)' }}>{h.num(gallery.length)}</span></>}
+                action={gallery.length > 12 ? t.seeAll : null} onAction={() => a.setSheet('gallery')} />
               {/* Square tiles in line with the page content: pages of 12 (3 × 4) scrolling sideways when there are more. */}
               {gallery.length
                 ? <SquareGrid key={act ?? 'all'} items={gallery} onOpen={k => a.go('photo', { src: 'gallery', id: co.id, i: k, ...(act != null ? { act } : {}) })} />
@@ -714,6 +715,27 @@ function ServiceCard({ x }: { x: ReturnType<ReturnType<typeof helpers>['svcV']> 
   const s = a.idx.svc.get(x.id);
   const empty = !a.catalog.albums.some(al => al.svc === x.id);
   return <ServiceNavCard title={x.title} img={x.img} open={x.open} sub={svcProjects(a, x.id)} icon={empty ? (s ? a.catalog.cats[s.cat]?.icon : undefined) || 'briefcase' : undefined} />;
+}
+
+/**
+ * «عرض الكل» from the company page's «معرض الأعمال»: every photo and video of the activity on screen in one
+ * square grid (three across). Tapping one opens it full screen, like the strip.
+ */
+export function GallerySheet() {
+  const a = useApp();
+  const { t, sheet, setSheet, page } = a;
+  const h = helpers(a);
+  const co = page.s === 'company' ? a.idx.co.get(page.id!) : undefined;
+  const act = co ? activeAct(co, page) : null;
+  const items = co ? (act == null ? companyGallery(a, co.id) : companyGallery(a, co.id, act)) : [];
+  return (
+    <BottomSheet open={sheet === 'gallery' && !!co} onClose={() => setSheet(null)}
+      title={<>{t.workGallery} <span style={{ color: 'var(--text-tertiary)' }}>{h.num(items.length)}</span></>}>
+      {sheet === 'gallery' && co && (
+        <SquareGrid items={items} per={items.length} onOpen={k => a.go('photo', { src: 'gallery', id: co.id, i: k, ...(act != null ? { act } : {}) })} />
+      )}
+    </BottomSheet>
+  );
 }
 
 /**

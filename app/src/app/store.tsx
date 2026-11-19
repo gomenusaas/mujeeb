@@ -27,7 +27,7 @@ export const isOverlay = (r: Route) => r.s === 'story' || r.s === 'photo';
  * location; `open`: only companies open now; `svc`: only companies covering this sub-service (its id).
  */
 export interface Filters { gov: 'all' | GovId; verified: boolean; sort: 'rel' | 'near' | 'recent' | 'verified'; q: string; mine: boolean; open: boolean; svc: string }
-export type SheetKey = null | 'menu' | 'about' | 'hours' | 'branches' | 'address' | 'coverage' | 'contact' | 'website' | 'social' | 'sort' | 'directions' | 'activity' | 'location' | 'preview' | 'services';
+export type SheetKey = null | 'menu' | 'about' | 'hours' | 'branches' | 'address' | 'coverage' | 'contact' | 'website' | 'social' | 'sort' | 'directions' | 'activity' | 'location' | 'preview' | 'services' | 'gallery';
 /** Sign-in sheet steps: sign in, create account, forgot password, choose a new password (from the reset email). */
 export type AuthStep = 'signin' | 'signup' | 'reset' | 'newpw';
 export interface BookingDraft { co: string; purpose: string; city: string; gov: GovId; day: number; time: string; notes: string; step: number }
