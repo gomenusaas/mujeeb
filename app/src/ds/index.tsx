@@ -448,7 +448,7 @@ export function SegmentedControl<T extends string>({ options, value, onChange, s
 }
 
 export function TabBar<T extends string>({ items, active, onChange, style }: {
-  items: { id: T; icon: string; label: ReactNode; badge?: string }[]; active: T; onChange?: (id: T) => void; style?: Style;
+  items: { id: T; icon: string; label: ReactNode; badge?: string; dot?: boolean }[]; active: T; onChange?: (id: T) => void; style?: Style;
 }) {
   return (
     <nav style={{ display: 'flex', alignItems: 'stretch', height: 'calc(var(--tabbar-height) + var(--safe-bottom))', padding: '6px 8px calc(14px + var(--safe-bottom))', background: 'oklch(1 0 0 / 0.92)', backdropFilter: 'var(--blur-bar)', WebkitBackdropFilter: 'var(--blur-bar)', boxShadow: 'var(--shadow-up)', fontFamily: 'var(--font-sans)', ...style }}>
@@ -459,6 +459,8 @@ export function TabBar<T extends string>({ items, active, onChange, style }: {
             style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, border: 'none', background: 'none', cursor: 'pointer', color: on ? 'var(--brand)' : 'var(--text-tertiary)', position: 'relative' }}>
             <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 56, height: 30, borderRadius: 'var(--radius-pill)', background: on ? 'var(--brand-tint-strong)' : 'transparent', transition: 'background var(--dur-base) var(--ease-out)', position: 'relative' }}>
               <Icon name={it.icon} size={22} />
+              {/* `dot`: something new (a small red dot on the icon). */}
+              {it.dot && !it.badge && <span aria-hidden="true" style={{ position: 'absolute', top: 2, insetInlineEnd: 15, width: 9, height: 9, borderRadius: 9, background: 'var(--danger)', boxShadow: '0 0 0 2px #fff' }} />}
               {it.badge && <span style={{ position: 'absolute', top: 0, insetInlineEnd: 12, minWidth: 16, height: 16, padding: '0 4px', borderRadius: 16, background: 'var(--accent)', color: '#fff', font: '700 10px/16px var(--font-sans)', boxShadow: '0 0 0 2px #fff' }}>{it.badge}</span>}
             </span>
             <span style={{ font: 'var(--type-overline)', fontWeight: on ? 700 : 600 }}>{it.label}</span>

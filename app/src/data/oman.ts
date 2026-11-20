@@ -68,6 +68,9 @@ export function findWilayat(list: Governorate[], id: string): { w: Wilayat; g: G
   return find(id) || find(DEFAULT_WILAYAT) || (first ? { w: first.wilayats[0], g: first } : { w: OMAN[0].wilayats[2], g: OMAN[0] });
 }
 
+/** The service location meaning all of Oman (no area filter). */
+export const ALL_OMAN = 'all';
+
 /** The wilayat's name with «ولاية» before it, without the governorate: «ولاية بوشر» / "Bawshar". */
 export function wilayatLabel(list: Governorate[], id: string, ar: boolean): string {
   const { w: x } = findWilayat(list, id);

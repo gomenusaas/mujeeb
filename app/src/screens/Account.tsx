@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Avatar, Badge, BottomSheet, Button, Icon, ListItem } from '../ds';
 import { useApp } from '../app/store';
@@ -154,7 +154,9 @@ export function Bookings() {
 
 export function Notifications() {
   const a = useApp();
-  const { t, ar } = a;
+  const { t, ar, setNotifsSeen } = a;
+  // Opening the list clears the dot on the «حسابي» tab.
+  useEffect(() => setNotifsSeen(true), [setNotifsSeen]);
   return (
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
       <TopBar title={t.notifications} onBack={a.back} />

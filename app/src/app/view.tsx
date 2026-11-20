@@ -3,7 +3,7 @@ import { AppBar, Icon } from '../ds';
 import { logoUrl, photo, remote } from '../data/api';
 import type { Album, Branch, Catalog, Company, GovId, Service } from '../data/types';
 import type { App } from './store';
-import { findWilayat } from '../data/oman';
+import { ALL_OMAN, findWilayat } from '../data/oman';
 import { isOpenNow } from './hours';
 import { arDigits } from '../i18n/strings';
 
@@ -105,12 +105,15 @@ const searchWords = (q: string) => fold(q).trim().split(' ').filter(Boolean).map
 
 /** The governorate of the customer's service location (what company coverage is checked against); null when unknown. */
 export function myGov(a: App): GovId | null {
+  if (a.wilayat === ALL_OMAN) return null;
   return findWilayat(a.places, a.wilayat).g.region ?? null;
 }
-/** The category page's governorate: its own location choice, else the home page's; null = all of Oman. */
-export function listGov(a: App): GovId | null {
-  if (a.f.loc === 'all') return null;
-  return a.f.loc ? findWilayat(a.places, a.f.loc).g.region ?? null : myGov(a);
+/** The company works in the customer's service location (always true for all of Oman). */
+export function servesArea(a: App, coId: string): boolean {
+  const g = myGov(a);
+  if (!g) return true;
+  const co = a.idx.co.get(coId);
+  return !!co && covers(co, g);
 }
 /** The company works in this governorate. */
 export const covers = (co: Company, g: GovId | null) => !!g && (co.cov.includes('all') || co.cov.includes(g));
@@ -137,8 +140,8 @@ export function listingCompanies(a: App, c: number | undefined): Company[] {
   const { catalog, f } = a;
   const words = searchWords(f.q);
   const idx = words.length ? searchIndex(catalog) : null;
-  // The page's location: only companies that cover it (all of them for all of Oman).
-  const g = listGov(a);
+  // The service location: only companies that cover it (all of them for all of Oman).
+  const g = myGov(a);
   const score = new Map<string, number>();
   // Sub-service chips: companies that cover every selected one (each by some service in this category).
   const coversSub = (co: Company, id: string) => catalog.services.some(s => s.co === co.id && (c == null || s.cat === c) && s.sub?.includes(id));
@@ -197,7 +200,7 @@ function rand(s: string): number {
  * category's), minus what companies hid from their galleries, in the daily mix order.
  */
 export function exploreMedia(a: App, cat: number | null | undefined): Media[] {
-  return mixedMedia(a.catalog.albums.filter(al => cat == null || al.cat === cat));
+  return mixedMedia(a.catalog.albums.filter(al => (cat == null || al.cat === cat) && servesArea(a, al.co)));
 }
 
 /**
@@ -396,3 +399,24 @@ export function callPhone(a: App, phone: string, companyId?: string) {
 }
 
 export const card: CSSProperties = { borderRadius: 'var(--radius-card)', background: 'var(--surface-card)', boxShadow: 'var(--shadow-sm)' };
+
+/**
+ * The service location in one line (pin · «موقع الخدمة» | the area · arrow), at the very top of Home, category pages,
+ * Explore and Offers. It's one setting for the whole app: tapping it opens the picker (LocationSheet), and the choice
+ * filters all four pages. `light`: white, on a coloured header.
+ */
+export function LocationBar({ a, light, style }: { a: App; light?: boolean; style?: CSSProperties }) {
+  return (
+    <button type="button" aria-haspopup="dialog" onClick={() => a.setSheet('location')}
+      style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, padding: 0, border: 'none', background: 'none', color: light ? '#fff' : 'var(--text-primary)', cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'start', ...style }}>
+      <Icon name="map-pin" size={16} color={light ? '#fff' : 'var(--brand)'} />
+      {/* Label (medium) and area (semibold) in one text run, so they share a baseline and colour. */}
+      <span style={{ minWidth: 0, font: 'var(--type-title)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <span style={{ fontWeight: 500 }}>{a.t.serviceLoc}</span>
+        <span aria-hidden="true" style={{ display: 'inline-block', width: 1, height: '0.85em', margin: '0 8px', verticalAlign: '-0.1em', background: light ? 'oklch(1 0 0 / 0.5)' : 'var(--border-default)' }} />
+        <span style={{ fontWeight: 600 }}>{a.locLabel}</span>
+      </span>
+      <Icon name="chevron-down" size={16} color={light ? '#fff' : 'var(--text-secondary)'} />
+    </button>
+  );
+}

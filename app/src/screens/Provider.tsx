@@ -1,9 +1,9 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { Avatar, Badge, BottomSheet, Button, Chip, EmptyState, Icon, IconButton, ListItem, OfferArt, SearchBar, SectionHeader, offerColor, type OfferArtData } from '../ds';
 import { DEFAULT_F, useApp, type CoSort, type Filters, type OfferSort, type SheetKey } from '../app/store';
-import { ContactGrid, HScroll, Img, MetaLine, preloadPhotos, useNear, albumMedia, callPhone, card, categoryServiceChips, companyGallery, companyPreview, covers, helpers, listGov, listingCompanies, myGov, openDirections, openWhatsApp, serviceImage, type Media } from '../app/view';
+import { ContactGrid, HScroll, Img, MetaLine, preloadPhotos, useNear, albumMedia, callPhone, card, categoryServiceChips, companyGallery, companyPreview, covers, helpers, listingCompanies, LocationBar, myGov, servesArea, openDirections, openWhatsApp, serviceImage, type Media } from '../app/view';
 import { logoUrl, photo, remote } from '../data/api';
-import { wilayatLabel } from '../data/oman';
+import { ALL_OMAN } from '../data/oman';
 import { demoOfferLook, liveOffersOf, offerAge, offerKind, offerServices } from '../data/offers';
 import { SPONSORED_MAX, isSponsored, sponsoredTurn } from '../data/sponsored';
 import type { Album, Company } from '../data/types';
@@ -276,8 +276,10 @@ export function Listing() {
       </div>
       <div ref={headRef} style={{ position: 'relative', overflow: 'hidden', padding: 'var(--top-inset) 0 4px', background: 'var(--cat-' + color + '-600)', borderRadius: '0 0 28px 28px', color: '#fff' }}>
         <span style={{ position: 'absolute', insetInlineEnd: -50, top: -40, width: 200, height: 200, borderRadius: '50%', background: 'oklch(1 0 0 / 0.14)' }} />
-        <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', padding: '8px 16px' }}>
+        {/* Back, and the app's service location at the very top (it filters the list: only companies covering it). */}
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '8px 16px' }}>
           <IconButton icon="arrow-left" variant="glass" size={40} onClick={a.back} label="Back" />
+          <LocationBar a={a} light />
         </div>
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 14, padding: '6px 20px 18px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
@@ -285,21 +287,6 @@ export function Listing() {
             <span style={{ font: 'var(--type-body-sm)', fontWeight: 600, opacity: 0.9 }}>{res.length + ' ' + t.results}</span>
           </div>
         </div>
-        {/* The page's location, in the home page's design (it starts on the home page's location): only companies that
-            cover it are listed. */}
-        <button type="button" aria-haspopup="dialog" onClick={() => a.setSheet('listLoc')}
-          style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 6, margin: '-4px 20px 16px', padding: 0, border: 'none', background: 'none', color: 'inherit', cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'start' }}>
-          {/* One line: pin, label, divider, the area, arrow. */}
-          <Icon name="map-pin" size={16} />
-          {/* Label (medium) and area (semibold) in one text run, so they share a baseline and colour; the label's letters
-              are denser, so one step lighter balances them. */}
-          <span style={{ font: 'var(--type-title)' }}>
-            <span style={{ fontWeight: 500 }}>{t.serviceLoc}</span>
-            <span aria-hidden="true" style={{ display: 'inline-block', width: 1, height: '0.85em', margin: '0 8px', verticalAlign: '-0.1em', background: 'oklch(1 0 0 / 0.5)' }} />
-            <span style={{ fontWeight: 600 }}>{f.loc === 'all' ? t.allOman : f.loc ? wilayatLabel(a.places, f.loc, a.ar) : a.locLabel}</span>
-          </span>
-          <Icon name="chevron-down" size={16} />
-        </button>
         {/* The search box (searches this category only; every company on the all-companies page). */}
         <div style={{ position: 'relative', padding: '0 20px 20px' }}>
           <SearchBar placeholder={t.search} value={f.q} onChange={e => set({ q: e.target.value })} onFilter={null} elevated style={{ height: 46 }} />
@@ -311,7 +298,11 @@ export function Listing() {
       {!res.length && (
         <>
           <EmptyState icon="search-x" color={color} title={t.noResults} body={t.noResultsBody} />
-          <div style={{ display: 'flex', justifyContent: 'center' }}><Button variant="secondary" onClick={() => setF({ ...DEFAULT_F, loc: 'all' })}>{t.clear}</Button></div>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <Button variant="secondary" onClick={() => setF(DEFAULT_F)}>{t.clear}</Button>
+            {/* Nothing in this area: look across Oman. */}
+            {myGov(a) && <Button variant="secondary" iconLeft="globe" onClick={() => a.setWilayat(ALL_OMAN)}>{t.showAllOman}</Button>}
+          </div>
         </>
       )}
       <div style={{ padding: '12px 20px 0', display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -364,17 +355,18 @@ function OfferItem({ x: { o, co }, cat }: { x: ListedOffer; cat?: number | null 
 }
 
 /**
- * The «العروض» tab, in sections like a store's deals page: a header (count and the customer's area),
- * «عروض مميزة» (a big swipeable advert per sponsored company; DEMO sponsors, a paid spot later), «تنتهي قريبًا» and
- * «في منطقتك» (sideways strips of smaller adverts, one per company), then «كل العروض»: category chips, the sort
- * button and every offer as a wide advert with its company line, PAGE at a time.
+ * The «العروض» tab, only offers from companies covering the app's service location (LocationBar at the top), in
+ * sections like a store's deals page: «عروض مميزة» (a big swipeable advert per sponsored company; DEMO sponsors, a
+ * paid spot later), «تنتهي قريبًا» (a sideways strip of smaller adverts, one per company), then «كل العروض»:
+ * category chips, the sort button and every offer as a wide advert with its company line, PAGE at a time.
  */
 export function OffersTab() {
   const a = useApp();
   const { t, catalog, ofCat, setOfCat, ofSort } = a;
   const h = helpers(a);
   const g = myGov(a);
-  const all = catalog.companies.flatMap(co => companyOffers(a, co).map(o => ({ o, co, near: covers(co, g) })));
+  // Only offers from companies covering the service location (all of them for all of Oman).
+  const all = catalog.companies.filter(co => servesArea(a, co.id)).flatMap(co => companyOffers(a, co).map(o => ({ o, co, near: covers(co, g) })));
   const chips = catalog.cats.map(x => x.i).filter(i => all.some(x => x.o.svc.cat === i));
   const cat = ofCat >= 0 && chips.includes(ofCat) ? ofCat : null;
   const offers = sortOffers(all.filter(x => cat == null || x.o.svc.cat === cat), ofSort);
@@ -384,7 +376,6 @@ export function OffersTab() {
   const featured = onePerCo(sortOffers(all, 'soon').filter(x => isSponsored(x.co.id)))
     .sort((x, y) => Number(y.near) - Number(x.near) || sponsoredTurn(x.co.id, day) - sponsoredTurn(y.co.id, day)).slice(0, 5);
   const ending = onePerCo(sortOffers(all, 'soon').filter(x => x.o.days <= ENDING_DAYS)).slice(0, 10);
-  const near = onePerCo(sortOffers(all.filter(x => x.near), 'rel')).slice(0, 10);
   const [shown, setShown] = useState(PAGE);
   useEffect(() => setShown(PAGE), [cat, ofSort]);
   const more = useRef<HTMLDivElement>(null);
@@ -398,20 +389,19 @@ export function OffersTab() {
   const title = (x: string) => <div style={{ padding: '0 20px' }}><SectionHeader title={x} action={null} /></div>;
   return (
     <div style={{ paddingBottom: 100, display: 'flex', flexDirection: 'column', gap: 24 }}>
-      {/* The header on the page background: the count and the customer's area (tap to change it). */}
-      <div style={{ padding: 'calc(var(--top-inset) + 8px) 20px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+      {/* The app's service location at the very top, then the title and how many offers there are in it. */}
+      <div style={{ padding: 'calc(var(--top-inset) + 8px) 20px 0', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <LocationBar a={a} style={{ alignSelf: 'flex-start', maxWidth: '100%' }} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <span style={{ font: 'var(--type-h1)' }}>{t.offers}</span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', font: 'var(--type-body-sm)', fontWeight: 600, color: 'var(--text-secondary)' }}>
-            <span>{countOf(a, all.length, OFFER_W)}</span>
-            <span aria-hidden="true" style={{ opacity: 0.6 }}>·</span>
-            <button type="button" aria-haspopup="dialog" onClick={() => a.setSheet('location')}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 3, padding: 0, border: 'none', background: 'none', cursor: 'pointer', font: 'inherit', fontFamily: 'var(--font-sans)', color: 'var(--text-primary)' }}>
-              <Icon name="map-pin" size={14} color="var(--brand)" />{a.locLabel}<Icon name="chevron-down" size={14} color="var(--text-secondary)" />
-            </button>
-          </span>
+          <span style={{ font: 'var(--type-body-sm)', fontWeight: 600, color: 'var(--text-secondary)' }}>{countOf(a, all.length, OFFER_W)}</span>
         </div>
       </div>
+      {/* Nothing in this area: say so, and offer all of Oman. */}
+      {!all.length && g && (
+        <EmptyState icon="badge-percent" title={t.noOffersArea} body={t.noOffersAreaBody}
+          action={<Button variant="secondary" iconLeft="globe" onClick={() => a.setWilayat(ALL_OMAN)}>{t.showAllOman}</Button>} />
+      )}
 
       {featured.length > 0 && (
         <section aria-label={t.featuredOffers} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -425,15 +415,9 @@ export function OffersTab() {
           <HScroll>{ending.map(x => <StripOffer key={x.co.id + ':' + x.o.i} x={x} countdown />)}</HScroll>
         </section>
       )}
-      {near.length > 0 && (
-        <section aria-label={t.nearOffers} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {title(t.nearOffers)}
-          <HScroll>{near.map(x => <StripOffer key={x.co.id + ':' + x.o.i} x={x} />)}</HScroll>
-        </section>
-      )}
 
       {/* «كل العروض»: the chips and sort button work on this grid only. */}
-      <section aria-label={t.allOffers} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {all.length > 0 && <section aria-label={t.allOffers} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div style={{ padding: '0 20px', display: 'flex', alignItems: 'baseline', gap: 8 }}>
           <span style={{ font: 'var(--type-h3)' }}>{t.allOffers}</span>
           <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-tertiary)' }}>{countOf(a, offers.length, OFFER_W)}</span>
@@ -450,7 +434,7 @@ export function OffersTab() {
           {offers.slice(0, shown).map(x => <OfferItem key={x.co.id + ':' + x.o.i} x={x} />)}
         </div>
         {shown < offers.length && <div ref={more} aria-hidden="true" style={{ height: 1 }} />}
-      </section>
+      </section>}
     </div>
   );
 }
@@ -595,7 +579,7 @@ function SponsoredStrip({ list, cat, sub }: { list: Company[]; cat: number | nul
     return photo(als[h % als.length].img, 560);
   };
   const h = helpers(a);
-  const g = listGov(a);
+  const g = myGov(a);
   // Today's date in Oman, so the turns change at midnight there.
   const day = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Muscat' });
   const cos = list.filter(co => isSponsored(co.id))

@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Avatar, Badge, BottomSheet, CategoryCard, Chip, Icon, IconButton, SectionHeader } from '../ds';
+import { Avatar, Badge, BottomSheet, Button, CategoryCard, Chip, EmptyState, Icon, SectionHeader } from '../ds';
 import { useApp } from '../app/store';
-import { HScroll, Img, MetaLine, card, exploreMedia, helpers } from '../app/view';
+import { HScroll, Img, LocationBar, MetaLine, card, exploreMedia, helpers, myGov, servesArea } from '../app/view';
+import { ALL_OMAN } from '../data/oman';
 import { logoUrl, photo } from '../data/api';
 import { StoryRow } from './Stories';
 import { Masonry } from './Provider';
@@ -11,7 +12,7 @@ const ROOT_PAD = { padding: 'calc(var(--top-inset) + 8px) 20px 100px' };
 /** Cover photos of the nine projects most recently added to the platform: 3 × 3, edge to edge. Tap opens the project. */
 function LatestProjects() {
   const a = useApp();
-  const latest = [...a.catalog.albums].sort((x, y) => (y.added || '').localeCompare(x.added || '')).slice(0, 9);
+  const latest = a.catalog.albums.filter(al => servesArea(a, al.co)).sort((x, y) => (y.added || '').localeCompare(x.added || '')).slice(0, 9);
   if (!latest.length) return null;
   return (
     <section style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -30,44 +31,31 @@ function LatestProjects() {
 
 export function Home() {
   const a = useApp();
-  const { t, ar, catalog } = a;
+  const { t, catalog } = a;
   const h = helpers(a);
+  // Everything below follows the service location: companies (and their projects) that cover it.
+  const local = catalog.companies.filter(co => servesArea(a, co.id));
+  const localAlbums = catalog.albums.filter(al => servesArea(a, al.co));
   const featCats = catalog.cats.map(c => ({
     ...c, label: h.cname(c.i),
     img: photo((catalog.companies.find(co => co.cats[0] === c.i) || catalog.companies[0]).img, 600),
-    count: catalog.companies.filter(co => co.cats.includes(c.i)).length + ' ' + t.results,
+    count: local.filter(co => co.cats.includes(c.i)).length + ' ' + t.results,
   }));
-  const recommended = ['c7', 'c3', 'c10'].map(id => a.idx.co.get(id)).filter(Boolean);
+  // Suggested: verified companies covering the area first, then those with the most projects.
+  const projects = (id: string) => catalog.albums.filter(al => al.co === id).length;
+  const recommended = local.slice().sort((x, y) => Number(y.verified) - Number(x.verified) || projects(y.id) - projects(x.id)).slice(0, 3);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 26, paddingBottom: 100 }}>
       <div>
-        <div style={{ position: 'relative', overflow: 'hidden', background: 'var(--brand)', color: '#fff', padding: 'calc(var(--top-inset) + 8px) 20px 52px', borderRadius: '0 0 32px 32px' }}>
+        <div style={{ position: 'relative', overflow: 'hidden', background: 'var(--brand)', color: '#fff', padding: 'calc(var(--top-inset) + 8px) 20px 20px', borderRadius: '0 0 32px 32px' }}>
           <span style={{ position: 'absolute', insetInlineEnd: -60, top: -40, width: 200, height: 200, borderRadius: '50%', background: 'oklch(1 0 0 / .08)' }} />
           <span style={{ position: 'absolute', insetInlineEnd: 40, bottom: -70, width: 140, height: 140, borderRadius: '50%', background: 'oklch(1 0 0 / .06)' }} />
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-            <span style={{ font: '800 20px/24px var(--font-sans)', letterSpacing: '-.02em' }}>{t.brand}<span style={{ opacity: 0.6 }}>.</span></span>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <button type="button" onClick={() => a.setLang(ar ? 'en' : 'ar')} style={{ height: 40, padding: '0 14px', border: 'none', borderRadius: 999, background: 'oklch(1 0 0 / .16)', color: '#fff', font: '700 13px var(--font-sans)', cursor: 'pointer' }}>{t.otherLang}</button>
-              <IconButton icon="bell" variant="glass" size={40} dot onClick={() => a.go('notifs')} label={t.notifications} />
-            </div>
-          </div>
-          {/* Service location: opens the wilayat picker. */}
-          <button type="button" aria-haspopup="dialog" onClick={() => a.setSheet('location')}
-            style={{ position: 'relative', alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 6, marginTop: 14, padding: 0, border: 'none', background: 'none', color: 'inherit', cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'start' }}>
-            {/* One line, like the category pages: pin, label (medium), divider, area (semibold), arrow. */}
-            <Icon name="map-pin" size={16} />
-            <span style={{ font: 'var(--type-title)' }}>
-              <span style={{ fontWeight: 500 }}>{t.serviceLoc}</span>
-              <span aria-hidden="true" style={{ display: 'inline-block', width: 1, height: '0.85em', margin: '0 8px', verticalAlign: '-0.1em', background: 'oklch(1 0 0 / 0.5)' }} />
-              <span style={{ fontWeight: 600 }}>{a.locLabel}</span>
-            </span>
-            <Icon name="chevron-down" size={16} />
-          </button>
-          <div style={{ position: 'relative', font: 'var(--type-h1)', marginTop: 18, textWrap: 'balance' }}>{t.greeting}</div>
-        </div>
-        <div style={{ position: 'relative', zIndex: 1, padding: '0 20px', marginTop: -26 }}>
-          <button type="button" onClick={() => a.go('listing')} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, height: 52, paddingInline: '18px 6px', border: 'none', cursor: 'pointer', borderRadius: 'var(--radius-pill)', background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)', fontFamily: 'var(--font-sans)' }}>
+          {/* The header: the app's service location at the very top (it filters the sections below), then the search bar
+              inside the header. No logo, language or bell: language is in «حسابي», and new notifications show as a dot
+              on its tab. */}
+          <LocationBar a={a} light style={{ position: 'relative', marginTop: 8 }} />
+          <button type="button" onClick={() => a.go('listing')} style={{ position: 'relative', width: '100%', marginTop: 16, display: 'flex', alignItems: 'center', gap: 10, height: 52, paddingInline: '18px 6px', border: 'none', cursor: 'pointer', borderRadius: 'var(--radius-pill)', background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)', fontFamily: 'var(--font-sans)' }}>
             <Icon name="search" size={20} color="var(--text-tertiary)" />
             <span style={{ flex: 1, minWidth: 0, font: 'var(--type-body)', fontWeight: 500, color: 'var(--text-tertiary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'start' }}>{t.search}</span>
             <span style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--brand)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="sliders-horizontal" size={18} /></span>
@@ -97,7 +85,7 @@ export function Home() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div style={{ padding: '0 20px' }}><SectionHeader title={t.featuredCo} action={t.seeAll} onAction={() => a.go('listing')} /></div>
         <HScroll>
-          {catalog.companies.slice(0, 6).map(h.coV).map(co => (
+          {local.slice(0, 6).map(h.coV).map(co => (
             <div key={co.id} onClick={co.open} style={{ flex: 'none', width: 260, scrollSnapAlign: 'start', ...card, overflow: 'hidden', cursor: 'pointer' }}>
               <div style={{ position: 'relative', aspectRatio: '16/9', background: co.c100 }}>
                 <Img src={co.cover} />
@@ -118,7 +106,7 @@ export function Home() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div style={{ padding: '0 20px' }}><SectionHeader title={t.featuredPr} action={t.seeAll} onAction={() => a.setTab('explore')} /></div>
         <HScroll>
-          {catalog.albums.slice(0, 6).map(h.albV).map(p => (
+          {localAlbums.slice(0, 6).map(h.albV).map(p => (
             <div key={p.id} onClick={p.open} style={{ flex: 'none', width: 232, scrollSnapAlign: 'start', ...card, overflow: 'hidden', cursor: 'pointer' }}>
               <div style={{ position: 'relative', aspectRatio: '4/3', background: p.c100 }}>
                 <Img src={p.img} />
@@ -134,7 +122,7 @@ export function Home() {
       </div>
 
       <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <SectionHeader title={t.recommended} subtitle={t.recSub} action={null} />
+        <SectionHeader title={myGov(a) ? t.recommendedIn.replace('{area}', a.locLabel) : t.recommended} subtitle={t.recSub} action={null} />
         {recommended.map(co => co && (
           <div key={co.id} onClick={() => a.go('company', { id: co.id })} style={{ display: 'flex', gap: 14, alignItems: 'center', padding: 14, ...card, cursor: 'pointer' }}>
             <Avatar name={h.coName(co)} src={logoUrl(co.id)} size={60} verified={co.verified} />
@@ -158,7 +146,6 @@ export function Categories() {
     <div style={{ ...ROOT_PAD, display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <span style={{ font: 'var(--type-h1)' }}>{t.allCats}</span>
-        <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }}>{h.num(catalog.cats.length)} {t.majorCats}</span>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {catalog.cats.map(c => <CategoryCard key={c.i} label={h.cname(c.i)} art={c.art} icon={c.icon} color={c.color} onClick={() => a.go('listing', { cat: c.i })} />)}
@@ -177,25 +164,27 @@ export function Explore() {
   const a = useApp();
   const { t, catalog, exCat, setExCat } = a;
   const h = helpers(a);
-  // A chip for every category that has published projects.
-  const chips = catalog.cats.map(c => c.i).filter(i => catalog.albums.some(al => al.cat === i));
+  // A chip for every category with published projects in the service location.
+  const chips = catalog.cats.map(c => c.i).filter(i => catalog.albums.some(al => al.cat === i && servesArea(a, al.co)));
   const cat = exCat < 0 ? undefined : exCat;
   const items = exploreMedia(a, cat);
   return (
     <div style={{ padding: 'calc(var(--top-inset) + 8px) 0 100px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {/* The app's service location, at the very top (only work from companies covering it). */}
+        <LocationBar a={a} style={{ alignSelf: 'flex-start', maxWidth: '100%' }} />
         <span style={{ font: 'var(--type-h1)' }}>{t.exploreTitle}</span>
-        {/* The customer's service location (same as the home header); tap to change it. */}
-        <button type="button" aria-haspopup="dialog" onClick={() => a.setSheet('location')}
-          style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 4, marginTop: 4, padding: 0, border: 'none', background: 'none', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 700, fontFamily: 'var(--font-sans)', color: 'var(--text-primary)' }}>
-          <Icon name="map-pin" size={15} color="var(--brand)" />{a.locLabel}<Icon name="chevron-down" size={15} color="var(--text-secondary)" />
-        </button>
       </div>
       <div className="mj-s" style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '0 20px', scrollbarWidth: 'none' }}>
         <Chip selected={exCat < 0} onClick={() => setExCat(-1)}>{t.all}</Chip>
         {chips.map(i => <Chip key={i} selected={exCat === i} onClick={() => setExCat(i)}>{h.cshort(i)}</Chip>)}
       </div>
       {/* Narrow side margins (same as the gap between tiles) so the pictures get the width. */}
+      {/* Nothing from this area: say so, and offer all of Oman. */}
+      {!items.length && (
+        <EmptyState icon="images" title={t.noResults} body={myGov(a) ? t.noOffersAreaBody : undefined}
+          action={myGov(a) ? <Button variant="secondary" iconLeft="globe" onClick={() => a.setWilayat(ALL_OMAN)}>{t.showAllOman}</Button> : undefined} />
+      )}
       <div style={{ padding: '0 6px' }}>
         <Masonry key={exCat} cols={3} items={items} onOpen={k => a.go('photo', { src: 'explore', i: k, ...(cat != null ? { cat } : {}) })} />
       </div>
@@ -209,20 +198,18 @@ export function Explore() {
  */
 export function LocationSheet() {
   const a = useApp();
-  const { t, ar, sheet, setSheet, wilayat, setWilayat, places, f, setF } = a;
+  const { t, ar, sheet, setSheet, wilayat, setWilayat, places } = a;
   const [q, setQ] = useState('');
-  // Also a category page's own location ('listLoc'): it starts on the home page's and can be all of Oman; picking
-  // one there doesn't change the home page's.
-  const page = sheet === 'listLoc';
-  const open = sheet === 'location' || page;
-  const cur = page ? f.loc || wilayat : wilayat;
+  const open = sheet === 'location';
+  const cur = wilayat;
   const n = q.trim().toLowerCase();
   const hit = (s: string) => s.toLowerCase().includes(n);
   const groups = places.map(g => ({ g, list: !n || hit(g.ar) || hit(g.en) ? g.wilayats : g.wilayats.filter(x => hit(x.ar) || hit(x.en)) })).filter(x => x.list.length);
   const close = () => { setSheet(null); setQ(''); };
-  const pick = (id: string) => { if (page) setF(x => ({ ...x, loc: id })); else setWilayat(id); close(); };
+  const pick = (id: string) => { setWilayat(id); close(); };
   return (
-    <BottomSheet open={open} onClose={close} title={t.serviceLoc}>
+    // A fixed height, so the sheet doesn't shrink while the list is filtered by typing.
+    <BottomSheet open={open} onClose={close} title={t.serviceLoc} style={{ height: '88%' }}>
       <div style={{ position: 'sticky', top: -12, zIndex: 1, margin: '-12px -20px 4px', padding: '12px 20px 10px', background: 'var(--surface-card)' }}>
         <label style={{ display: 'flex', alignItems: 'center', gap: 8, height: 44, padding: '0 14px', borderRadius: 'var(--radius-pill)', background: 'var(--surface-card)', boxShadow: 'inset 0 0 0 1.5px var(--border-default)' }}>
           <Icon name="search" size={18} color="var(--text-tertiary)" />
@@ -230,13 +217,13 @@ export function LocationSheet() {
             style={{ flex: 1, minWidth: 0, border: 'none', outline: 'none', background: 'none', font: 'var(--type-body)', fontFamily: 'var(--font-sans)', color: 'var(--text-primary)' }} />
         </label>
       </div>
-      {/* A category page can also show every company, wherever it works. */}
-      {page && !n && (
-        <button type="button" onClick={() => pick('all')} aria-pressed={cur === 'all'}
-          style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', minHeight: 48, padding: '0 4px', border: 'none', borderBottom: '1px solid var(--border-subtle)', background: 'none', cursor: 'pointer', textAlign: 'start', fontFamily: 'var(--font-sans)', font: 'var(--type-body)', fontWeight: cur === 'all' ? 700 : 500, color: cur === 'all' ? 'var(--brand)' : 'var(--text-primary)' }}>
-          <Icon name="globe" size={18} color={cur === 'all' ? 'var(--brand)' : 'var(--text-secondary)'} />
+      {/* All of Oman: no area filter (to browse beyond the customer's own area). */}
+      {!n && (
+        <button type="button" onClick={() => pick(ALL_OMAN)} aria-pressed={cur === ALL_OMAN}
+          style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', minHeight: 48, padding: '0 4px', border: 'none', borderBottom: '1px solid var(--border-subtle)', background: 'none', cursor: 'pointer', textAlign: 'start', fontFamily: 'var(--font-sans)', font: 'var(--type-body)', fontWeight: cur === ALL_OMAN ? 700 : 500, color: cur === ALL_OMAN ? 'var(--brand)' : 'var(--text-primary)' }}>
+          <Icon name="globe" size={18} color={cur === ALL_OMAN ? 'var(--brand)' : 'var(--text-secondary)'} />
           <span style={{ flex: 1 }}>{t.allOman}</span>
-          {cur === 'all' && <Icon name="check" size={20} color="var(--brand)" />}
+          {cur === ALL_OMAN && <Icon name="check" size={20} color="var(--brand)" />}
         </button>
       )}
       {!groups.length && <div style={{ padding: '24px 0', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-tertiary)' }}>{t.noWilayat}</div>}

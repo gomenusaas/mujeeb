@@ -1,9 +1,9 @@
 import { useEffect, useLayoutEffect, useState } from 'react';
 import { Chip, Icon, IconButton, SegmentedControl, TabBar, Toast } from './ds';
 import { AppProvider, useApp, useAppState, type RootTab, type Route } from './app/store';
-import { dataSource, loadCatalog, loadCustomerSeed } from './data/api';
+import { auth, dataSource, loadCatalog, loadCustomerSeed } from './data/api';
 import type { Catalog, CustomerSeed } from './data/types';
-import { STR } from './i18n/strings';
+import { NOTIFS, STR } from './i18n/strings';
 import { useDragScroll } from './app/useDragScroll';
 import { Categories, Explore, Home, LocationSheet } from './screens/Discover';
 import { ActivitySheet, AlbumPage, CompanyPage, CompanySheet, GallerySheet, Listing, OfferPage, OffersTab, ReachSheets, ServicePage, ServicesSheet, SortSheet, WorkPreviewSheet } from './screens/Provider';
@@ -131,7 +131,8 @@ function Phone() {
         {top.s === 'photo' && <PhotoViewer key={top.src + '|' + (top.id ?? top.cat)} />}
         {showTabs && (
           <div style={{ position: 'absolute', insetInline: 0, bottom: 0, zIndex: 10 }}>
-            <TabBar items={TABS.map(x => ({ ...x, label: t[x.id] }))} active={tab} onChange={a.setTab} />
+            {/* A red dot on «حسابي» while there are notifications not yet looked at (demo notifications; see NOTIFS). */}
+            <TabBar items={TABS.map(x => ({ ...x, label: t[x.id], dot: x.id === 'profile' && !auth.enabled && NOTIFS.length > 0 && !a.notifsSeen }))} active={tab} onChange={a.setTab} />
           </div>
         )}
         {reachCo && <CompanySheet co={reachCo} />}
