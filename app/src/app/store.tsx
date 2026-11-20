@@ -7,9 +7,9 @@ import { hasOffer, pathToStack, routeToPath, shareLink } from './links';
 import { shownStories } from '../data/stories';
 import { DEFAULT_WILAYAT, OMAN, findWilayat, wilayatLabel } from '../data/oman';
 
-export type Screen = 'home' | 'categories' | 'explore' | 'profile' | 'listing' | 'company' | 'service' | 'offer' | 'album'
+export type Screen = 'home' | 'categories' | 'offers' | 'explore' | 'profile' | 'listing' | 'company' | 'service' | 'offer' | 'album'
   | 'booking' | 'bkDone' | 'bookings' | 'notifs' | 'story' | 'photo';
-export type RootTab = 'home' | 'categories' | 'explore' | 'profile';
+export type RootTab = 'home' | 'categories' | 'offers' | 'explore' | 'profile';
 /** `src` + `i`: which photo a `photo` route shows (of the album or service `id`). */
 export interface Route { s: Screen; id?: string; cat?: number; co?: string; src?: 'album' | 'service' | 'gallery' | 'explore'; i?: number;
   /** Company page (and its gallery viewer): the activity (category) shown; missing = all activities. */
@@ -27,8 +27,8 @@ export const isOverlay = (r: Route) => r.s === 'story' || r.s === 'photo';
  * location; `open`: only companies open now; `svcs`: only companies covering every one of these sub-services (ids); `offers`: show the category's offers instead of
  * its companies.
  */
-export interface Filters { gov: 'all' | GovId; verified: boolean; sort: CoSort; q: string; mine: boolean; open: boolean; svcs: string[]; offers: boolean; osort: OfferSort }
-/** Category page order: companies (service chips) and offers («العروض») each have their own. */
+export interface Filters { gov: 'all' | GovId; verified: boolean; sort: CoSort; q: string; mine: boolean; open: boolean; svcs: string[] }
+/** The order of a category page's companies, and of the «العروض» tab's offers. */
 export type CoSort = 'rel' | 'recent' | 'projects' | 'followers';
 export type OfferSort = 'rel' | 'soon' | 'new';
 export type SheetKey = null | 'menu' | 'about' | 'hours' | 'branches' | 'address' | 'coverage' | 'contact' | 'website' | 'social' | 'sort' | 'directions' | 'activity' | 'location' | 'preview' | 'services' | 'gallery';
@@ -36,7 +36,7 @@ export type SheetKey = null | 'menu' | 'about' | 'hours' | 'branches' | 'address
 export type AuthStep = 'signin' | 'signup' | 'reset' | 'newpw';
 export interface BookingDraft { co: string; purpose: string; city: string; gov: GovId; day: number; time: string; notes: string; step: number }
 
-export const DEFAULT_F: Filters = { gov: 'all', verified: false, sort: 'rel', q: '', mine: false, open: false, svcs: [], offers: false, osort: 'rel' };
+export const DEFAULT_F: Filters = { gov: 'all', verified: false, sort: 'rel', q: '', mine: false, open: false, svcs: [] };
 const LS = 'mujeeb.v1';
 const TRAIL = 'mujeeb.trail';
 
@@ -87,6 +87,9 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
   const [previewCo, setPreviewCo] = useState<string | null>(null);
   const openPreview = useCallback((id: string) => { setPreviewCo(id); setSheet('preview'); }, []);
   const [exCat, setExCat] = useState(-1);
+  // The «العروض» tab: its category chip (-1: all) and order.
+  const [ofCat, setOfCat] = useState(-1);
+  const [ofSort, setOfSort] = useState<OfferSort>('rel');
   const [bookings, setBookings] = useState<Booking[]>(saved.bookings || seed.bookings);
   const [seq, setSeq] = useState({ bk: saved.seq?.bk ?? 57 });
   /** Story ids the customer has opened. */
@@ -300,7 +303,7 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
 
   return {
     catalog, idx, coById, sharePage, lang, setLang, ar, t, stack, top, page, scroller, tab, setTab, go, back, replace, reset, toast, showToast,
-    fav, toggleFav, f, setF, sheet, setSheet, previewCo, openPreview, exCat, setExCat,
+    fav, toggleFav, f, setF, sheet, setSheet, previewCo, openPreview, exCat, setExCat, ofCat, setOfCat, ofSort, setOfSort,
     bookings, setBookings,
     bk, setBk, startBk, submitBooking, days, seen, markSeen, follows, toggleFollow,
     wilayat, setWilayat, places, locLabel: wilayatLabel(places, wilayat, ar),

@@ -6,7 +6,7 @@ import type { Catalog, CustomerSeed } from './data/types';
 import { STR } from './i18n/strings';
 import { useDragScroll } from './app/useDragScroll';
 import { Categories, Explore, Home, LocationSheet } from './screens/Discover';
-import { ActivitySheet, AlbumPage, CompanyPage, CompanySheet, GallerySheet, Listing, OfferPage, ReachSheets, ServicePage, ServicesSheet, SortSheet, WorkPreviewSheet } from './screens/Provider';
+import { ActivitySheet, AlbumPage, CompanyPage, CompanySheet, GallerySheet, Listing, OfferPage, OffersTab, ReachSheets, ServicePage, ServicesSheet, SortSheet, WorkPreviewSheet } from './screens/Provider';
 import { BookingPage, DonePage } from './screens/Flows';
 import { StoryViewer } from './screens/Stories';
 import { PhotoViewer } from './screens/Photo';
@@ -15,7 +15,7 @@ import { Bookings, Notifications, Profile } from './screens/Account';
 import { AuthSheet } from './screens/Auth';
 
 const TABS: { id: RootTab; icon: string }[] = [
-  { id: 'home', icon: 'house' }, { id: 'categories', icon: 'layout-grid' }, { id: 'explore', icon: 'compass' },
+  { id: 'home', icon: 'house' }, { id: 'categories', icon: 'layout-grid' }, { id: 'explore', icon: 'search' }, { id: 'offers', icon: 'tag' },
   { id: 'profile', icon: 'user-round' },
 ];
 
@@ -126,7 +126,7 @@ function Phone() {
           <ScreenSwitch route={base} />
         </div>
         {/* Long pages (category list and gallery, company page, Explore) get a back-to-top button. */}
-        {!overlay && (base.s === 'listing' || base.s === 'company' || base.s === 'explore') && <BackToTop key={key} el={scrollRef} aboveTabs={showTabs} />}
+        {!overlay && (base.s === 'listing' || base.s === 'offers' || base.s === 'company' || base.s === 'explore') && <BackToTop key={key} el={scrollRef} aboveTabs={showTabs} />}
         {top.s === 'story' && <StoryViewer key="story" />}
         {top.s === 'photo' && <PhotoViewer key={top.src + '|' + (top.id ?? top.cat)} />}
         {showTabs && (
@@ -137,7 +137,7 @@ function Phone() {
         {reachCo && <CompanySheet co={reachCo} />}
         {reachCo && <ReachSheets co={reachCo} />}
         {top.s === 'listing' && <WorkPreviewSheet />}
-        {top.s === 'listing' && <SortSheet />}
+        {(top.s === 'listing' || top.s === 'offers') && <SortSheet />}
         {top.s === 'company' && <ActivitySheet />}
         {top.s === 'company' && <ServicesSheet />}
         {top.s === 'company' && <GallerySheet />}
@@ -158,6 +158,7 @@ function ScreenSwitch({ route }: { route: Route }) {
   switch (route.s) {
     case 'home': return <Home />;
     case 'categories': return <Categories />;
+    case 'offers': return <OffersTab />;
     case 'explore': return <Explore />;
     case 'profile': return <Profile />;
     case 'listing': return <Listing />;
@@ -179,7 +180,7 @@ function DemoPanel() {
   const jump = (routes: Route[], tb: RootTab = 'home') => () => a.reset(routes, tb);
   const H: Route = { s: 'home' };
   const jumps: [string, () => void][] = [
-    ['Home', jump([H])], ['Categories', jump([{ s: 'categories' }], 'categories')], ['Listing · AC', jump([H, { s: 'listing', cat: 1 }])],
+    ['Home', jump([H])], ['Categories', jump([{ s: 'categories' }], 'categories')], ['Offers', jump([{ s: 'offers' }], 'offers')], ['Listing · AC', jump([H, { s: 'listing', cat: 1 }])],
     ['Company profile', jump([H, { s: 'company', id: 'c4' }])], ['Service details', jump([H, { s: 'company', id: 'g1-1', act: 4 }, { s: 'service', id: 'sg1-1-2' }])], ['Album', jump([H, { s: 'album', id: 'a3' }])],
     ['Book site visit', () => { a.reset([H, { s: 'company', id: 'c4' }], 'home'); setTimeout(() => a.startBk('c4'), 0); }],
     ['My bookings', jump([{ s: 'profile' }, { s: 'bookings' }], 'profile')], ['Explore', jump([{ s: 'explore' }], 'explore')],

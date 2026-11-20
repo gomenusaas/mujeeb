@@ -3,10 +3,10 @@ import { Avatar, Badge, BottomSheet, Button, Chip, EmptyState, Icon, IconButton,
 import { DEFAULT_F, useApp, type CoSort, type Filters, type OfferSort, type SheetKey } from '../app/store';
 import { ContactGrid, HScroll, Img, MetaLine, preloadPhotos, useNear, albumMedia, callPhone, card, categoryServiceChips, companyGallery, companyPreview, covers, helpers, listingCompanies, myGov, openDirections, openWhatsApp, serviceImage, type Media } from '../app/view';
 import { logoUrl, photo, remote } from '../data/api';
-import { hasOfferIn, offerAge, offerKind, offerServices } from '../data/offers';
+import { offerAge, offerKind, offerServices } from '../data/offers';
+import { SPONSORED_MAX, isSponsored, sponsoredTurn } from '../data/sponsored';
 import type { Album, Company } from '../data/types';
 import { WEEK_ORDER, dayName, fmtTime, isOpenNow, muscatToday, shifts } from '../app/hours';
-import { CategoryStoryRow } from './Stories';
 
 /** Height of the photo at the top of the company page and its service pages (kept the same on both). */
 const HERO_H = 250;
@@ -211,14 +211,6 @@ export function Listing() {
   const set = (p: Partial<Filters>) => setF(x => ({ ...x, ...p }));
   const res = listingCompanies(a, c);
   const chips = categoryServiceChips(a, c);
-  // «العروض»: shown when at least one of the category's companies has an offer in it.
-  const offersHere = catalog.companies.some(co => (c == null || co.cats.includes(c)) && hasOfferIn(catalog, co.id, c));
-  // «العروض» view: every offer of the listed companies in this category, each its own advert (see sortOffers).
-  const g = myGov(a);
-  const offers = f.offers
-    ? sortOffers(res.flatMap(co => companyOffers(a, co).filter(o => c == null || o.svc.cat === c).map(o => ({ o, co, near: covers(co, g) }))), f.osort)
-    : [];
-  const offerCount = offers.length;
   // Slide the chips row so the selected chip sits in the middle (as far as the row can scroll).
   const chipRow = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -238,7 +230,7 @@ export function Listing() {
     const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) setShown(n => n + PAGE); }, { rootMargin: '600px 0px' });
     io.observe(el);
     return () => io.disconnect();
-  }, [shown, res.length, offers.length]);
+  }, [shown, res.length]);
   const color = c == null ? 'violet' : catalog.cats[c].color;
   // Opening a company from here lands on this category's activity.
   const results = res.map(co => ({ ...h.coV(co), work: workPreview(a, co, c), open: () => a.go('company', { id: co.id, ...(c != null ? { act: c } : {}) }) }));
@@ -257,61 +249,33 @@ export function Listing() {
           </span>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
             <span style={{ font: 'var(--type-h1)' }}>{c == null ? t.allServices : h.cname(c)}</span>
-            <span style={{ font: 'var(--type-body-sm)', fontWeight: 600, opacity: 0.9 }}>{f.offers ? countOf(a, offerCount, OFFER_W) : res.length + ' ' + t.results}</span>
+            <span style={{ font: 'var(--type-body-sm)', fontWeight: 600, opacity: 0.9 }}>{res.length + ' ' + t.results}</span>
           </div>
         </div>
         <div style={{ position: 'relative', padding: '0 20px 20px' }}>
           <SearchBar placeholder={t.search} value={f.q} onChange={e => set({ q: e.target.value })} onFilter={null} elevated />
         </div>
       </div>
-      {/* The category's stories (they stay while searching or filtering, so the page doesn't jump). */}
-      {c != null && <CategoryStoryRow cat={c} />}
       {/* The category's common services as chips: one at a time (another chip switches to it; the selected one again
-          clears it). The list is always in the «الأنسب» order (see listingCompanies). */}
+          clears it). The order comes from the sort button (see listingCompanies). */}
       {/* The sort button stays at the start; the chips scroll beside it. */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 16, paddingInlineStart: 20 }}>
         <SortButton />
         <div ref={chipRow} className="mj-s" style={{ flex: 1, minWidth: 0, display: 'flex', gap: 8, alignItems: 'center', overflowX: 'auto', paddingInlineEnd: 20, scrollbarWidth: 'none' }}>
-          {/* «العروض» first, in coral: it switches the list to the category's offers. It and the service chips take turns:
-              choosing one clears the other. */}
-          {offersHere && (
-            <Chip size="sm" icon="badge-percent" selected={f.offers} onClick={() => set({ offers: !f.offers, svcs: [] })}
-              style={f.offers ? { background: 'var(--accent)', color: '#fff' } : { color: 'var(--accent)' }}>{t.offers}</Chip>
-          )}
           {chips.length >= 2 && chips.map(x => {
             const on = f.svcs.includes(x.key);
-            return <span key={x.key} data-chip={x.key} style={{ display: 'contents' }}><Chip size="sm" selected={on} onClick={() => set({ svcs: on ? [] : [x.key], offers: false })}>{x.label}</Chip></span>;
+            return <span key={x.key} data-chip={x.key} style={{ display: 'contents' }}><Chip size="sm" selected={on} onClick={() => set({ svcs: on ? [] : [x.key] })}>{x.label}</Chip></span>;
           })}
         </div>
       </div>
-      {(f.offers ? !offers.length : !res.length) && (
+      <SponsoredStrip list={res} cat={c} />
+      {!res.length && (
         <>
           <EmptyState icon="search-x" color={color} title={t.noResults} body={t.noResultsBody} />
           <div style={{ display: 'flex', justifyContent: 'center' }}><Button variant="secondary" onClick={() => setF(DEFAULT_F)}>{t.clear}</Button></div>
         </>
       )}
-      {/* The offers view: one advert per offer (it opens the offer), the company on a slim line under it (opens the company). */}
-      {f.offers && (
-        <div style={{ padding: '12px 20px 0', display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {offers.slice(0, shown).map(({ o, co }) => {
-            const v = h.coV(co);
-            return (
-              <div key={co.id + ':' + o.i} onClick={() => a.go('company', { id: co.id, ...(c != null ? { act: c } : {}) })} style={{ ...card, overflow: 'hidden', cursor: 'pointer' }}>
-                <OfferCard o={o} lg flush />
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px' }}>
-                  <Avatar name={v.name} src={v.logo} size={36} verified={v.verified} />
-                  <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-                    <span style={{ font: 'var(--type-body-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.name}</span>
-                    <span style={{ font: 'var(--type-caption)', color: 'var(--text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.city}</span>
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-          {shown < offers.length && <div ref={more} aria-hidden="true" style={{ height: 1 }} />}
-        </div>
-      )}
-      {!f.offers && <div style={{ padding: '12px 20px 0', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ padding: '12px 20px 0', display: 'flex', flexDirection: 'column', gap: 14 }}>
         {results.slice(0, shown).map(co => (
           <div key={co.id} onClick={co.open} style={{ ...card, overflow: 'hidden', cursor: 'pointer' }}>
             {co.work.photos.length
@@ -328,12 +292,77 @@ export function Listing() {
         ))}
         {/* Loads the next PAGE companies when this comes near the screen. */}
         {shown < results.length && <div ref={more} aria-hidden="true" style={{ height: 1 }} />}
-      </div>}
+      </div>
     </div>
   );
 }
 
 type ListedOffer = { o: Offer; co: Company; near: boolean };
+
+/** One offer in a list: the advert (opens the offer) with the company on a slim line under it (opens the company,
+ * in the offer's activity or `cat`). */
+function OfferItem({ x: { o, co }, cat }: { x: ListedOffer; cat?: number | null }) {
+  const a = useApp();
+  const v = helpers(a).coV(co);
+  const act = cat ?? o.svc.cat;
+  return (
+    <div onClick={() => a.go('company', { id: co.id, ...(act != null ? { act } : {}) })} style={{ ...card, overflow: 'hidden', cursor: 'pointer' }}>
+      <OfferCard o={o} lg flush />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px' }}>
+        <Avatar name={v.name} src={v.logo} size={36} verified={v.verified} />
+        <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+          <span style={{ font: 'var(--type-body-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.name}</span>
+          <span style={{ font: 'var(--type-caption)', color: 'var(--text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.city}</span>
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The «العروض» tab: every company's offers across all categories, one advert each, with a chip per category that
+ * has offers («الكل» first) and the sort button fixed at the start of the chips. Loads PAGE at a time.
+ */
+export function OffersTab() {
+  const a = useApp();
+  const { t, catalog, ofCat, setOfCat, ofSort } = a;
+  const h = helpers(a);
+  const g = myGov(a);
+  const all = catalog.companies.flatMap(co => companyOffers(a, co).map(o => ({ o, co, near: covers(co, g) })));
+  const chips = catalog.cats.map(x => x.i).filter(i => all.some(x => x.o.svc.cat === i));
+  const cat = ofCat >= 0 && chips.includes(ofCat) ? ofCat : null;
+  const offers = sortOffers(all.filter(x => cat == null || x.o.svc.cat === cat), ofSort);
+  const [shown, setShown] = useState(PAGE);
+  useEffect(() => setShown(PAGE), [cat, ofSort]);
+  const more = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = more.current;
+    if (!el) return;
+    const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) setShown(n => n + PAGE); }, { rootMargin: '600px 0px' });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [shown, offers.length]);
+  return (
+    <div style={{ padding: 'calc(var(--top-inset) + 8px) 0 100px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <span style={{ font: 'var(--type-h1)' }}>{t.offers}</span>
+        <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }}>{countOf(a, offers.length, OFFER_W)}</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingInlineStart: 20 }}>
+        <SortButton />
+        <div className="mj-s" style={{ flex: 1, minWidth: 0, display: 'flex', gap: 8, alignItems: 'center', overflowX: 'auto', paddingInlineEnd: 20, scrollbarWidth: 'none' }}>
+          <Chip size="sm" selected={cat == null} onClick={() => setOfCat(-1)}>{t.all}</Chip>
+          {chips.map(i => <Chip key={i} size="sm" selected={cat === i} onClick={() => setOfCat(i)}>{h.cshort(i)}</Chip>)}
+        </div>
+      </div>
+      {!offers.length && <EmptyState icon="badge-percent" title={t.noResults} />}
+      <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {offers.slice(0, shown).map(x => <OfferItem key={x.co.id + ':' + x.o.i} x={x} />)}
+        {shown < offers.length && <div ref={more} aria-hidden="true" style={{ height: 1 }} />}
+      </div>
+    </div>
+  );
+}
 /**
  * The «العروض» order. «الأنسب» goes in rounds: every company's best offer first (companies covering the customer's
  * area first, then the soonest-ending), then every company's second offer, and so on, never two adverts in a row
@@ -359,15 +388,16 @@ function sortOffers(list: ListedOffer[], by: OfferSort): ListedOffer[] {
 
 const CO_SORTS: [CoSort, 'relevance' | 'sortRecentWork' | 'sortProjects' | 'sortFollowers'][] = [['rel', 'relevance'], ['recent', 'sortRecentWork'], ['projects', 'sortProjects'], ['followers', 'sortFollowers']];
 const OFFER_SORTS: [OfferSort, 'relevance' | 'sortSoon' | 'recent'][] = [['rel', 'relevance'], ['soon', 'sortSoon'], ['new', 'recent']];
-/** The category page's current order and its choices: the companies', or the offers' while «العروض» is on. */
+/** The current order and its choices: the companies' on a category page, the offers' on the «العروض» tab. */
 function useListSort() {
   const a = useApp();
-  const { f } = a;
-  const opts = f.offers ? OFFER_SORTS : CO_SORTS;
+  const offers = a.page.s === 'offers';
+  const opts = offers ? OFFER_SORTS : CO_SORTS;
   // An order this version doesn't have (saved by an older one) counts as «الأنسب».
-  const raw: string = f.offers ? f.osort : f.sort;
+  const raw: string = offers ? a.ofSort : a.f.sort;
   const cur = opts.some(x => x[0] === raw) ? raw : 'rel';
-  return { a, opts, cur, label: a.t[(opts.find(x => x[0] === cur) || opts[0])[1]] };
+  const set = (k: string) => (offers ? a.setOfSort(k as OfferSort) : a.setF(x => ({ ...x, sort: k as CoSort })));
+  return { a, opts, cur, offers, set, label: a.t[(opts.find(x => x[0] === cur) || opts[0])[1]] };
 }
 /** The category page's sort button, at the start of the chips row: purple when the list isn't in «الأنسب» order. */
 function SortButton() {
@@ -382,11 +412,11 @@ function SortButton() {
 }
 /** The sort sheet (mounted with the app's other sheets, over the whole screen); choosing an order closes it. */
 export function SortSheet() {
-  const { a, opts, cur } = useListSort();
-  const { t, f, setF, sheet, setSheet } = a;
-  const choose = (k: string) => { setF(x => (f.offers ? { ...x, osort: k as OfferSort } : { ...x, sort: k as CoSort })); setSheet(null); };
+  const { a, opts, cur, offers, set } = useListSort();
+  const { t, sheet, setSheet } = a;
+  const choose = (k: string) => { set(k); setSheet(null); };
   return (
-    <BottomSheet open={sheet === 'sort'} onClose={() => setSheet(null)} title={f.offers ? t.sortOffers : t.sortCompanies}>
+    <BottomSheet open={sheet === 'sort'} onClose={() => setSheet(null)} title={offers ? t.sortOffers : t.sortCompanies}>
       {/* A plain list: the order's name, a tick on the chosen one. */}
       <div role="radiogroup" style={{ display: 'flex', flexDirection: 'column', paddingBottom: 8 }}>
         {opts.map(([k, name], n) => (
@@ -398,6 +428,50 @@ export function SortSheet() {
         ))}
       </div>
     </BottomSheet>
+  );
+}
+
+/**
+ * «إعلانات مموّلة»: up to SPONSORED_MAX sponsored companies from the page's list (so they follow the chosen chip and
+ * search) in a sideways strip on a tinted band: those covering the customer's area first, then taking turns by day.
+ * Each card: a photo of the company's work in this category, its logo, name and town; it opens the company.
+ * DEMO: which companies are sponsored comes from data/sponsored.ts.
+ */
+function SponsoredStrip({ list, cat }: { list: Company[]; cat: number | null | undefined }) {
+  const a = useApp();
+  const h = helpers(a);
+  const g = myGov(a);
+  // Today's date in Oman, so the turns change at midnight there.
+  const day = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Muscat' });
+  const cos = list.filter(co => isSponsored(co.id))
+    .sort((x, y) => Number(covers(y, g)) - Number(covers(x, g)) || sponsoredTurn(x.id, day) - sponsoredTurn(y.id, day))
+    .slice(0, SPONSORED_MAX);
+  if (!cos.length) return null;
+  return (
+    <section aria-label={a.t.sponsoredT} style={{ marginTop: 16, padding: '16px 0 18px', background: 'color-mix(in oklch, var(--brand-tint-strong) 55%, var(--brand-tint))', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <span style={{ padding: '0 20px', font: 'var(--type-h3)' }}>{a.t.sponsoredT}</span>
+      <HScroll>
+        {cos.map(co => {
+          const v = h.coV(co);
+          const pic = companyPreview(a, co.id, cat).find(m => !m.video);
+          return (
+            <button key={co.id} type="button" className="mj-press-sm" onClick={() => a.go('company', { id: co.id, ...(cat != null ? { act: cat } : {}) })}
+              style={{ ...card, flex: 'none', width: 280, padding: 0, border: 'none', overflow: 'hidden', cursor: 'pointer', scrollSnapAlign: 'start', textAlign: 'start', fontFamily: 'var(--font-sans)', color: 'var(--text-primary)' }}>
+              <div style={{ position: 'relative', height: 170, background: v.c100 }}>
+                <Img src={pic ? photo(pic.src, 560) : v.cover} />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px 14px' }}>
+                <Avatar name={v.name} src={v.logo} size={40} verified={v.verified} />
+                <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ font: 'var(--type-title)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.name}</span>
+                  <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.city}</span>
+                </span>
+              </div>
+            </button>
+          );
+        })}
+      </HScroll>
+    </section>
   );
 }
 
