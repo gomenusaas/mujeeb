@@ -66,3 +66,8 @@ input, textarea, select { font: inherit; }
 }
 
 @keyframes pv-spin { to { transform: rotate(360deg); } }
+
+/* The offer editor's preview stays in view while the form scrolls, once the two sit side by side. */
+@media (min-width: 900px) {
+  .pv-offer-preview { position: sticky; top: 0; z-index: 1; }
+}

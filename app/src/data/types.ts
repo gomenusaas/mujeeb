@@ -82,8 +82,21 @@ export interface Catalog {
   stories?: Story[];
   /** Followers per company (not counting the person viewing); missing = none yet. */
   followers?: Record<string, number>;
+  /** Live offers from Supabase (active, not ended); undefined in demo mode. Companies without any show demo offers. */
+  offers?: LiveOffer[];
   /** Service locations (governorates → wilayats) in the admin's order; undefined = the bundled list in data/oman.ts. */
   places?: import('./oman').Governorate[];
+}
+
+/** An offer a company posted (see supabase/migrations/…_offers.sql). Texts: k = kicker, b = value, s = what it's on. */
+export interface LiveOffer {
+  id: string; co: string; svc: string; style: number; color: string;
+  kAr: string; kEn: string; bAr: string; bEn: string; sAr: string; sEn: string; tAr: string; tEn: string;
+  /** Photo URL or demo id; undefined = the service's photo. */
+  photo?: string;
+  /** Last day, "YYYY-MM-DD" (Oman time). */
+  ends: string;
+  added: string;
 }
 
 export interface CustomerSeed { bookings: Booking[] }

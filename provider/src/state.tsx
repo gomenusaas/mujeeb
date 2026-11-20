@@ -2,10 +2,11 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { Company, Refs, Repo } from './data';
 import { arDigits, strings, type T } from './i18n';
 
-export type Section = 'dashboard' | 'profile' | 'hours' | 'branches' | 'services' | 'projects' | 'stories';
+export type Section = 'dashboard' | 'profile' | 'hours' | 'branches' | 'services' | 'projects' | 'stories' | 'offers';
 export const SECTIONS: { id: Section; icon: string; label: keyof T }[] = [
   { id: 'dashboard', icon: 'layout-dashboard', label: 'dashboard' },
   { id: 'stories', icon: 'circle-play', label: 'stories' },
+  { id: 'offers', icon: 'tag', label: 'offers' },
   { id: 'services', icon: 'briefcase', label: 'services' },
   { id: 'projects', icon: 'images', label: 'projects' },
   { id: 'profile', icon: 'building-2', label: 'profile' },

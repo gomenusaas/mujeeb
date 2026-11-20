@@ -120,6 +120,31 @@ export const STR = {
   recentExpired: ['قصص منتهية مؤخرًا', 'Recently expired'], video: ['فيديو', 'Video'], photo: ['صورة', 'Photo'], tooBig: ['الملف أكبر من المسموح.', 'That file is too large.'],
   uploadFailed: ['تعذر رفع الملف.', 'Upload failed.'], uploading: ['جارٍ الرفع…', 'Uploading…'],
 
+  // Offers
+  offers: ['العروض', 'Offers'], offersHelp: ['عروض لفترة محدودة تظهر للعملاء في صفحة شركتك وفي قسم «العروض». اختر لكل عرض تصميمًا ولونًا.', 'Time-limited deals customers see on your company page and in the Offers tab. Pick a design and colour for each.'],
+  newOffer: ['عرض جديد', 'New offer'], editOffer: ['تعديل العرض', 'Edit offer'],
+  noOffers: ['لا توجد عروض بعد', 'No offers yet'], noOffersBody: ['أضف خصمًا أو هدية أو زيارة مجانية لجذب العملاء.', 'Add a discount, a gift or a free visit to attract customers.'],
+  activeOffers: ['عروض نشطة', 'Active offers'], pastOffers: ['عروض منتهية أو موقوفة', 'Ended or paused'],
+  offerService: ['الخدمة', 'Service'], offerServiceHelp: ['العرض يخص هذه الخدمة، ويظهر في فئتها.', 'The offer is about this service and shows in its category.'],
+  offerTexts: ['نص الإعلان', 'Advert text'],
+  kickerAr: ['السطر العلوي (عربي)', 'Top line (Arabic)'], kickerEn: ['السطر العلوي (إنجليزي)', 'Top line (English)'],
+  headlineAr: ['العرض بخط كبير (عربي)', 'Big text (Arabic)'], headlineEn: ['العرض بخط كبير (إنجليزي)', 'Big text (English)'],
+  sublineAr: ['على ماذا (عربي)', 'What it’s on (Arabic)'], sublineEn: ['على ماذا (إنجليزي)', 'What it’s on (English)'],
+  kickerPh: ['مثال: خصم', 'e.g. Save'], headlinePh: ['مثال: ٢٠٪', 'e.g. 20%'], sublinePh: ['مثال: على تصميم المجالس', 'e.g. on majlis design'],
+  englishOptional: ['النص الإنجليزي اختياري؛ إن تركته فارغًا يظهر النص العربي.', 'English is optional; if left empty, the Arabic text shows.'],
+  termsAr: ['الشروط (عربي)', 'Conditions (Arabic)'], termsEn: ['الشروط (إنجليزي)', 'Conditions (English)'],
+  termsHelp: ['شرط في كل سطر. اتركها فارغة لعرض الشروط المعتادة.', 'One per line. Leave empty to show the usual conditions.'],
+  endsOn: ['آخر يوم للعرض', 'Last day of the offer'], endsPast: ['اختر تاريخًا من اليوم فصاعدًا.', 'Pick today or a later date.'],
+  offerPhoto: ['الصورة', 'Photo'], servicePhoto: ['صورة الخدمة', 'Service photo'], uploadPhoto: ['رفع صورة', 'Upload a photo'],
+  offerPhotoHelp: ['بعض التصاميم لا تستخدم صورة.', 'Some designs don’t use a photo.'],
+  offerColor: ['اللون', 'Colour'], customColor: ['لون آخر', 'Other colour'],
+  offerStyle: ['التصميم', 'Design'], offerStyleHelp: ['٣٠ تصميمًا؛ اختر ما يناسب عرضك. يظهر كما تراه هنا.', '30 designs; pick one that suits your offer. Customers see it exactly like this.'],
+  offerActive: ['العرض نشط', 'Offer is active'], offerActiveHelp: ['أوقفه لإخفائه عن العملاء دون حذفه.', 'Turn it off to hide it from customers without deleting it.'],
+  offerPreview: ['معاينة', 'Preview'], offerTag: ['عرض خاص', 'Special offer'], offerUntil: ['حتى', 'Until'],
+  offerEnded: ['منتهٍ', 'Ended'], offerPaused: ['موقوف', 'Paused'], offerLive: ['نشط', 'Live'],
+  needService: ['أضف خدمة أولًا، ثم أنشئ عرضًا لها.', 'Add a service first, then create an offer for it.'],
+  goServices: ['إلى الخدمات', 'Go to services'],
+
 } as const;
 
 export type StrKey = keyof typeof STR;

@@ -59,6 +59,25 @@ export interface Story {
   id?: string; company_id: string; kind: 'image' | 'video'; media_url: string; poster_url: string | null;
   caption_ar: string; caption_en: string; created_at?: string; expires_at?: string;
 }
+/**
+ * A time-limited offer, drawn as an advert in one of 30 designs (`style`) in the company's chosen colour (see
+ * shared/ds/offer.tsx). Customers see it while it's active, until the end of `ends_on` (Oman time).
+ */
+export interface Offer {
+  id?: string; company_id: string; service_id: string;
+  /** Above the value («خصم»), the value in big type («٢٠٪»), what it's on («على تصميم المجالس»), conditions (one per line). */
+  kicker_ar: string; kicker_en: string; headline_ar: string; headline_en: string; subline_ar: string; subline_en: string; terms_ar: string; terms_en: string;
+  style: number; color: string;
+  /** Photo URL or demo photo id; null = the service's photo. */
+  photo: string | null;
+  /** "YYYY-MM-DD". */
+  ends_on: string; is_active: boolean; created_at?: string;
+}
+/** Text limits (the database enforces them too). */
+export const OFFER_MAX = { kicker: 24, headline: 12, subline: 48, terms: 600 };
+/** Today in Oman, "YYYY-MM-DD". */
+export const omanToday = (plusDays = 0) => new Date(Date.now() + plusDays * 864e5).toLocaleDateString('en-CA', { timeZone: 'Asia/Muscat' });
+
 /** One weekday's hours. day: 0 = Sunday … 6 = Saturday. Times are "HH:MM" (Oman time). */
 export interface DayHours { day: number; is_closed: boolean; opens: string | null; closes: string | null; opens2: string | null; closes2: string | null }
 export type StatKind = 'profile_view' | 'service_view' | 'story_view' | 'whatsapp' | 'call' | 'directions' | 'follow';
@@ -103,6 +122,9 @@ export interface Repo {
   stories(cid: string): Promise<Story[]>;
   createStory(s: Story): Promise<Story>;
   deleteStory(id: string): Promise<void>;
+  offers(cid: string): Promise<Offer[]>;
+  saveOffer(o: Offer): Promise<Offer>;
+  deleteOffer(id: string): Promise<void>;
   /** Uploads to the company's media folder and returns a public URL. */
   /** All 7 days, Sunday first; days not set yet come back closed. */
   hours(cid: string): Promise<DayHours[]>;
@@ -203,6 +225,9 @@ function supabaseRepo(sb: SupabaseClient): Repo {
     },
     async createStory(s) { return ok(await sb.from('stories').insert(s).select().single()) as Story; },
     async deleteStory(id) { ok(await sb.from('stories').delete().eq('id', id)); },
+    async offers(cid) { return ok(await sb.from('offers').select('*').eq('company_id', cid).order('created_at', { ascending: false })) as Offer[]; },
+    async saveOffer(o) { return ok(await sb.from('offers').upsert(o).select().single()) as Offer; },
+    async deleteOffer(id) { ok(await sb.from('offers').delete().eq('id', id)); },
     async hours(cid) { return fullWeek(ok(await sb.from('company_hours').select('day, is_closed, opens, closes, opens2, closes2').eq('company_id', cid)) as DayHours[]); },
     async saveHours(cid, week) { ok(await sb.from('company_hours').upsert(week.map(d => ({ ...d, company_id: cid })), { onConflict: 'company_id,day' })); },
     async upload(cid, file, name) {
@@ -273,6 +298,12 @@ async function demoRepo(): Promise<Repo> {
     { id: uid(), company_id: CID, kind: 'video', media_url: 'https://assets.mixkit.co/videos/43033/43033-720.mp4', poster_url: 'https://assets.mixkit.co/videos/43033/43033-thumb-720-0.jpg', caption_ar: 'مطبخ مفتوح سلّمناه هذا الأسبوع', caption_en: 'Open kitchen handed over this week', created_at: iso(6 * 36e5), expires_at: iso(-18 * 36e5) },
     { id: uid(), company_id: CID, kind: 'image', media_url: photoUrl('1600566753190-17f0baa2a6c3', 1080), poster_url: null, caption_ar: 'خزائن داكنة بلمسة نحاسية', caption_en: 'Dark cabinets with brass details', created_at: iso(30 * 36e5), expires_at: iso(6 * 36e5) },
   ];
+  // Two sample offers on the company's first services.
+  const svcOf = (k: number) => services[k % Math.max(1, services.length)];
+  let offers: Offer[] = services.length ? [
+    { id: uid(), company_id: CID, service_id: svcOf(0).id!, kicker_ar: 'خصم', kicker_en: 'Save', headline_ar: '٢٠٪', headline_en: '20%', subline_ar: 'على ' + svcOf(0).title_ar, subline_en: 'on ' + svcOf(0).title_en.toLowerCase(), terms_ar: '', terms_en: '', style: 4, color: '#2F9E44', photo: null, ends_on: omanToday(12), is_active: true, created_at: iso(3 * 864e5) },
+    { id: uid(), company_id: CID, service_id: svcOf(1).id!, kicker_ar: 'زيارة معاينة', kicker_en: 'Site visit', headline_ar: 'مجانًا', headline_en: 'Free', subline_ar: 'لخدمة ' + svcOf(1).title_ar, subline_en: 'for ' + svcOf(1).title_en.toLowerCase(), terms_ar: '', terms_en: '', style: 9, color: '#E8590C', photo: null, ends_on: omanToday(25), is_active: true, created_at: iso(864e5) },
+  ] : [];
   // Random but stable-looking demo stats.
   const seeded = (n: number) => { const x = Math.sin(n * 9301 + 49297) * 233280; return x - Math.floor(x); };
   const stat = (k: number, base: number) => ({ cur: Math.round(base * (0.9 + seeded(k))), prev: Math.round(base * (0.7 + seeded(k + 50))) });
@@ -313,6 +344,9 @@ async function demoRepo(): Promise<Repo> {
     stories: async () => wait(stories),
     createStory: async s => { const item = { ...s, id: uid(), created_at: iso(0), expires_at: iso(-24 * 36e5) }; stories = [item, ...stories]; return wait(item); },
     deleteStory: async id => { stories = stories.filter(s => s.id !== id); },
+    offers: async () => wait([...offers].sort((x, y) => (y.created_at || '').localeCompare(x.created_at || ''))),
+    saveOffer: async o => { const [l, item] = upsert(offers, { ...o, created_at: o.created_at || new Date().toISOString() }); offers = l; return wait(item); },
+    deleteOffer: async id => { offers = offers.filter(o => o.id !== id); },
     hours: async () => wait(week),
     saveHours: async (_cid, w) => { week = w; await wait(0); },
     upload: async (_cid, file) => wait(URL.createObjectURL(file)),

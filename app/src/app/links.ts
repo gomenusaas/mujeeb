@@ -1,10 +1,10 @@
 import type { Catalog, Story } from '../data/types';
 import type { RootTab, Route } from './store';
-import { offerServices } from '../data/offers';
+import { offerCount } from '../data/offers';
 
-/** Offer `i` of company `co` exists (see the demo offers in data/offers.ts). */
+/** Offer `i` of company `co` exists (its posted offers, or its demo ones; see data/offers.ts). */
 export const hasOffer = (catalog: Catalog, co?: string, i?: number) =>
-  !!co && i != null && i >= 0 && catalog.companies.some(c => c.id === co) && i < offerServices(catalog, co).length;
+  !!co && i != null && i >= 0 && catalog.companies.some(c => c.id === co) && i < offerCount(catalog, co);
 
 /*
  * Page links. The address bar follows the screen on top, and opening a link rebuilds the screen

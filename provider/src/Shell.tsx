@@ -6,6 +6,7 @@ import { Dashboard } from './screens/Dashboard';
 import { Branches, Profile } from './screens/Company';
 import { Projects, Services } from './screens/Catalog';
 import { Stories } from './screens/Stories';
+import { Offers } from './screens/Offers';
 import { Hours } from './screens/Hours';
 import { Modal } from './ui';
 
@@ -51,6 +52,7 @@ function Layout({ onSignOut }: { onSignOut: () => void }) {
           {section === 'services' && <Services />}
           {section === 'projects' && <Projects />}
           {section === 'stories' && <Stories />}
+          {section === 'offers' && <Offers />}
         </main>
       </div>
       {toast && (

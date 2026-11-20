@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient, type User } from '@supabase/supabase-js';
 import type { Governorate } from './oman';
-import type { Album, Branch, Catalog, Category, Company, CustomerSeed, GovId, Pair, Service, Story, SubService, WeekHours } from './types';
+import type { Album, Branch, Catalog, Category, Company, CustomerSeed, GovId, LiveOffer, Pair, Service, Story, SubService, WeekHours } from './types';
 
 const URL_ = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
@@ -88,6 +88,13 @@ export async function loadCatalog(): Promise<Catalog> {
     poster: r.poster_url || (r.kind === 'image' ? r.media_url : photo(coverOf.get(r.company_id) || '', 540)),
     ar: r.caption_ar, en: r.caption_en, h: Math.max(1, Math.round((Date.now() - Date.parse(r.created_at)) / 36e5)),
   }));
+  // Live offers (RLS returns active ones that haven't ended, from live companies), oldest first.
+  const { data: ofRows } = await sb.from('offers').select('*').order('created_at');
+  const offers: LiveOffer[] = ((ofRows || []) as Row[]).map(r => ({
+    id: r.id, co: r.company_id, svc: r.service_id, style: r.style, color: r.color,
+    kAr: r.kicker_ar, kEn: r.kicker_en, bAr: r.headline_ar, bEn: r.headline_en, sAr: r.subline_ar, sEn: r.subline_en, tAr: r.terms_ar, tEn: r.terms_en,
+    photo: r.photo || undefined, ends: r.ends_on, added: r.created_at,
+  }));
   // Service locations in the admin's order (only active ones come back); the bundled list if none.
   const [{ data: gRows }, { data: wRows }] = await Promise.all([
     sb.from('governorates').select('id, name_ar, name_en, region').order('position'),
@@ -100,7 +107,7 @@ export async function loadCatalog(): Promise<Catalog> {
   // Follower counts per company (numbers only; the viewer's own follow is added back by the app).
   const { data: fc } = await sb.rpc('follower_counts');
   const followers = Object.fromEntries(((fc || []) as Row[]).map(r => [r.company_id as string, r.n as number]));
-  return { cats: categories, gov, hours: hours.map(h => [h.days_ar, h.days_en, h.hours]), companies, services, albums, subs, stories, followers, ...(places.length ? { places } : {}) };
+  return { cats: categories, gov, hours: hours.map(h => [h.days_ar, h.days_en, h.hours]), companies, services, albums, subs, stories, followers, offers, ...(places.length ? { places } : {}) };
 }
 
 function sortKey(id: string) {

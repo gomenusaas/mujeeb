@@ -469,3 +469,4 @@ export function TabBar<T extends string>({ items, active, onChange, style }: {
     </nav>
   );
 }
+export * from './offer';
