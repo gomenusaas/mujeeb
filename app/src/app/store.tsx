@@ -27,16 +27,18 @@ export const isOverlay = (r: Route) => r.s === 'story' || r.s === 'photo';
  * location; `open`: only companies open now; `svcs`: only companies covering every one of these sub-services (ids); `offers`: show the category's offers instead of
  * its companies.
  */
-export interface Filters { gov: 'all' | GovId; verified: boolean; sort: CoSort; q: string; mine: boolean; open: boolean; svcs: string[] }
+export interface Filters { gov: 'all' | GovId; verified: boolean; sort: CoSort; q: string; mine: boolean; open: boolean; svcs: string[];
+  /** The category page's location: a wilayat id, 'all' (all of Oman) or '' (the home page's service location). */
+  loc: string }
 /** The order of a category page's companies, and of the «العروض» tab's offers. */
 export type CoSort = 'rel' | 'recent' | 'projects' | 'followers';
 export type OfferSort = 'rel' | 'soon' | 'new';
-export type SheetKey = null | 'menu' | 'about' | 'hours' | 'branches' | 'address' | 'coverage' | 'contact' | 'website' | 'social' | 'sort' | 'directions' | 'activity' | 'location' | 'preview' | 'services' | 'gallery';
+export type SheetKey = null | 'menu' | 'about' | 'hours' | 'branches' | 'address' | 'coverage' | 'contact' | 'website' | 'social' | 'sort' | 'directions' | 'activity' | 'location' | 'preview' | 'services' | 'gallery' | 'listLoc';
 /** Sign-in sheet steps: sign in, create account, forgot password, choose a new password (from the reset email). */
 export type AuthStep = 'signin' | 'signup' | 'reset' | 'newpw';
 export interface BookingDraft { co: string; purpose: string; city: string; gov: GovId; day: number; time: string; notes: string; step: number }
 
-export const DEFAULT_F: Filters = { gov: 'all', verified: false, sort: 'rel', q: '', mine: false, open: false, svcs: [] };
+export const DEFAULT_F: Filters = { gov: 'all', verified: false, sort: 'rel', q: '', mine: false, open: false, svcs: [], loc: '' };
 const LS = 'mujeeb.v1';
 const TRAIL = 'mujeeb.trail';
 

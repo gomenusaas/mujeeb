@@ -107,6 +107,11 @@ const searchWords = (q: string) => fold(q).trim().split(' ').filter(Boolean).map
 export function myGov(a: App): GovId | null {
   return findWilayat(a.places, a.wilayat).g.region ?? null;
 }
+/** The category page's governorate: its own location choice, else the home page's; null = all of Oman. */
+export function listGov(a: App): GovId | null {
+  if (a.f.loc === 'all') return null;
+  return a.f.loc ? findWilayat(a.places, a.f.loc).g.region ?? null : myGov(a);
+}
 /** The company works in this governorate. */
 export const covers = (co: Company, g: GovId | null) => !!g && (co.cov.includes('all') || co.cov.includes(g));
 
@@ -132,7 +137,8 @@ export function listingCompanies(a: App, c: number | undefined): Company[] {
   const { catalog, f } = a;
   const words = searchWords(f.q);
   const idx = words.length ? searchIndex(catalog) : null;
-  const g = myGov(a);
+  // The page's location: only companies that cover it (all of them for all of Oman).
+  const g = listGov(a);
   const score = new Map<string, number>();
   // Sub-service chips: companies that cover every selected one (each by some service in this category).
   const coversSub = (co: Company, id: string) => catalog.services.some(s => s.co === co.id && (c == null || s.cat === c) && s.sub?.includes(id));
@@ -143,6 +149,7 @@ export function listingCompanies(a: App, c: number | undefined): Company[] {
       (!f.verified || co.verified) &&
       (!f.mine || covers(co, g)) &&
       (!f.open || (!!co.hrs && isOpenNow(co.hrs))) &&
+      (!g || covers(co, g)) &&
       f.svcs.every(id => coversSub(co, id)))) return false;
     if (!idx) return true;
     const { strong, weak } = idx.get(co.id)!;

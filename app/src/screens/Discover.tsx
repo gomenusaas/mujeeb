@@ -54,9 +54,15 @@ export function Home() {
           </div>
           {/* Service location: opens the wilayat picker. */}
           <button type="button" aria-haspopup="dialog" onClick={() => a.setSheet('location')}
-            style={{ position: 'relative', alignSelf: 'flex-start', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2, marginTop: 14, padding: 0, border: 'none', background: 'none', color: 'inherit', cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'start' }}>
-            <span style={{ font: 'var(--type-caption)', opacity: 0.8 }}>{t.serviceLoc}</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4, font: 'var(--type-title)' }}><Icon name="map-pin" size={16} />{a.locLabel}<Icon name="chevron-down" size={16} /></span>
+            style={{ position: 'relative', alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 6, marginTop: 14, padding: 0, border: 'none', background: 'none', color: 'inherit', cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'start' }}>
+            {/* One line, like the category pages: pin, label (medium), divider, area (semibold), arrow. */}
+            <Icon name="map-pin" size={16} />
+            <span style={{ font: 'var(--type-title)' }}>
+              <span style={{ fontWeight: 500 }}>{t.serviceLoc}</span>
+              <span aria-hidden="true" style={{ display: 'inline-block', width: 1, height: '0.85em', margin: '0 8px', verticalAlign: '-0.1em', background: 'oklch(1 0 0 / 0.5)' }} />
+              <span style={{ fontWeight: 600 }}>{a.locLabel}</span>
+            </span>
+            <Icon name="chevron-down" size={16} />
           </button>
           <div style={{ position: 'relative', font: 'var(--type-h1)', marginTop: 18, textWrap: 'balance' }}>{t.greeting}</div>
         </div>
@@ -203,23 +209,36 @@ export function Explore() {
  */
 export function LocationSheet() {
   const a = useApp();
-  const { t, ar, sheet, setSheet, wilayat, setWilayat, places } = a;
+  const { t, ar, sheet, setSheet, wilayat, setWilayat, places, f, setF } = a;
   const [q, setQ] = useState('');
-  const open = sheet === 'location';
+  // Also a category page's own location ('listLoc'): it starts on the home page's and can be all of Oman; picking
+  // one there doesn't change the home page's.
+  const page = sheet === 'listLoc';
+  const open = sheet === 'location' || page;
+  const cur = page ? f.loc || wilayat : wilayat;
   const n = q.trim().toLowerCase();
   const hit = (s: string) => s.toLowerCase().includes(n);
   const groups = places.map(g => ({ g, list: !n || hit(g.ar) || hit(g.en) ? g.wilayats : g.wilayats.filter(x => hit(x.ar) || hit(x.en)) })).filter(x => x.list.length);
   const close = () => { setSheet(null); setQ(''); };
-  const pick = (id: string) => { setWilayat(id); close(); };
+  const pick = (id: string) => { if (page) setF(x => ({ ...x, loc: id })); else setWilayat(id); close(); };
   return (
     <BottomSheet open={open} onClose={close} title={t.serviceLoc}>
       <div style={{ position: 'sticky', top: -12, zIndex: 1, margin: '-12px -20px 4px', padding: '12px 20px 10px', background: 'var(--surface-card)' }}>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8, height: 44, padding: '0 14px', borderRadius: 'var(--radius-pill)', background: 'var(--neutral-100)' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, height: 44, padding: '0 14px', borderRadius: 'var(--radius-pill)', background: 'var(--surface-card)', boxShadow: 'inset 0 0 0 1.5px var(--border-default)' }}>
           <Icon name="search" size={18} color="var(--text-tertiary)" />
           <input value={q} onChange={e => setQ(e.target.value)} placeholder={t.searchWilayat} aria-label={t.searchWilayat}
             style={{ flex: 1, minWidth: 0, border: 'none', outline: 'none', background: 'none', font: 'var(--type-body)', fontFamily: 'var(--font-sans)', color: 'var(--text-primary)' }} />
         </label>
       </div>
+      {/* A category page can also show every company, wherever it works. */}
+      {page && !n && (
+        <button type="button" onClick={() => pick('all')} aria-pressed={cur === 'all'}
+          style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', minHeight: 48, padding: '0 4px', border: 'none', borderBottom: '1px solid var(--border-subtle)', background: 'none', cursor: 'pointer', textAlign: 'start', fontFamily: 'var(--font-sans)', font: 'var(--type-body)', fontWeight: cur === 'all' ? 700 : 500, color: cur === 'all' ? 'var(--brand)' : 'var(--text-primary)' }}>
+          <Icon name="globe" size={18} color={cur === 'all' ? 'var(--brand)' : 'var(--text-secondary)'} />
+          <span style={{ flex: 1 }}>{t.allOman}</span>
+          {cur === 'all' && <Icon name="check" size={20} color="var(--brand)" />}
+        </button>
+      )}
       {!groups.length && <div style={{ padding: '24px 0', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-tertiary)' }}>{t.noWilayat}</div>}
       {groups.map(({ g, list }) => (
         <div key={g.id} style={{ display: 'flex', flexDirection: 'column' }}>
@@ -230,7 +249,7 @@ export function LocationSheet() {
             <span style={{ font: 'var(--type-caption)', fontWeight: 600, opacity: 0.75 }}>{helpers(a).num(g.wilayats.length)}</span>
           </span>
           {list.map(x => {
-            const on = x.id === wilayat;
+            const on = x.id === cur;
             return (
               <button key={x.id} type="button" onClick={() => pick(x.id)} aria-pressed={on}
                 style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 48, padding: '0 4px', border: 'none', borderBottom: '1px solid var(--border-subtle)', background: 'none', cursor: 'pointer', textAlign: 'start', fontFamily: 'var(--font-sans)', font: 'var(--type-body)', fontWeight: on ? 700 : 500, color: on ? 'var(--brand)' : 'var(--text-primary)' }}>

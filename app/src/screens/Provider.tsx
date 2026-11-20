@@ -1,8 +1,9 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { Avatar, Badge, BottomSheet, Button, Chip, EmptyState, Icon, IconButton, ListItem, OfferArt, SearchBar, SectionHeader, offerColor, type OfferArtData } from '../ds';
 import { DEFAULT_F, useApp, type CoSort, type Filters, type OfferSort, type SheetKey } from '../app/store';
-import { ContactGrid, HScroll, Img, MetaLine, preloadPhotos, useNear, albumMedia, callPhone, card, categoryServiceChips, companyGallery, companyPreview, covers, helpers, listingCompanies, myGov, openDirections, openWhatsApp, serviceImage, type Media } from '../app/view';
+import { ContactGrid, HScroll, Img, MetaLine, preloadPhotos, useNear, albumMedia, callPhone, card, categoryServiceChips, companyGallery, companyPreview, covers, helpers, listGov, listingCompanies, myGov, openDirections, openWhatsApp, serviceImage, type Media } from '../app/view';
 import { logoUrl, photo, remote } from '../data/api';
+import { wilayatLabel } from '../data/oman';
 import { demoOfferLook, liveOffersOf, offerAge, offerKind, offerServices } from '../data/offers';
 import { SPONSORED_MAX, isSponsored, sponsoredTurn } from '../data/sponsored';
 import type { Album, Company } from '../data/types';
@@ -234,48 +235,83 @@ export function Listing() {
   const color = c == null ? 'violet' : catalog.cats[c].color;
   // Opening a company from here lands on this category's activity.
   const results = res.map(co => ({ ...h.coV(co), work: workPreview(a, co, c), open: () => a.go('company', { id: co.id, ...(c != null ? { act: c } : {}) }) }));
+  // The mini header (title and chips) slides in once the header and chips have scrolled away.
+  const headRef = useRef<HTMLDivElement>(null);
+  const [past, setPast] = useState(false);
+  useEffect(() => {
+    const el = a.scroller.current, head = headRef.current;
+    if (!el || !head) return;
+    const on = () => setPast(el.scrollTop > head.offsetHeight + 40);
+    on();
+    el.addEventListener('scroll', on, { passive: true });
+    return () => el.removeEventListener('scroll', on);
+  }, [a.scroller]);
+  const mini = past;
+  const title = c == null ? t.allServices : h.cname(c);
+  // The sort button and the chips (the page's row has the ref that centres the chosen chip).
+  const chipStrip = (withRef: boolean) => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingInlineStart: 20 }}>
+      <SortButton />
+      <div ref={withRef ? chipRow : undefined} className="mj-s" style={{ flex: 1, minWidth: 0, display: 'flex', gap: 8, alignItems: 'center', overflowX: 'auto', paddingInlineEnd: 20, scrollbarWidth: 'none' }}>
+        {chips.length >= 2 && chips.map(x => {
+          const on = f.svcs.includes(x.key);
+          return <span key={x.key} data-chip={x.key} style={{ display: 'contents' }}><Chip size="sm" selected={on} onClick={() => set({ svcs: on ? [] : [x.key] })}>{x.label}</Chip></span>;
+        })}
+      </div>
+    </div>
+  );
 
   return (
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column', paddingBottom: 40 }}>
-      <div style={{ position: 'relative', overflow: 'hidden', padding: 'var(--top-inset) 0 4px', background: 'var(--cat-' + color + '-600)', borderRadius: '0 0 28px 28px', color: '#fff' }}>
+      {/* The mini header: sticks to the top of the scrolling page (a zero-height sticky holder, so it takes no room),
+          under the status bar (z-index 20 in app.css). */}
+      <div style={{ position: 'sticky', top: 0, height: 0, zIndex: 15 }}>
+        <div aria-hidden={!mini} inert={!mini} style={{ position: 'absolute', insetInline: 0, top: 0, padding: 'var(--top-inset) 0 10px', display: 'flex', flexDirection: 'column', gap: 8, background: 'var(--surface-card)', boxShadow: '0 1px 0 var(--border-subtle), 0 8px 18px oklch(0.2 0.03 285 / 0.1)', opacity: mini ? 1 : 0, transform: mini ? 'none' : 'translateY(-12px)', transition: 'opacity 200ms var(--ease-out), transform 200ms var(--ease-out)', pointerEvents: mini ? 'auto' : 'none' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0 12px' }}>
+            <IconButton icon="arrow-left" variant="plain" size={36} onClick={a.back} label="Back" />
+            <span style={{ flex: 1, minWidth: 0, font: 'var(--type-title)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</span>
+          </div>
+          {chipStrip(false)}
+        </div>
+      </div>
+      <div ref={headRef} style={{ position: 'relative', overflow: 'hidden', padding: 'var(--top-inset) 0 4px', background: 'var(--cat-' + color + '-600)', borderRadius: '0 0 28px 28px', color: '#fff' }}>
         <span style={{ position: 'absolute', insetInlineEnd: -50, top: -40, width: 200, height: 200, borderRadius: '50%', background: 'oklch(1 0 0 / 0.14)' }} />
         <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', padding: '8px 16px' }}>
           <IconButton icon="arrow-left" variant="glass" size={40} onClick={a.back} label="Back" />
-          <IconButton icon="share-2" variant="glass" size={40} label={t.share} onClick={() => a.sharePage(top, c == null ? t.allServices : h.cname(c))} />
         </div>
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 14, padding: '6px 20px 18px' }}>
-          <span style={{ flex: 'none', width: 52, height: 52, borderRadius: 'var(--radius-tile)', background: 'oklch(1 0 0 / 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Icon name={c == null ? 'layout-grid' : catalog.cats[c].icon} size={26} color="#fff" />
-          </span>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-            <span style={{ font: 'var(--type-h1)' }}>{c == null ? t.allServices : h.cname(c)}</span>
+            <span style={{ font: 'var(--type-h1)' }}>{title}</span>
             <span style={{ font: 'var(--type-body-sm)', fontWeight: 600, opacity: 0.9 }}>{res.length + ' ' + t.results}</span>
           </div>
         </div>
-        {/* The search box only on the all-companies page (where the home page's search opens); category pages
-            narrow down with the chips instead. */}
-        {c == null
-          ? <div style={{ position: 'relative', padding: '0 20px 20px' }}>
-              <SearchBar placeholder={t.search} value={f.q} onChange={e => set({ q: e.target.value })} onFilter={null} elevated />
-            </div>
-          : <div style={{ height: 8 }} />}
-      </div>
-      {/* The category's common services as chips: one at a time (another chip switches to it; the selected one again
-          clears it). The order comes from the sort button (see listingCompanies). */}
-      {/* The sort button stays at the start; the chips scroll beside it. */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 16, paddingInlineStart: 20 }}>
-        <SortButton />
-        <div ref={chipRow} className="mj-s" style={{ flex: 1, minWidth: 0, display: 'flex', gap: 8, alignItems: 'center', overflowX: 'auto', paddingInlineEnd: 20, scrollbarWidth: 'none' }}>
-          {chips.length >= 2 && chips.map(x => {
-            const on = f.svcs.includes(x.key);
-            return <span key={x.key} data-chip={x.key} style={{ display: 'contents' }}><Chip size="sm" selected={on} onClick={() => set({ svcs: on ? [] : [x.key] })}>{x.label}</Chip></span>;
-          })}
+        {/* The page's location, in the home page's design (it starts on the home page's location): only companies that
+            cover it are listed. */}
+        <button type="button" aria-haspopup="dialog" onClick={() => a.setSheet('listLoc')}
+          style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 6, margin: '-4px 20px 16px', padding: 0, border: 'none', background: 'none', color: 'inherit', cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'start' }}>
+          {/* One line: pin, label, divider, the area, arrow. */}
+          <Icon name="map-pin" size={16} />
+          {/* Label (medium) and area (semibold) in one text run, so they share a baseline and colour; the label's letters
+              are denser, so one step lighter balances them. */}
+          <span style={{ font: 'var(--type-title)' }}>
+            <span style={{ fontWeight: 500 }}>{t.serviceLoc}</span>
+            <span aria-hidden="true" style={{ display: 'inline-block', width: 1, height: '0.85em', margin: '0 8px', verticalAlign: '-0.1em', background: 'oklch(1 0 0 / 0.5)' }} />
+            <span style={{ fontWeight: 600 }}>{f.loc === 'all' ? t.allOman : f.loc ? wilayatLabel(a.places, f.loc, a.ar) : a.locLabel}</span>
+          </span>
+          <Icon name="chevron-down" size={16} />
+        </button>
+        {/* The search box (searches this category only; every company on the all-companies page). */}
+        <div style={{ position: 'relative', padding: '0 20px 20px' }}>
+          <SearchBar placeholder={t.search} value={f.q} onChange={e => set({ q: e.target.value })} onFilter={null} elevated style={{ height: 46 }} />
         </div>
       </div>
+      {/* The category's common services as chips: one at a time (another chip switches to it; the selected one again
+          clears it), after the sort button; the order comes from it (see listingCompanies). */}
+      <div style={{ marginTop: 16 }}>{chipStrip(true)}</div>
       {!res.length && (
         <>
           <EmptyState icon="search-x" color={color} title={t.noResults} body={t.noResultsBody} />
-          <div style={{ display: 'flex', justifyContent: 'center' }}><Button variant="secondary" onClick={() => setF(DEFAULT_F)}>{t.clear}</Button></div>
+          <div style={{ display: 'flex', justifyContent: 'center' }}><Button variant="secondary" onClick={() => setF({ ...DEFAULT_F, loc: 'all' })}>{t.clear}</Button></div>
         </>
       )}
       <div style={{ padding: '12px 20px 0', display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -559,7 +595,7 @@ function SponsoredStrip({ list, cat, sub }: { list: Company[]; cat: number | nul
     return photo(als[h % als.length].img, 560);
   };
   const h = helpers(a);
-  const g = myGov(a);
+  const g = listGov(a);
   // Today's date in Oman, so the turns change at midnight there.
   const day = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Muscat' });
   const cos = list.filter(co => isSponsored(co.id))
