@@ -321,8 +321,10 @@ function OfferItem({ x: { o, co }, cat }: { x: ListedOffer; cat?: number | null 
 }
 
 /**
- * The «العروض» tab: every company's offers across all categories, one advert each, with a chip per category that
- * has offers («الكل» first) and the sort button fixed at the start of the chips. Loads PAGE at a time.
+ * The «العروض» tab, in sections like a store's deals page: a purple header (count and the customer's area),
+ * «عروض مميزة» (a big swipeable advert per sponsored company; DEMO sponsors, a paid spot later), «تنتهي قريبًا» and
+ * «في منطقتك» (sideways strips of smaller adverts, one per company), then «كل العروض»: category chips, the sort
+ * button and every offer as a wide advert with its company line, PAGE at a time.
  */
 export function OffersTab() {
   const a = useApp();
@@ -333,6 +335,13 @@ export function OffersTab() {
   const chips = catalog.cats.map(x => x.i).filter(i => all.some(x => x.o.svc.cat === i));
   const cat = ofCat >= 0 && chips.includes(ofCat) ? ofCat : null;
   const offers = sortOffers(all.filter(x => cat == null || x.o.svc.cat === cat), ofSort);
+  // One offer per company, in the list's order.
+  const onePerCo = (list: ListedOffer[]) => list.filter((x, k) => list.findIndex(y => y.co.id === x.co.id) === k);
+  const day = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Muscat' });
+  const featured = onePerCo(sortOffers(all, 'soon').filter(x => isSponsored(x.co.id)))
+    .sort((x, y) => Number(y.near) - Number(x.near) || sponsoredTurn(x.co.id, day) - sponsoredTurn(y.co.id, day)).slice(0, 5);
+  const ending = onePerCo(sortOffers(all, 'soon').filter(x => x.o.days <= ENDING_DAYS)).slice(0, 10);
+  const near = onePerCo(sortOffers(all.filter(x => x.near), 'rel')).slice(0, 10);
   const [shown, setShown] = useState(PAGE);
   useEffect(() => setShown(PAGE), [cat, ofSort]);
   const more = useRef<HTMLDivElement>(null);
@@ -343,27 +352,120 @@ export function OffersTab() {
     io.observe(el);
     return () => io.disconnect();
   }, [shown, offers.length]);
+  const title = (x: string) => <div style={{ padding: '0 20px' }}><SectionHeader title={x} action={null} /></div>;
   return (
-    <div style={{ padding: 'calc(var(--top-inset) + 8px) 0 100px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <span style={{ font: 'var(--type-h1)' }}>{t.offers}</span>
-        <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }}>{countOf(a, offers.length, OFFER_W)}</span>
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingInlineStart: 20 }}>
-        <SortButton />
-        <div className="mj-s" style={{ flex: 1, minWidth: 0, display: 'flex', gap: 8, alignItems: 'center', overflowX: 'auto', paddingInlineEnd: 20, scrollbarWidth: 'none' }}>
-          <Chip size="sm" selected={cat == null} onClick={() => setOfCat(-1)}>{t.all}</Chip>
-          {chips.map(i => <Chip key={i} size="sm" selected={cat === i} onClick={() => setOfCat(i)}>{h.cshort(i)}</Chip>)}
+    <div style={{ paddingBottom: 100, display: 'flex', flexDirection: 'column', gap: 24 }}>
+      {/* The header: purple like a category page's, with the count and the customer's area (tap to change it). */}
+      <div style={{ position: 'relative', overflow: 'hidden', padding: 'calc(var(--top-inset) + 12px) 20px 22px', background: 'var(--brand)', borderRadius: '0 0 28px 28px', color: '#fff' }}>
+        <span style={{ position: 'absolute', insetInlineEnd: -50, top: -40, width: 200, height: 200, borderRadius: '50%', background: 'oklch(1 0 0 / 0.14)' }} />
+        <span style={{ position: 'absolute', insetInlineStart: -30, bottom: -60, width: 140, height: 140, borderRadius: '50%', background: 'oklch(1 0 0 / 0.08)' }} />
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 14 }}>
+          <span style={{ flex: 'none', width: 52, height: 52, borderRadius: 'var(--radius-tile)', background: 'oklch(1 0 0 / 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Icon name="tag" size={26} color="#fff" />
+          </span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+            <span style={{ font: 'var(--type-h1)' }}>{t.offers}</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', font: 'var(--type-body-sm)', fontWeight: 600 }}>
+              <span style={{ opacity: 0.9 }}>{countOf(a, all.length, OFFER_W)}</span>
+              <span aria-hidden="true" style={{ opacity: 0.6 }}>·</span>
+              <button type="button" aria-haspopup="dialog" onClick={() => a.setSheet('location')}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 3, padding: 0, border: 'none', background: 'none', cursor: 'pointer', font: 'inherit', fontFamily: 'var(--font-sans)', color: '#fff' }}>
+                <Icon name="map-pin" size={14} />{a.locLabel}<Icon name="chevron-down" size={14} />
+              </button>
+            </span>
+          </div>
         </div>
       </div>
-      {!offers.length && <EmptyState icon="badge-percent" title={t.noResults} />}
-      <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-        {offers.slice(0, shown).map(x => <OfferItem key={x.co.id + ':' + x.o.i} x={x} />)}
+
+      {featured.length > 0 && (
+        <section aria-label={t.featuredOffers} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {title(t.featuredOffers)}
+          <HeroOffers list={featured} />
+        </section>
+      )}
+      {ending.length > 0 && (
+        <section aria-label={t.endingSoon} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {title(t.endingSoon)}
+          <HScroll>{ending.map(x => <StripOffer key={x.co.id + ':' + x.o.i} x={x} countdown />)}</HScroll>
+        </section>
+      )}
+      {near.length > 0 && (
+        <section aria-label={t.nearOffers} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {title(t.nearOffers)}
+          <HScroll>{near.map(x => <StripOffer key={x.co.id + ':' + x.o.i} x={x} />)}</HScroll>
+        </section>
+      )}
+
+      {/* «كل العروض»: the chips and sort button work on this grid only. */}
+      <section aria-label={t.allOffers} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ padding: '0 20px', display: 'flex', alignItems: 'baseline', gap: 8 }}>
+          <span style={{ font: 'var(--type-h3)' }}>{t.allOffers}</span>
+          <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-tertiary)' }}>{countOf(a, offers.length, OFFER_W)}</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingInlineStart: 20 }}>
+          <SortButton />
+          <div className="mj-s" style={{ flex: 1, minWidth: 0, display: 'flex', gap: 8, alignItems: 'center', overflowX: 'auto', paddingInlineEnd: 20, scrollbarWidth: 'none' }}>
+            <Chip size="sm" selected={cat == null} onClick={() => setOfCat(-1)}>{t.all}</Chip>
+            {chips.map(i => <Chip key={i} size="sm" selected={cat === i} onClick={() => setOfCat(i)}>{h.cshort(i)}</Chip>)}
+          </div>
+        </div>
+        {!offers.length && <EmptyState icon="badge-percent" title={t.noResults} />}
+        <div style={{ padding: '4px 20px 0', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {offers.slice(0, shown).map(x => <OfferItem key={x.co.id + ':' + x.o.i} x={x} />)}
+        </div>
         {shown < offers.length && <div ref={more} aria-hidden="true" style={{ height: 1 }} />}
-      </div>
+      </section>
     </div>
   );
 }
+
+/** Offers ending within this many days go in «تنتهي قريبًا». */
+const ENDING_DAYS = 10;
+
+/** «باقٍ ٦ أيام» (6 days left). */
+function daysLeft(a: ReturnType<typeof useApp>, n: number) {
+  return a.ar ? a.t.offerLeft + ' ' + countOf(a, n, DAY_W) : countOf(a, n, DAY_W) + ' ' + a.t.offerLeft;
+}
+
+/** «عروض مميزة»: big adverts (each with its company line) to swipe through, a dot per advert underneath. */
+function HeroOffers({ list }: { list: ListedOffer[] }) {
+  const row = useRef<HTMLDivElement>(null);
+  const [at, setAt] = useState(0);
+  const onScroll = () => {
+    const el = row.current;
+    const first = el?.firstElementChild as HTMLElement | null;
+    if (el && first) setAt(Math.min(list.length - 1, Math.round(Math.abs(el.scrollLeft) / (first.offsetWidth + 12))));
+  };
+  return (
+    <div>
+      <div ref={row} onScroll={onScroll} className="mj-s" style={{ display: 'flex', gap: 12, overflowX: 'auto', scrollSnapType: 'x mandatory', scrollPaddingInline: 20, padding: '2px 20px 10px', margin: '-2px 0 -10px', scrollbarWidth: 'none' }}>
+        {list.map(x => <div key={x.co.id + ':' + x.o.i} style={{ flex: 'none', width: 'calc(100% - 40px)', scrollSnapAlign: 'start' }}><OfferItem x={x} /></div>)}
+      </div>
+      {list.length > 1 && (
+        <span aria-hidden="true" style={{ display: 'flex', justifyContent: 'center', gap: 6, paddingTop: 12 }}>
+          {list.map((x, k) => <span key={x.co.id + ':' + x.o.i} style={{ width: k === at ? 16 : 6, height: 6, borderRadius: 3, background: k === at ? 'var(--brand)' : 'var(--neutral-200)', transition: 'width var(--dur-base) var(--ease-out), background var(--dur-base)' }} />)}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/** A smaller advert in a sideways strip, the company's logo and name under it. `countdown`: a red «باقٍ …» badge. */
+function StripOffer({ x: { o, co }, countdown }: { x: ListedOffer; countdown?: boolean }) {
+  const a = useApp();
+  const v = helpers(a).coV(co);
+  return (
+    <div style={{ flex: 'none', width: 240, display: 'flex', flexDirection: 'column', gap: 8, scrollSnapAlign: 'start' }}>
+      <OfferCard o={o} badge={countdown ? daysLeft(a, o.days) : undefined} />
+      <button type="button" onClick={() => a.go('company', { id: co.id, act: o.svc.cat })}
+        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 0, border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'start', color: 'var(--text-primary)' }}>
+        <Avatar name={v.name} src={v.logo} size={24} />
+        <span style={{ flex: 1, minWidth: 0, font: 'var(--type-body-sm)', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.name}</span>
+      </button>
+    </div>
+  );
+}
+
 /**
  * The «العروض» order. «الأنسب» goes in rounds: every company's best offer first (companies covering the customer's
  * area first, then the soonest-ending), then every company's second offer, and so on, never two adverts in a row
@@ -586,7 +688,7 @@ function CompanyCardInfo({ v }: { v: { name: string; logo: string; verified: boo
  * offer's colour, «عرض خاص», the offer in big type, what it's for and the end date; the whole card opens the offer.
  * Small (240px) in a company's strip; `lg`: the full width of the page (a category page's offers).
  */
-function OfferCard({ o, lg, flush }: { o: Offer; lg?: boolean; flush?: boolean }) {
+function OfferCard({ o, lg, flush, badge }: { o: Offer; lg?: boolean; flush?: boolean; badge?: string }) {
   const { t, ar } = useApp();
   const z = (n: number) => Math.round(n * (lg ? 1.4 : 1)); // sizes scale with the card
   return (
@@ -603,6 +705,8 @@ function OfferCard({ o, lg, flush }: { o: Offer; lg?: boolean; flush?: boolean }
         {/* The end date at the bottom (the whole card opens the offer). */}
         <span style={{ marginTop: 'auto', display: 'inline-flex', alignItems: 'center', gap: 4, font: '600 ' + z(10) + 'px var(--font-sans)', opacity: 0.85 }}><Icon name="clock" size={z(11)} />{t.offerUntil} {o.until}</span>
       </span>
+      {/* `badge`: a red pill in the top corner (e.g. «باقٍ ٦ أيام»). */}
+      {badge && <span style={{ position: 'absolute', top: z(10), insetInlineEnd: z(10), height: 22, padding: '0 9px', borderRadius: 999, background: 'var(--danger)', color: '#fff', display: 'inline-flex', alignItems: 'center', gap: 4, font: '800 11px var(--font-sans)' }}><Icon name="clock" size={12} />{badge}</span>}
     </button>
   );
 }
