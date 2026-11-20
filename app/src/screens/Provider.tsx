@@ -268,7 +268,8 @@ export function Listing() {
           })}
         </div>
       </div>
-      <SponsoredStrip list={res} cat={c} />
+      {/* Starts again from the first card when the chip changes. */}
+      <SponsoredStrip key={f.svcs[0] || ''} list={res} cat={c} sub={f.svcs[0]} />
       {!res.length && (
         <>
           <EmptyState icon="search-x" color={color} title={t.noResults} body={t.noResultsBody} />
@@ -434,11 +435,25 @@ export function SortSheet() {
 /**
  * «إعلانات مموّلة»: up to SPONSORED_MAX sponsored companies from the page's list (so they follow the chosen chip and
  * search) in a sideways strip on a tinted band: those covering the customer's area first, then taking turns by day.
- * Each card: a photo of the company's work in this category, its logo, name and town; it opens the company.
+ * Each card: a photo of the company's work in the chosen sub-service (else in this category), its logo, name and
+ * town; it opens the company.
  * DEMO: which companies are sponsored comes from data/sponsored.ts.
  */
-function SponsoredStrip({ list, cat }: { list: Company[]; cat: number | null | undefined }) {
+function SponsoredStrip({ list, cat, sub }: { list: Company[]; cat: number | null | undefined; sub?: string }) {
   const a = useApp();
+  const { catalog } = a;
+  // A recent project of the company's services that cover the chosen sub-service. Projects belong to a service, not
+  // a sub-service, so one service covering several chips would show the same photo for each: the chip picks which
+  // of its five newest projects to show.
+  const subPhoto = (co: Company) => {
+    if (!sub) return null;
+    const svcs = new Set(catalog.services.filter(x => x.co === co.id && (cat == null || x.cat === cat) && x.sub?.includes(sub)).map(x => x.id));
+    const als = catalog.albums.filter(x => !!x.svc && svcs.has(x.svc)).sort((x, y) => (y.added || '').localeCompare(x.added || '')).slice(0, 5);
+    if (!als.length) return null;
+    let h = 0;
+    for (const ch of sub) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    return photo(als[h % als.length].img, 560);
+  };
   const h = helpers(a);
   const g = myGov(a);
   // Today's date in Oman, so the turns change at midnight there.
@@ -458,7 +473,7 @@ function SponsoredStrip({ list, cat }: { list: Company[]; cat: number | null | u
             <button key={co.id} type="button" className="mj-press-sm" onClick={() => a.go('company', { id: co.id, ...(cat != null ? { act: cat } : {}) })}
               style={{ ...card, flex: 'none', width: 280, padding: 0, border: 'none', overflow: 'hidden', cursor: 'pointer', scrollSnapAlign: 'start', textAlign: 'start', fontFamily: 'var(--font-sans)', color: 'var(--text-primary)' }}>
               <div style={{ position: 'relative', height: 170, background: v.c100 }}>
-                <Img src={pic ? photo(pic.src, 560) : v.cover} />
+                <Img src={subPhoto(co) || (pic ? photo(pic.src, 560) : v.cover)} />
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px 14px' }}>
                 <Avatar name={v.name} src={v.logo} size={40} verified={v.verified} />
