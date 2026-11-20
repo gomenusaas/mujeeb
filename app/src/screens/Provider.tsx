@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { Avatar, Badge, BottomSheet, Button, Chip, EmptyState, Icon, IconButton, ListItem, OfferArt, SearchBar, SectionHeader, offerColor, type OfferArtData } from '../ds';
 import { DEFAULT_F, useApp, type CoSort, type Filters, type OfferSort, type SheetKey } from '../app/store';
 import { ContactGrid, HScroll, Img, MetaLine, preloadPhotos, useNear, albumMedia, callPhone, card, categoryServiceChips, companyGallery, companyPreview, covers, helpers, listingCompanies, myGov, openDirections, openWhatsApp, serviceImage, type Media } from '../app/view';
@@ -252,9 +252,13 @@ export function Listing() {
             <span style={{ font: 'var(--type-body-sm)', fontWeight: 600, opacity: 0.9 }}>{res.length + ' ' + t.results}</span>
           </div>
         </div>
-        <div style={{ position: 'relative', padding: '0 20px 20px' }}>
-          <SearchBar placeholder={t.search} value={f.q} onChange={e => set({ q: e.target.value })} onFilter={null} elevated />
-        </div>
+        {/* The search box only on the all-companies page (where the home page's search opens); category pages
+            narrow down with the chips instead. */}
+        {c == null
+          ? <div style={{ position: 'relative', padding: '0 20px 20px' }}>
+              <SearchBar placeholder={t.search} value={f.q} onChange={e => set({ q: e.target.value })} onFilter={null} elevated />
+            </div>
+          : <div style={{ height: 8 }} />}
       </div>
       {/* The category's common services as chips: one at a time (another chip switches to it; the selected one again
           clears it). The order comes from the sort button (see listingCompanies). */}
@@ -268,8 +272,6 @@ export function Listing() {
           })}
         </div>
       </div>
-      {/* Starts again from the first card when the chip changes. */}
-      <SponsoredStrip key={f.svcs[0] || ''} list={res} cat={c} sub={f.svcs[0]} />
       {!res.length && (
         <>
           <EmptyState icon="search-x" color={color} title={t.noResults} body={t.noResultsBody} />
@@ -277,8 +279,9 @@ export function Listing() {
         </>
       )}
       <div style={{ padding: '12px 20px 0', display: 'flex', flexDirection: 'column', gap: 14 }}>
-        {results.slice(0, shown).map(co => (
-          <div key={co.id} onClick={co.open} style={{ ...card, overflow: 'hidden', cursor: 'pointer' }}>
+        {results.slice(0, shown).map((co, k) => (
+          <Fragment key={co.id}>
+          <div onClick={co.open} style={{ ...card, overflow: 'hidden', cursor: 'pointer' }}>
             {co.work.photos.length
               ? <Mosaic photos={co.work.photos} n={co.work.n} bg={co.c100} onOpen={() => a.openPreview(co.id)}
                   // As the finger lands, start fetching the sheet's first photos (it then opens with them ready).
@@ -290,6 +293,10 @@ export function Listing() {
               )}
             <CompanyCardInfo v={co} />
           </div>
+          {/* The sponsored strip after the 3rd company (after the last when there are fewer), edge to edge. It starts
+              again from its first card when the chip changes. */}
+          {k === Math.min(2, results.length - 1) && <div style={{ margin: '0 -20px' }}><SponsoredStrip key={f.svcs[0] || ''} list={res} cat={c} sub={f.svcs[0]} /></div>}
+          </Fragment>
         ))}
         {/* Loads the next PAGE companies when this comes near the screen. */}
         {shown < results.length && <div ref={more} aria-hidden="true" style={{ height: 1 }} />}
@@ -357,9 +364,6 @@ export function OffersTab() {
     <div style={{ paddingBottom: 100, display: 'flex', flexDirection: 'column', gap: 24 }}>
       {/* The header on the page background: the count and the customer's area (tap to change it). */}
       <div style={{ padding: 'calc(var(--top-inset) + 8px) 20px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
-        <span style={{ flex: 'none', width: 52, height: 52, borderRadius: 'var(--radius-tile)', background: 'var(--brand-tint)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Icon name="tag" size={26} color="var(--brand)" />
-        </span>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
           <span style={{ font: 'var(--type-h1)' }}>{t.offers}</span>
           <span style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', font: 'var(--type-body-sm)', fontWeight: 600, color: 'var(--text-secondary)' }}>
@@ -563,7 +567,7 @@ function SponsoredStrip({ list, cat, sub }: { list: Company[]; cat: number | nul
     .slice(0, SPONSORED_MAX);
   if (!cos.length) return null;
   return (
-    <section aria-label={a.t.sponsoredT} style={{ marginTop: 16, padding: '16px 0 18px', background: 'color-mix(in oklch, var(--brand-tint-strong) 55%, var(--brand-tint))', display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <section aria-label={a.t.sponsoredT} style={{ padding: '16px 0 18px', background: 'color-mix(in oklch, var(--brand-tint-strong) 55%, var(--brand-tint))', display: 'flex', flexDirection: 'column', gap: 12 }}>
       <span style={{ padding: '0 20px', font: 'var(--type-h3)' }}>{a.t.sponsoredT}</span>
       <HScroll>
         {cos.map(co => {
@@ -1000,11 +1004,12 @@ export function CompanyPage() {
 function ServiceNavCard({ title, img, open, sub, icon }: { title: string; img: string; open: () => void; sub: string; icon?: string }) {
   return (
     <button type="button" className="mj-press-sm" onClick={open}
-      style={{ minWidth: 0, minHeight: 64, display: 'flex', alignItems: 'center', gap: 10, padding: 8, paddingInlineEnd: 12, border: '1px solid var(--border-default)', borderRadius: 12, background: 'var(--surface-card)', cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'start', scrollSnapAlign: 'start' }}>
-      <span style={{ position: 'relative', flex: 'none', width: 72, height: 50, borderRadius: 8, overflow: 'hidden', background: 'var(--neutral-100)', display: 'grid', placeItems: 'center' }}>
+      style={{ minWidth: 0, minHeight: 66, display: 'flex', alignItems: 'stretch', gap: 12, padding: 0, paddingInlineEnd: 12, border: '1px solid var(--border-default)', borderRadius: 12, overflow: 'hidden', background: 'var(--surface-card)', cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'start', scrollSnapAlign: 'start' }}>
+      {/* The photo runs to the card's edges (top, bottom and the start side). */}
+      <span style={{ position: 'relative', flex: 'none', width: 84, background: 'var(--neutral-100)', display: 'grid', placeItems: 'center' }}>
         {icon ? <Icon name={icon} size={22} color="var(--text-tertiary)" /> : <Img src={img} style={{ position: 'absolute', inset: 0 }} />}
       </span>
-      <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
+      <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 1, padding: '8px 0' }}>
         <span style={{ font: 'var(--type-body-sm)', fontWeight: 700, lineHeight: 1.35, color: 'var(--text-primary)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{title}</span>
         <span style={{ font: 'var(--type-caption)', color: icon ? 'var(--text-tertiary)' : 'var(--text-secondary)' }}>{sub}</span>
       </span>

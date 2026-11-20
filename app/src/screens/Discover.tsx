@@ -154,10 +154,6 @@ export function Categories() {
         <span style={{ font: 'var(--type-h1)' }}>{t.allCats}</span>
         <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }}>{h.num(catalog.cats.length)} {t.majorCats}</span>
       </div>
-      <button type="button" onClick={() => a.go('listing')} style={{ display: 'flex', alignItems: 'center', gap: 10, height: 52, paddingInline: 18, border: 'none', cursor: 'pointer', borderRadius: 'var(--radius-pill)', background: 'var(--surface-card)', boxShadow: 'inset 0 0 0 1.5px var(--border-default)', fontFamily: 'var(--font-sans)' }}>
-        <Icon name="search" size={20} color="var(--text-tertiary)" />
-        <span style={{ font: 'var(--type-body)', fontWeight: 500, color: 'var(--text-tertiary)' }}>{t.search}</span>
-      </button>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {catalog.cats.map(c => <CategoryCard key={c.i} label={h.cname(c.i)} art={c.art} icon={c.icon} color={c.color} onClick={() => a.go('listing', { cat: c.i })} />)}
       </div>

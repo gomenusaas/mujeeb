@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- A wall-mounted security camera in the soft 3D style of the other category icons (Fluent emoji). -->
+  <defs>
+    <linearGradient id="plate" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#C9CCD8"/><stop offset="1" stop-color="#8E93A6"/>
+    </linearGradient>
+    <linearGradient id="arm" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#B4B8C8"/><stop offset="1" stop-color="#7D8296"/>
+    </linearGradient>
+    <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/><stop offset="0.55" stop-color="#E4E6EE"/><stop offset="1" stop-color="#B9BDCC"/>
+    </linearGradient>
+    <linearGradient id="hood" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7C83A8"/><stop offset="1" stop-color="#4B5180"/>
+    </linearGradient>
+    <linearGradient id="face" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5B6290"/><stop offset="1" stop-color="#2E3356"/>
+    </linearGradient>
+    <radialGradient id="lens" cx="0.38" cy="0.35" r="0.75">
+      <stop offset="0" stop-color="#9FD3FF"/><stop offset="0.35" stop-color="#3E7BD8"/><stop offset="0.75" stop-color="#1B2550"/><stop offset="1" stop-color="#0E1330"/>
+    </radialGradient>
+  </defs>
+  <g transform="translate(0 16)">
+  <!-- Wall plate and arm -->
+  <rect x="186" y="118" width="44" height="96" rx="14" fill="url(#plate)"/>
+  <rect x="190" y="122" width="36" height="10" rx="5" fill="#E8EAF2" opacity="0.7"/>
+  <path d="M150 128 L196 156 L196 176 L142 146 Z" fill="url(#arm)"/>
+  <circle cx="147" cy="136" r="14" fill="url(#arm)"/>
+  <!-- Camera body, tilted down towards the start -->
+  <g transform="rotate(16 120 104)">
+    <rect x="40" y="70" width="168" height="68" rx="26" fill="url(#body)"/>
+    <rect x="52" y="74" width="144" height="12" rx="6" fill="#FFFFFF" opacity="0.8"/>
+    <path d="M30 66 Q30 56 42 56 L196 56 Q210 56 210 70 L210 74 L30 74 Z" fill="url(#hood)"/>
+    <rect x="30" y="68" width="40" height="74" rx="18" fill="url(#face)"/>
+    <circle cx="50" cy="105" r="22" fill="url(#lens)"/>
+    <circle cx="43" cy="97" r="6" fill="#FFFFFF" opacity="0.75"/>
+    <circle cx="186" cy="118" r="6" fill="#FF4D5E"/>
+    <circle cx="184.5" cy="116.5" r="2" fill="#FFC2C8"/>
+  </g>
+  </g>
+</svg>

@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- A wooden cupboard in the soft 3D style of the other category icons (Fluent emoji). -->
+  <defs>
+    <linearGradient id="body" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#E8A05E"/><stop offset="1" stop-color="#B8692F"/>
+    </linearGradient>
+    <linearGradient id="crown" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F7C287"/><stop offset="1" stop-color="#D98B47"/>
+    </linearGradient>
+    <linearGradient id="door" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FBCB92"/><stop offset="1" stop-color="#E39A57"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#E9A462"/><stop offset="1" stop-color="#F5BC7E"/>
+    </linearGradient>
+    <radialGradient id="knob" cx="0.35" cy="0.3" r="0.8">
+      <stop offset="0" stop-color="#FFF1B8"/><stop offset="0.45" stop-color="#FFC93C"/><stop offset="1" stop-color="#C98A12"/>
+    </radialGradient>
+    <linearGradient id="leg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#A65E28"/><stop offset="1" stop-color="#7E4419"/>
+    </linearGradient>
+  </defs>
+  <rect x="62" y="214" width="20" height="22" rx="6" fill="url(#leg)"/>
+  <rect x="174" y="214" width="20" height="22" rx="6" fill="url(#leg)"/>
+  <rect x="44" y="34" width="168" height="190" rx="20" fill="url(#body)"/>
+  <rect x="36" y="20" width="184" height="28" rx="12" fill="url(#crown)"/>
+  <rect x="44" y="20" width="168" height="8" rx="4" fill="#FFE0B8" opacity="0.6"/>
+  <rect x="58" y="58" width="66" height="150" rx="12" fill="url(#door)"/>
+  <rect x="132" y="58" width="66" height="150" rx="12" fill="url(#door)"/>
+  <rect x="70" y="72" width="42" height="56" rx="8" fill="url(#panel)"/>
+  <rect x="70" y="138" width="42" height="56" rx="8" fill="url(#panel)"/>
+  <rect x="144" y="72" width="42" height="56" rx="8" fill="url(#panel)"/>
+  <rect x="144" y="138" width="42" height="56" rx="8" fill="url(#panel)"/>
+  <rect x="58" y="58" width="66" height="10" rx="5" fill="#FFE3C2" opacity="0.55"/>
+  <rect x="132" y="58" width="66" height="10" rx="5" fill="#FFE3C2" opacity="0.55"/>
+  <circle cx="116" cy="133" r="8" fill="url(#knob)"/>
+  <circle cx="140" cy="133" r="8" fill="url(#knob)"/>
+</svg>

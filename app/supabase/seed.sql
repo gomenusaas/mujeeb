@@ -14,10 +14,10 @@ insert into public.categories (id, name_ar, name_en, short_ar, short_en, icon, c
   (3, 'السباكة وشبكات المياه', 'Plumbing & Water Systems', 'سباكة', 'Plumbing', 'droplets', 'sky', 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Shower/3D/shower_3d.png', 3),
   (4, 'التصميم الداخلي والديكور', 'Interior Design & Decoration', 'تصميم داخلي', 'Interiors', 'lamp', 'violet', 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Couch%20and%20lamp/3D/couch_and_lamp_3d.png', 4),
   (5, 'الحدادة والألمنيوم والزجاج', 'Metal, Aluminum & Glass Works', 'حدادة وألمنيوم', 'Metal & glass', 'frame', 'steel', 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Window/3D/window_3d.png', 5),
-  (6, 'الكاميرات والأنظمة الأمنية والمراقبة', 'Cameras, Security & Surveillance', 'كاميرات ومراقبة', 'Security & CCTV', 'cctv', 'indigo', 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Video%20camera/3D/video_camera_3d.png', 6),
+  (6, 'الكاميرات والأنظمة الأمنية والمراقبة', 'Cameras, Security & Surveillance', 'كاميرات ومراقبة', 'Security & CCTV', 'cctv', 'indigo', '/art/cctv.svg', 6),
   (7, 'أنظمة الحريق والإنذار', 'Fire & Alarm Systems', 'حريق وإنذار', 'Fire & alarm', 'fire-extinguisher', 'ruby', 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Fire%20extinguisher/3D/fire_extinguisher_3d.png', 7),
   (8, 'تصميم الحدائق', 'Garden Design', 'حدائق', 'Gardens', 'trees', 'green', 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Potted%20plant/3D/potted_plant_3d.png', 8),
-  (9, 'المطابخ والخزانات والأبواب', 'Kitchens, Cabinets & Doors', 'مطابخ', 'Kitchens', 'chef-hat', 'wood', 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Cooking/3D/cooking_3d.png', 9);
+  (9, 'المطابخ والخزانات والأبواب', 'Kitchens, Cabinets & Doors', 'مطابخ', 'Kitchens', 'chef-hat', 'wood', '/art/cupboard.svg', 9);
 insert into public.working_hours (id, days_ar, days_en, hours) values
   (0, 'السبت – الخميس', 'Sat – Thu', '8:00 – 18:00'),
   (1, 'الجمعة', 'Friday', null);
