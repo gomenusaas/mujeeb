@@ -321,7 +321,7 @@ function OfferItem({ x: { o, co }, cat }: { x: ListedOffer; cat?: number | null 
 }
 
 /**
- * The «العروض» tab, in sections like a store's deals page: a purple header (count and the customer's area),
+ * The «العروض» tab, in sections like a store's deals page: a header (count and the customer's area),
  * «عروض مميزة» (a big swipeable advert per sponsored company; DEMO sponsors, a paid spot later), «تنتهي قريبًا» and
  * «في منطقتك» (sideways strips of smaller adverts, one per company), then «كل العروض»: category chips, the sort
  * button and every offer as a wide advert with its company line, PAGE at a time.
@@ -355,25 +355,21 @@ export function OffersTab() {
   const title = (x: string) => <div style={{ padding: '0 20px' }}><SectionHeader title={x} action={null} /></div>;
   return (
     <div style={{ paddingBottom: 100, display: 'flex', flexDirection: 'column', gap: 24 }}>
-      {/* The header: purple like a category page's, with the count and the customer's area (tap to change it). */}
-      <div style={{ position: 'relative', overflow: 'hidden', padding: 'calc(var(--top-inset) + 12px) 20px 22px', background: 'var(--brand)', borderRadius: '0 0 28px 28px', color: '#fff' }}>
-        <span style={{ position: 'absolute', insetInlineEnd: -50, top: -40, width: 200, height: 200, borderRadius: '50%', background: 'oklch(1 0 0 / 0.14)' }} />
-        <span style={{ position: 'absolute', insetInlineStart: -30, bottom: -60, width: 140, height: 140, borderRadius: '50%', background: 'oklch(1 0 0 / 0.08)' }} />
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <span style={{ flex: 'none', width: 52, height: 52, borderRadius: 'var(--radius-tile)', background: 'oklch(1 0 0 / 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Icon name="tag" size={26} color="#fff" />
+      {/* The header on the page background: the count and the customer's area (tap to change it). */}
+      <div style={{ padding: 'calc(var(--top-inset) + 8px) 20px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
+        <span style={{ flex: 'none', width: 52, height: 52, borderRadius: 'var(--radius-tile)', background: 'var(--brand-tint)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name="tag" size={26} color="var(--brand)" />
+        </span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+          <span style={{ font: 'var(--type-h1)' }}>{t.offers}</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', font: 'var(--type-body-sm)', fontWeight: 600, color: 'var(--text-secondary)' }}>
+            <span>{countOf(a, all.length, OFFER_W)}</span>
+            <span aria-hidden="true" style={{ opacity: 0.6 }}>·</span>
+            <button type="button" aria-haspopup="dialog" onClick={() => a.setSheet('location')}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 3, padding: 0, border: 'none', background: 'none', cursor: 'pointer', font: 'inherit', fontFamily: 'var(--font-sans)', color: 'var(--text-primary)' }}>
+              <Icon name="map-pin" size={14} color="var(--brand)" />{a.locLabel}<Icon name="chevron-down" size={14} color="var(--text-secondary)" />
+            </button>
           </span>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-            <span style={{ font: 'var(--type-h1)' }}>{t.offers}</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', font: 'var(--type-body-sm)', fontWeight: 600 }}>
-              <span style={{ opacity: 0.9 }}>{countOf(a, all.length, OFFER_W)}</span>
-              <span aria-hidden="true" style={{ opacity: 0.6 }}>·</span>
-              <button type="button" aria-haspopup="dialog" onClick={() => a.setSheet('location')}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 3, padding: 0, border: 'none', background: 'none', cursor: 'pointer', font: 'inherit', fontFamily: 'var(--font-sans)', color: '#fff' }}>
-                <Icon name="map-pin" size={14} />{a.locLabel}<Icon name="chevron-down" size={14} />
-              </button>
-            </span>
-          </div>
         </div>
       </div>
 

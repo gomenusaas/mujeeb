@@ -118,7 +118,7 @@ function Phone() {
   return (
     <div className="mj-root">
       <div className="mj-frame" dir={ar ? 'rtl' : 'ltr'} lang={lang}>
-        <div className="mj-status" dir="ltr" style={{ color: top.s === 'home' || top.s === 'offers' || overlay ? '#fff' : 'var(--text-primary)' }}>
+        <div className="mj-status" dir="ltr" style={{ color: top.s === 'home' || overlay ? '#fff' : 'var(--text-primary)' }}>
           <span>9:41</span>
           <span style={{ display: 'flex', gap: 6 }}><Icon name="signal" size={16} /><Icon name="wifi" size={16} /><Icon name="battery-full" size={18} /></span>
         </div>
