@@ -286,7 +286,7 @@ export function Listing() {
         </div>
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 14, padding: '6px 20px 18px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-            <span style={{ font: 'var(--type-h1)' }}>{title}</span>
+            <span style={{ font: 'var(--type-h2)' }}>{title}</span>
             <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', opacity: 0.9 }}>{res.length + ' ' + t.results}</span>
           </div>
         </div>
