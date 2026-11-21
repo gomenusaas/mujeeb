@@ -417,14 +417,14 @@ export function LocationBar({ a, light, style }: { a: App; light?: boolean; styl
   return (
     <button type="button" aria-haspopup="dialog" onClick={() => a.setSheet('location')}
       style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, padding: 0, border: 'none', background: 'none', color: light ? '#fff' : 'var(--text-primary)', cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'start', ...style }}>
-      <Icon name="map-pin" size={16} color={light ? '#fff' : 'var(--brand)'} />
+      <Icon name="map-pin" size={14} color={light ? '#fff' : 'var(--brand)'} />
       {/* Label (medium) and area (semibold) in one text run, so they share a baseline and colour. */}
-      <span style={{ minWidth: 0, font: 'var(--type-title)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+      <span style={{ minWidth: 0, font: 'var(--fw-regular) 14px/20px var(--font-sans)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
         <span style={{ fontWeight: 'var(--fw-medium)' }}>{a.t.serviceLoc}</span>
-        <span aria-hidden="true" style={{ display: 'inline-block', width: 1, height: '0.85em', margin: '0 8px', verticalAlign: '-0.1em', background: light ? 'oklch(1 0 0 / 0.5)' : 'var(--border-default)' }} />
+        <span aria-hidden="true" style={{ display: 'inline-block', width: 1, height: '0.85em', margin: '0 7px', verticalAlign: '-0.1em', background: light ? 'oklch(1 0 0 / 0.5)' : 'var(--border-default)' }} />
         <span style={{ fontWeight: 'var(--fw-semibold)' }}>{a.locLabel}</span>
       </span>
-      <Icon name="chevron-down" size={16} color={light ? '#fff' : 'var(--text-secondary)'} />
+      <Icon name="chevron-down" size={14} color={light ? '#fff' : 'var(--text-secondary)'} />
     </button>
   );
 }
