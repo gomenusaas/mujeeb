@@ -17,6 +17,8 @@
      adverts' big type (extrabold) stays bold. */
   --font-sans: 'Readex Pro', ui-sans-serif, system-ui, sans-serif;
   --fw-semibold: 500; --fw-bold: 600; --fw-extrabold: 700;
+  /* Filter chips (service chips on category pages, Explore and Offers) in regular weight. */
+  --chip-weight: 400;
   --type-display: var(--fw-bold) var(--fs-display)/var(--lh-display) var(--font-sans);
   --type-h1: var(--fw-bold) var(--fs-h1)/var(--lh-h1) var(--font-sans);
 

@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Avatar, BottomSheet, Button, Chip, EmptyState, Icon, IconButton, SectionHeader } from '../ds';
 import { useApp } from '../app/store';
-import { HScroll, Img, LocationBar, card, exploreMedia, helpers, myGov, servesArea } from '../app/view';
+import { ColorHeader, HScroll, Img, LocationBar, albumMedia, card, exploreMedia, helpers, myGov, servesArea } from '../app/view';
 import { ALL_OMAN } from '../data/oman';
 import { photo } from '../data/api';
+import type { Album } from '../data/types';
 import { StoryCircles } from './Stories';
 import { HomeOffers, Masonry, PRJ_W, countOf } from './Provider';
 
@@ -174,14 +175,27 @@ export function Explore() {
   // A chip for every category with published projects in the service location.
   const chips = catalog.cats.map(c => c.i).filter(i => catalog.albums.some(al => al.cat === i && servesArea(a, al.co)));
   const cat = exCat < 0 ? undefined : exCat;
-  const items = exploreMedia(a, cat);
+  // The search box in the header narrows the photos to projects whose title, place, company or service matches.
+  const [q, setQ] = useState('');
+  const n = q.trim().toLowerCase();
+  const match = (al: Album) => {
+    const co = a.idx.co.get(al.co);
+    return [al.ar, al.en, al.pAr, al.pEn, co?.ar, co?.en, h.cname(al.cat)].some(v => (v || '').toLowerCase().includes(n));
+  };
+  const items = exploreMedia(a, cat).filter(m => !n || (m.al && match(m.al)));
+  const projects = new Set(items.map(m => m.al?.id)).size;
+  // A tapped photo opens in the Explore viewer; while searching, in its own project's viewer (the Explore viewer
+  // doesn't know about the search, so its numbering would point at another photo).
+  const open = (k: number) => {
+    const m = items[k];
+    if (n && m.al) a.go('photo', { src: 'album', id: m.al.id, i: Math.max(0, albumMedia(m.al).findIndex(x => x.src === m.src)) });
+    else a.go('photo', { src: 'explore', i: k, ...(cat != null ? { cat } : {}) });
+  };
   return (
-    <div style={{ padding: 'calc(var(--top-inset) + 8px) 0 100px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {/* The app's service location, at the very top (only work from companies covering it). */}
-        <LocationBar a={a} style={{ alignSelf: 'flex-start', maxWidth: '100%' }} />
-        <span style={{ font: 'var(--type-h2)' }}>{t.exploreTitle}</span>
-      </div>
+    <div style={{ minHeight: '100%', padding: '0 0 100px', display: 'flex', flexDirection: 'column', gap: 16, background: 'var(--surface-card)' }}>
+      {/* The coloured header (like the category pages): search, the service location (only work from companies
+          covering it), the title and how many projects. */}
+      <ColorHeader a={a} title={t.exploreTitle} count={countOf(a, projects, PRJ_W)} q={q} onQ={setQ} placeholder={t.searchWork} />
       <div className="mj-s" style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '0 20px', scrollbarWidth: 'none' }}>
         <Chip selected={exCat < 0} onClick={() => setExCat(-1)}>{t.all}</Chip>
         {chips.map(i => <Chip key={i} selected={exCat === i} onClick={() => setExCat(i)}>{h.cshort(i)}</Chip>)}
@@ -193,7 +207,7 @@ export function Explore() {
           action={myGov(a) ? <Button variant="secondary" iconLeft="globe" onClick={() => a.setWilayat(ALL_OMAN)}>{t.showAllOman}</Button> : undefined} />
       )}
       <div style={{ padding: '0 6px' }}>
-        <Masonry key={exCat} cols={3} items={items} onOpen={k => a.go('photo', { src: 'explore', i: k, ...(cat != null ? { cat } : {}) })} />
+        <Masonry key={exCat + '|' + n} cols={3} items={items} onOpen={open} />
       </div>
     </div>
   );

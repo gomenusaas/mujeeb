@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { Avatar, Badge, BottomSheet, Button, Chip, EmptyState, Icon, IconButton, ListItem, OfferArt, SectionHeader, offerColor, type OfferArtData } from '../ds';
 import { DEFAULT_F, useApp, type CoSort, type Filters, type OfferSort, type SheetKey } from '../app/store';
-import { catOf, ContactGrid, HScroll, Img, MetaLine, preloadPhotos, useNear, albumMedia, callPhone, card, categoryServiceChips, companyGallery, companyPreview, covers, helpers, listingCompanies, LocationBar, myGov, servesArea, openDirections, openWhatsApp, serviceImage, type Media } from '../app/view';
+import { catOf, ColorHeader, ContactGrid, HScroll, Img, MetaLine, preloadPhotos, useNear, albumMedia, callPhone, card, categoryServiceChips, companyGallery, companyPreview, covers, helpers, listingCompanies, myGov, servesArea, openDirections, openWhatsApp, serviceImage, type Media } from '../app/view';
 import { logoUrl, photo, remote } from '../data/api';
 import { ALL_OMAN } from '../data/oman';
 import { demoOfferLook, liveOffersOf, offerAge, offerKind, offerServices } from '../data/offers';
@@ -277,27 +277,10 @@ export function Listing() {
           {chipStrip(false)}
         </div>
       </div>
-      <div ref={headRef} style={{ position: 'relative', overflow: 'hidden', padding: 'var(--top-inset) 0 4px', background: 'var(--cat-' + color + '-600)', color: '#fff' }}>
-        <span style={{ position: 'absolute', insetInlineEnd: -50, top: -40, width: 200, height: 200, borderRadius: '50%', background: 'oklch(1 0 0 / 0.14)' }} />
-        {/* Top row: Back, and a small search box half the width at the other end (searches this category only; every company on the
-            all-companies page). */}
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px' }}>
-          <IconButton icon="arrow-left" variant="glass" size={34} onClick={a.back} label="Back" />
-          <label style={{ flex: '0 1 50%', minWidth: 0, marginInlineStart: 'auto', display: 'flex', alignItems: 'center', gap: 8, height: 34, paddingInline: 12, borderRadius: 'var(--radius-pill)', background: 'var(--surface-card)', color: 'var(--text-primary)', cursor: 'text' }}>
-            <Icon name="search" size={16} color="var(--text-tertiary)" />
-            <input type="search" value={f.q} onChange={e => set({ q: e.target.value })} placeholder={t.searchCos} aria-label={t.searchCos}
-              style={{ flex: 1, minWidth: 0, height: '100%', padding: 0, border: 'none', outline: 'none', background: 'transparent', font: 'var(--fw-regular) 12px/16px var(--font-sans)', color: 'var(--text-primary)' }} />
-          </label>
-        </div>
-        {/* The app's service location (it filters the list: only companies covering it), then the title. */}
-        <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 10, padding: '10px 20px 20px' }}>
-          <LocationBar a={a} light style={{ alignSelf: 'flex-start' }} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-            <span style={{ font: 'var(--type-h2)' }}>{title}</span>
-            <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', opacity: 0.9 }}>{res.length + ' ' + t.results}</span>
-          </div>
-        </div>
-      </div>
+      {/* Back and a small search box (this category only; every company on the all-companies page), the service
+          location, then the title and how many companies. */}
+      <ColorHeader a={a} boxRef={headRef} back color={'var(--cat-' + color + '-600)'} title={title} count={res.length + ' ' + t.results}
+        q={f.q} onQ={v => set({ q: v })} placeholder={t.searchCos} />
       {/* The category's common services as chips: one at a time (another chip switches to it; the selected one again
           clears it), after the sort button; the order comes from it (see listingCompanies). */}
       <div style={{ marginTop: 16 }}>{chipStrip(true)}</div>
@@ -372,7 +355,11 @@ export function OffersTab() {
   const h = helpers(a);
   const g = myGov(a);
   // Only offers from companies covering the service location (all of them for all of Oman).
-  const all = catalog.companies.filter(co => servesArea(a, co.id)).flatMap(co => companyOffers(a, co).map(o => ({ o, co, near: covers(co, g) })));
+  // The search box in the header narrows the whole page (offer text, service and company names).
+  const [q, setQ] = useState('');
+  const n = q.trim().toLowerCase();
+  const hit = (x: ListedOffer) => !n || [x.o.title, x.o.kicker, x.o.big, x.o.on, x.o.svc.ar, x.o.svc.en, x.co.ar, x.co.en].some(v => (v || '').toLowerCase().includes(n));
+  const all = catalog.companies.filter(co => servesArea(a, co.id)).flatMap(co => companyOffers(a, co).map(o => ({ o, co, near: covers(co, g) }))).filter(hit);
   const chips = catalog.cats.map(x => x.i).filter(i => all.some(x => x.o.svc.cat === i));
   const cat = ofCat >= 0 && chips.includes(ofCat) ? ofCat : null;
   const offers = sortOffers(all.filter(x => cat == null || x.o.svc.cat === cat), ofSort);
@@ -383,7 +370,7 @@ export function OffersTab() {
     .sort((x, y) => Number(y.near) - Number(x.near) || sponsoredTurn(x.co.id, day) - sponsoredTurn(y.co.id, day)).slice(0, 5);
   const ending = onePerCo(sortOffers(all, 'soon').filter(x => x.o.days <= ENDING_DAYS)).slice(0, 10);
   const [shown, setShown] = useState(PAGE);
-  useEffect(() => setShown(PAGE), [cat, ofSort]);
+  useEffect(() => setShown(PAGE), [cat, ofSort, n]);
   const more = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = more.current;
@@ -394,17 +381,12 @@ export function OffersTab() {
   }, [shown, offers.length]);
   const title = (x: string) => <div style={{ padding: '0 20px' }}><SectionHeader title={x} action={null} /></div>;
   return (
-    <div style={{ paddingBottom: 100, display: 'flex', flexDirection: 'column', gap: 24 }}>
-      {/* The app's service location at the very top, then the title and how many offers there are in it. */}
-      <div style={{ padding: 'calc(var(--top-inset) + 8px) 20px 0', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <LocationBar a={a} style={{ alignSelf: 'flex-start', maxWidth: '100%' }} />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <span style={{ font: 'var(--type-h2)' }}>{t.offers}</span>
-          <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-secondary)' }}>{countOf(a, all.length, OFFER_W)}</span>
-        </div>
-      </div>
+    <div style={{ minHeight: '100%', paddingBottom: 100, display: 'flex', flexDirection: 'column', gap: 24, background: 'var(--surface-card)' }}>
+      {/* The page is white all the way down. The header (like the category pages): search, the service location, the title and how many offers. */}
+      <ColorHeader a={a} title={t.offers} count={countOf(a, all.length, OFFER_W)} q={q} onQ={setQ} placeholder={t.searchOffers} />
       {/* Nothing in this area: say so, and offer all of Oman. */}
-      {!all.length && g && (
+      {!all.length && n && <EmptyState icon="search-x" title={t.noResults} body={t.noResultsBody} action={<Button variant="secondary" onClick={() => setQ('')}>{t.clear}</Button>} />}
+      {!all.length && !n && g && (
         <EmptyState icon="badge-percent" title={t.noOffersArea} body={t.noOffersAreaBody}
           action={<Button variant="secondary" iconLeft="globe" onClick={() => a.setWilayat(ALL_OMAN)}>{t.showAllOman}</Button>} />
       )}

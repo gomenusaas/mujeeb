@@ -109,7 +109,7 @@ export function Chip({ children, icon, selected, onClick, trailingIcon, size = '
   const h = size === 'sm' ? 32 : 38;
   return (
     <button type="button" onClick={onClick}
-      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flex: 'none', height: h, padding: '0 ' + (size === 'sm' ? 12 : 14) + 'px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontWeight: 'var(--fw-semibold)', fontSize: size === 'sm' ? 13 : 14, whiteSpace: 'nowrap', transition: 'background var(--dur-base) var(--ease-out), color var(--dur-base)', background: selected ? 'var(--neutral-900)' : 'var(--surface-card)', color: selected ? 'var(--neutral-0)' : 'var(--text-primary)', boxShadow: selected ? 'none' : 'inset 0 0 0 1px var(--border-default)', ...style }}>
+      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flex: 'none', height: h, padding: '0 ' + (size === 'sm' ? 12 : 14) + 'px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontWeight: 'var(--chip-weight, var(--fw-semibold))', fontSize: size === 'sm' ? 13 : 14, whiteSpace: 'nowrap', transition: 'background var(--dur-base) var(--ease-out), color var(--dur-base)', background: selected ? 'var(--neutral-900)' : 'var(--surface-card)', color: selected ? 'var(--neutral-0)' : 'var(--text-primary)', boxShadow: selected ? 'none' : 'inset 0 0 0 1px var(--border-default)', ...style }}>
       {icon && <Icon name={icon} size={16} />}{children}{trailingIcon && <Icon name={trailingIcon} size={14} />}
     </button>
   );

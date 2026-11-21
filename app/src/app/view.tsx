@@ -1,5 +1,5 @@
-import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
-import { AppBar, Icon } from '../ds';
+import { useEffect, useState, type CSSProperties, type ReactNode, type Ref } from 'react';
+import { AppBar, Icon, IconButton } from '../ds';
 import { logoUrl, photo, remote } from '../data/api';
 import type { Album, Branch, Catalog, Category, Company, GovId, Service } from '../data/types';
 import type { App } from './store';
@@ -418,13 +418,64 @@ export function LocationBar({ a, light, style }: { a: App; light?: boolean; styl
     <button type="button" aria-haspopup="dialog" onClick={() => a.setSheet('location')}
       style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, padding: 0, border: 'none', background: 'none', color: light ? '#fff' : 'var(--text-primary)', cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'start', ...style }}>
       <Icon name="map-pin" size={14} color={light ? '#fff' : 'var(--brand)'} />
-      {/* Label (medium) and area (semibold) in one text run, so they share a baseline and colour. */}
+      {/* Label and area (both regular) in one text run, so they share a baseline and colour. */}
       <span style={{ minWidth: 0, font: 'var(--fw-regular) 14px/20px var(--font-sans)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-        <span style={{ fontWeight: 'var(--fw-medium)' }}>{a.t.serviceLoc}</span>
+        <span style={{ fontWeight: 'var(--fw-regular)' }}>{a.t.serviceLoc}</span>
         <span aria-hidden="true" style={{ display: 'inline-block', width: 1, height: '0.85em', margin: '0 7px', verticalAlign: '-0.1em', background: light ? 'oklch(1 0 0 / 0.5)' : 'var(--border-default)' }} />
-        <span style={{ fontWeight: 'var(--fw-semibold)' }}>{a.locLabel}</span>
+        <span style={{ fontWeight: 'var(--fw-regular)' }}>{a.locLabel}</span>
       </span>
       <Icon name="chevron-down" size={14} color={light ? '#fff' : 'var(--text-secondary)'} />
     </button>
+  );
+}
+
+/**
+ * The coloured header of the category, Explore and Offers pages: a top row with Back (pages opened from another
+ * page) and a small search box at the other end (half the width); the service location; the page title and a count.
+ * `color`: the header colour (a category's); none = a white header, title first (Explore, Offers). `boxRef`: the header
+ * element (the category page watches it to show its slim header).
+ */
+export function ColorHeader({ a, title, count, color, back, q, onQ, placeholder, boxRef }: {
+  a: App; title: ReactNode; count?: ReactNode; color?: string; back?: boolean; q: string; onQ: (v: string) => void;
+  placeholder: string; boxRef?: Ref<HTMLDivElement>;
+}) {
+  const light = !!color;
+  // White pages (Explore, Offers): title first. The location, the title and count, then a full-width search field.
+  if (!light) {
+    return (
+      <div ref={boxRef} style={{ padding: 'calc(var(--top-inset) + 8px) 20px 14px', display: 'flex', flexDirection: 'column', gap: 10, background: 'var(--surface-card)', color: 'var(--text-primary)' }}>
+        <LocationBar a={a} style={{ alignSelf: 'flex-start', maxWidth: '100%' }} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+          <span style={{ font: 'var(--type-h2)' }}>{title}</span>
+          {count != null && <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-secondary)' }}>{count}</span>}
+        </div>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, height: 40, marginTop: 4, paddingInline: 14, borderRadius: 'var(--radius-pill)', background: 'var(--surface-card)', boxShadow: 'inset 0 0 0 1px var(--border-default)', cursor: 'text' }}>
+          <Icon name="search" size={17} color="var(--text-tertiary)" />
+          <input type="search" value={q} onChange={e => onQ(e.target.value)} placeholder={placeholder} aria-label={placeholder}
+            style={{ flex: 1, minWidth: 0, height: '100%', padding: 0, border: 'none', outline: 'none', background: 'transparent', font: 'var(--fw-regular) 14px/20px var(--font-sans)', color: 'var(--text-primary)' }} />
+        </label>
+      </div>
+    );
+  }
+  return (
+    <div ref={boxRef} style={{ position: 'relative', overflow: 'hidden', padding: 'var(--top-inset) 0 4px', background: color, color: '#fff' }}>
+      <span style={{ position: 'absolute', insetInlineEnd: -50, top: -40, width: 200, height: 200, borderRadius: '50%', background: 'oklch(1 0 0 / 0.14)' }} />
+      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 10, minHeight: 34, padding: '8px 16px' }}>
+        {back && <IconButton icon="arrow-left" variant="glass" size={34} onClick={a.back} label="Back" />}
+        <label style={{ flex: '0 1 50%', minWidth: 0, marginInlineStart: 'auto', display: 'flex', alignItems: 'center', gap: 8, height: 34, paddingInline: 12, borderRadius: 'var(--radius-pill)', background: 'var(--surface-card)', color: 'var(--text-primary)', cursor: 'text' }}>
+          <Icon name="search" size={16} color="var(--text-tertiary)" />
+          <input type="search" value={q} onChange={e => onQ(e.target.value)} placeholder={placeholder} aria-label={placeholder}
+            style={{ flex: 1, minWidth: 0, height: '100%', padding: 0, border: 'none', outline: 'none', background: 'transparent', font: 'var(--fw-regular) 12px/16px var(--font-sans)', color: 'var(--text-primary)' }} />
+        </label>
+      </div>
+      {/* The app's service location (it filters the page), then the title. */}
+      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 10, padding: '10px 20px 20px' }}>
+        <LocationBar a={a} light style={{ alignSelf: 'flex-start', maxWidth: '100%' }} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+          <span style={{ font: 'var(--type-h2)' }}>{title}</span>
+          {count != null && <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', opacity: 0.9 }}>{count}</span>}
+        </div>
+      </div>
+    </div>
   );
 }
