@@ -14,7 +14,7 @@ export const CUSTOMER_URL = (import.meta.env.VITE_CUSTOMER_URL as string | undef
 /** Where company accounts' password-reset links go. */
 export const PROVIDER_URL = (import.meta.env.VITE_PROVIDER_URL as string | undefined) || 'https://mujeeb-provider.vercel.app';
 
-export interface Category { id: number; name_ar: string; name_en: string; color: string; icon: string }
+export interface Category { id: number; name_ar: string; name_en: string; color: string; icon: string; art_url: string | null }
 export interface Location { id: string; name_ar: string; name_en: string }
 export interface Refs { categories: Category[]; locations: Location[] }
 
@@ -62,6 +62,31 @@ async function rpc<T>(fn: string, args?: Record<string, unknown>): Promise<T> {
   return data as T;
 }
 
+/** A tile in the customer app's home «الخدمات» grid: the category page it opens and its name there. */
+export interface HomeTile { id: number; category_id: number; label_ar: string; label_en: string; position: number; icon: string | null }
+
+/** The flat icons the customer app ships (public/art/flat/<name>.svg) that a home tile can use. */
+export const TILE_ICONS = [
+  'construction', 'snowflake', 'bulb', 'shower', 'couch', 'window', 'cctv', 'extinguisher', 'plant', 'cupboard',
+  'hammer_and_wrench', 'toolbox', 'hammer', 'wrench', 'screwdriver', 'hammer_and_pick', 'carpentry_saw', 'ladder', 'gear',
+  'house', 'hut', 'office_building', 'classical_building', 'brick', 'wood', 'door', 'key', 'locked',
+  'bed', 'chair', 'bathtub', 'toilet', 'droplet', 'water_wave', 'fountain',
+  'high_voltage', 'electric_plug', 'battery', 'sun', 'thermometer', 'fire', 'bell', 'video_camera', 'satellite_antenna', 'television',
+  'paintbrush', 'broom', 'sponge', 'soap', 'sparkles', 'seedling', 'deciduous_tree', 'cockroach',
+];
+/** Where a tile icon is served from (the customer app). */
+export const tileIconUrl = (name: string) => CUSTOMER_URL + '/art/flat/' + name + '.svg';
+/** The flat icon the customer app shows for a category's own art (see flatArt in its Discover screen). */
+export function categoryIcon(art: string | null): string | null {
+  const stem = (art || '').split('/').pop()?.replace(/\.(png|svg)$/, '') || '';
+  const map: Record<string, string> = {
+    building_construction_3d: 'construction', snowflake_3d: 'snowflake', light_bulb_3d: 'bulb', shower_3d: 'shower',
+    couch_and_lamp_3d: 'couch', window_3d: 'window', fire_extinguisher_3d: 'extinguisher', potted_plant_3d: 'plant',
+    cctv: 'cctv', cupboard: 'cupboard',
+  };
+  return map[stem] || null;
+}
+
 /** A sub-service in a category's fixed list (hidden ones included for the admin). */
 export interface SubService { id: string; category_id: number; name_ar: string; name_en: string; position: number; is_active: boolean }
 /** A sub-service a company typed itself, with how many services use it. */
@@ -106,6 +131,16 @@ export const api = {
     else await ok(client().from('sub_services').insert({ id: x.category_id + '-' + newId('s'), category_id: x.category_id, name_ar: x.name_ar, name_en: x.name_en, is_active: x.is_active, position: x.position ?? 999 }));
   },
   deleteSub: async (id: string) => { await ok(client().from('sub_services').delete().eq('id', id)); },
+  /* ── Home services grid (table home_services; only platform admins may write) ── */
+  homeTiles: async () => (await ok(client().from('home_services').select('id, category_id, label_ar, label_en, position, icon').order('position'))) as HomeTile[],
+  async saveTile(x: { id?: number; category_id: number; label_ar: string; label_en: string; icon: string | null; position?: number }) {
+    if (x.id) await ok(client().from('home_services').update({ category_id: x.category_id, label_ar: x.label_ar, label_en: x.label_en, icon: x.icon }).eq('id', x.id));
+    else await ok(client().from('home_services').insert({ category_id: x.category_id, label_ar: x.label_ar, label_en: x.label_en, icon: x.icon, position: x.position ?? 999 }));
+  },
+  deleteTile: async (id: number) => { await ok(client().from('home_services').delete().eq('id', id)); },
+  async reorderTiles(ids: number[]) {
+    await Promise.all(ids.map((id, k) => ok(client().from('home_services').update({ position: k }).eq('id', id))));
+  },
   /** Saves a new order: each id gets its index as its position. */
   async reorder(table: 'governorates' | 'wilayats' | 'sub_services', ids: string[]) {
     await Promise.all(ids.map((id, k) => ok(client().from(table).update({ position: k }).eq('id', id))));
@@ -134,7 +169,7 @@ export const api = {
   isAdmin: () => rpc<boolean>('is_platform_admin'),
   async refs(): Promise<Refs> {
     const [c, l] = await Promise.all([
-      client().from('categories').select('id, name_ar, name_en, color, icon').order('sort_order'),
+      client().from('categories').select('id, name_ar, name_en, color, icon, art_url').order('sort_order'),
       client().from('locations').select('id, name_ar, name_en').order('sort_order'),
     ]);
     return { categories: (c.data || []) as Category[], locations: ((l.data || []) as Location[]).filter(x => x.id !== 'all') };

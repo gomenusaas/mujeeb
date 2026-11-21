@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient, type User } from '@supabase/supabase-js';
 import type { Governorate } from './oman';
-import type { Album, Branch, Catalog, Category, Company, CustomerSeed, GovId, LiveOffer, Pair, Service, Story, SubService, WeekHours } from './types';
+import type { Album, Branch, Catalog, Category, Company, CustomerSeed, GovId, HomeTile, LiveOffer, Pair, Service, Story, SubService, WeekHours } from './types';
 
 const URL_ = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
@@ -104,10 +104,14 @@ export async function loadCatalog(): Promise<Catalog> {
     id: g.id, ar: g.name_ar, en: g.name_en, region: g.region,
     wilayats: ((wRows || []) as Row[]).filter(w => w.governorate_id === g.id).map(w => ({ id: w.id, ar: w.name_ar, en: w.name_en })),
   })).filter(g => g.wilayats.length);
+  // The home services grid as the platform admin set it (tiles whose category no longer exists are dropped).
+  const { data: hsRows } = await sb.from('home_services').select('category_id, label_ar, label_en, icon').order('position');
+  const home: HomeTile[] = ((hsRows || []) as Row[]).filter(r => categories.some(c => c.i === r.category_id))
+    .map(r => ({ cat: r.category_id, ar: r.label_ar, en: r.label_en || r.label_ar, ...(/^[a-z_]+$/.test(r.icon || '') ? { icon: r.icon } : {}) }));
   // Follower counts per company (numbers only; the viewer's own follow is added back by the app).
   const { data: fc } = await sb.rpc('follower_counts');
   const followers = Object.fromEntries(((fc || []) as Row[]).map(r => [r.company_id as string, r.n as number]));
-  return { cats: categories, gov, hours: hours.map(h => [h.days_ar, h.days_en, h.hours]), companies, services, albums, subs, stories, followers, offers, ...(places.length ? { places } : {}) };
+  return { cats: categories, gov, hours: hours.map(h => [h.days_ar, h.days_en, h.hours]), companies, services, albums, subs, stories, followers, offers, ...(places.length ? { places } : {}), ...(home.length ? { home } : {}) };
 }
 
 function sortKey(id: string) {

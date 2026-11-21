@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { Avatar, Badge, BottomSheet, Button, Chip, EmptyState, Icon, IconButton, ListItem, OfferArt, SearchBar, SectionHeader, offerColor, type OfferArtData } from '../ds';
 import { DEFAULT_F, useApp, type CoSort, type Filters, type OfferSort, type SheetKey } from '../app/store';
-import { ContactGrid, HScroll, Img, MetaLine, preloadPhotos, useNear, albumMedia, callPhone, card, categoryServiceChips, companyGallery, companyPreview, covers, helpers, listingCompanies, LocationBar, myGov, servesArea, openDirections, openWhatsApp, serviceImage, type Media } from '../app/view';
+import { catOf, ContactGrid, HScroll, Img, MetaLine, preloadPhotos, useNear, albumMedia, callPhone, card, categoryServiceChips, companyGallery, companyPreview, covers, helpers, listingCompanies, LocationBar, myGov, servesArea, openDirections, openWhatsApp, serviceImage, type Media } from '../app/view';
 import { logoUrl, photo, remote } from '../data/api';
 import { ALL_OMAN } from '../data/oman';
 import { demoOfferLook, liveOffersOf, offerAge, offerKind, offerServices } from '../data/offers';
@@ -235,7 +235,7 @@ export function Listing() {
     io.observe(el);
     return () => io.disconnect();
   }, [shown, res.length]);
-  const color = c == null ? 'violet' : catalog.cats[c].color;
+  const color = c == null ? 'violet' : catOf(catalog, c)?.color ?? 'violet';
   // Opening a company from here lands on this category's activity.
   const results = res.map(co => ({ ...h.coV(co), work: workPreview(a, co, c), open: () => a.go('company', { id: co.id, ...(c != null ? { act: c } : {}) }) }));
   // The mini header (title and chips) slides in once the header and chips have scrolled away.
@@ -754,14 +754,13 @@ function OfferStrip({ co, title, except }: { co: Company; title?: string; except
     </section>
   );
 }
-/** The lower half of a company card on a category page: logo, name, activities, town and coverage. */
-function CompanyCardInfo({ v }: { v: { name: string; logo: string; verified: boolean; cats: string; city: string; covers: string } }) {
+/** The lower half of a company card on a category page: logo, name, town and coverage. */
+function CompanyCardInfo({ v }: { v: { name: string; logo: string; verified: boolean; city: string; covers: string } }) {
   return (
     <div style={{ padding: '14px 16px 16px', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
       <Avatar name={v.name} src={v.logo} size={48} verified={v.verified} />
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
         <span style={{ font: 'var(--type-title)' }}>{v.name}</span>
-        <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }}>{v.cats}</span>
         <MetaLine icon="map-pin">{v.city}</MetaLine>
         <MetaLine icon="route">{v.covers}</MetaLine>
       </div>
@@ -829,7 +828,7 @@ export function OfferPage() {
           <Avatar name={name} src={logoUrl(co.id)} size={44} verified={co.verified} />
           <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
             <span style={{ font: 'var(--type-body-strong)' }}>{name}</span>
-            <span style={{ marginTop: 4 }}><CatTag color={a.catalog.cats[o.svc.cat]?.color ?? 'violet'} h={24} pad={10}>{h.cname(o.svc.cat)}</CatTag></span>
+            <span style={{ marginTop: 4 }}><CatTag color={catOf(a.catalog, o.svc.cat)?.color ?? 'violet'} h={24} pad={10}>{h.cname(o.svc.cat)}</CatTag></span>
           </span>
           <Icon name="chevron-right" size={18} color="var(--text-tertiary)" />
         </div>
@@ -933,7 +932,7 @@ export function ActivitySheet() {
   return (
     <BottomSheet open={open} onClose={() => setSheet(null)} title={t.activity}>
       {cats.map(c => (
-        <ListItem key={c} icon={catalog.cats[c].icon} color={catalog.cats[c].color} title={h.cname(c)} subtitle={counts(c)} chevron={false} trailing={check(cur === c)} onClick={() => pick(c)} />
+        <ListItem key={c} icon={catOf(catalog, c).icon} color={catOf(catalog, c).color} title={h.cname(c)} subtitle={counts(c)} chevron={false} trailing={check(cur === c)} onClick={() => pick(c)} />
       ))}
     </BottomSheet>
   );
@@ -1098,7 +1097,7 @@ function ServiceCard({ x }: { x: ReturnType<ReturnType<typeof helpers>['svcV']> 
   const a = useApp();
   const s = a.idx.svc.get(x.id);
   const empty = !a.catalog.albums.some(al => al.svc === x.id);
-  return <ServiceNavCard title={x.title} img={x.img} open={x.open} sub={svcProjects(a, x.id)} icon={empty ? (s ? a.catalog.cats[s.cat]?.icon : undefined) || 'briefcase' : undefined} />;
+  return <ServiceNavCard title={x.title} img={x.img} open={x.open} sub={svcProjects(a, x.id)} icon={empty ? (s ? catOf(a.catalog, s.cat)?.icon : undefined) || 'briefcase' : undefined} />;
 }
 
 /**
@@ -1173,7 +1172,7 @@ export function ServicePage() {
   const h = helpers(a);
   const s = a.idx.svc.get(top.id!)!;
   const co = a.idx.co.get(s.co)!;
-  const color = catalog.cats[s.cat]?.color ?? 'violet';
+  const color = catOf(catalog, s.cat)?.color ?? 'violet';
   const title = ar ? s.ar : s.en;
   const desc = (ar ? s.dar : s.den) || '';
   const [full, setFull] = useState(false);
@@ -1399,7 +1398,7 @@ export function AlbumPage() {
   const title = ar ? al.ar : al.en;
   const desc = (ar ? al.dAr : al.dEn) || '';
   const [more, setMore] = useState(false);
-  const color = a.catalog.cats[al.cat]?.color ?? 'violet';
+  const color = catOf(a.catalog, al.cat)?.color ?? 'violet';
   const done = al.done ? new Date(al.done + 'T12:00:00').toLocaleDateString(ar ? 'ar-OM' : 'en-GB', { month: 'long', year: 'numeric' }) : '';
   const photos = media.filter(m => !m.video).length, vids = media.length - photos;
   // The project's number among this company's projects, oldest first (the first project they added is no. 1).

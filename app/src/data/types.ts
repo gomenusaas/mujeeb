@@ -86,7 +86,14 @@ export interface Catalog {
   offers?: LiveOffer[];
   /** Service locations (governorates → wilayats) in the admin's order; undefined = the bundled list in data/oman.ts. */
   places?: import('./oman').Governorate[];
+  /** The home «الخدمات» grid as the platform admin set it (table home_services): each tile's category and name, in
+   * order. Undefined (demo mode) or empty = the first categories with their short names. */
+  home?: HomeTile[];
 }
+
+/** A tile in the home services grid: opens category `cat`, named `ar` / `en`; `icon` = a flat icon in public/art/flat
+ * the admin picked (undefined = the category's own). */
+export interface HomeTile { cat: number; ar: string; en: string; icon?: string }
 
 /** An offer a company posted (see supabase/migrations/…_offers.sql). Texts: k = kicker, b = value, s = what it's on. */
 export interface LiveOffer {

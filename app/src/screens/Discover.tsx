@@ -25,6 +25,13 @@ export function Home() {
   const a = useApp();
   const { t, catalog } = a;
   const h = helpers(a);
+  // The services grid: the admin's tiles (up to 9), or the first 9 categories with their short names.
+  const tiles = catalog.home?.length
+    ? catalog.home.slice(0, 9).flatMap(x => {
+      const c = catalog.cats.find(y => y.i === x.cat);
+      return c ? [{ c, name: a.ar ? x.ar : x.en, art: x.icon ? '/art/flat/' + x.icon + '.svg' : c.art && flatArt(c.art) }] : [];
+    })
+    : catalog.cats.slice(0, 9).map(c => ({ c, name: h.cshort(c.i), art: c.art && flatArt(c.art) }));
   // Everything below follows the service location: companies (and their projects) that cover it.
   const local = catalog.companies.filter(co => servesArea(a, co.id));
   const localAlbums = catalog.albums.filter(al => servesArea(a, al.co));
@@ -57,29 +64,22 @@ export function Home() {
         <div aria-hidden="true" style={{ position: 'relative', height: 34, marginTop: -33, marginBottom: -1, borderRadius: '32px 32px 0 0', background: 'var(--bg-app)' }} />
       </div>
 
-      {/* Services: the categories as a 4 × 2 grid of icons (the category's art, flat 2D, on a white tile with a thin border,
-          like the cards on the «الخدمات» page, and a short name); the eighth opens all of them. */}
+      {/* Services: a 3 × 3 grid of icons (the category's art, flat 2D, on a white tile with a thin border, like the cards
+          on the «الخدمات» page, and a short name), each opening its category page. The platform admin picks the tiles,
+          their names and icons (catalog.home, up to 9); otherwise the first 9 categories with their short names. No «عرض الكل»:
+          all services are here (and in the «الخدمات» tab). */}
       <section aria-label={t.categories} style={{ padding: '0 20px', marginTop: -18, display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <SectionHeader title={t.categories} action={t.seeAll} onAction={() => a.setTab('categories')} />
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '14px 10px' }}>
-          {catalog.cats.slice(0, catalog.cats.length > 8 ? 7 : 8).map(c => (
-            <button key={c.i} type="button" className="mj-press-sm" onClick={() => a.go('listing', { cat: c.i })}
+        <SectionHeader title={t.categories} action={null} />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '14px 12px' }}>
+          {tiles.map(({ c, name, art }, k) => (
+            <button key={k} type="button" className="mj-press-sm" onClick={() => a.go('listing', { cat: c.i })}
               style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: 0, border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
-              <span style={{ width: '100%', aspectRatio: '1 / 0.82', borderRadius: 16, background: 'var(--surface-card)', border: '1px solid var(--border-default)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {c.art ? <img src={flatArt(c.art)} alt="" style={{ width: 34, height: 34 }} /> : <Icon name={c.icon} size={24} color={'var(--cat-' + c.color + '-600)'} />}
+              <span style={{ width: '100%', aspectRatio: '1 / 0.68', borderRadius: 16, background: 'var(--surface-card)', border: '1px solid var(--border-default)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {art ? <img src={art} alt="" style={{ width: 36, height: 36 }} /> : <Icon name={c.icon} size={24} color={'var(--cat-' + c.color + '-600)'} />}
               </span>
-              <span style={{ font: 'var(--type-caption)', fontWeight: 600, color: 'var(--text-primary)', textAlign: 'center', lineHeight: 1.25 }}>{h.cshort(c.i)}</span>
+              <span style={{ font: 'var(--type-caption)', fontWeight: 600, color: 'var(--text-primary)', textAlign: 'center', lineHeight: 1.25 }}>{name}</span>
             </button>
           ))}
-          {catalog.cats.length > 8 && (
-            <button type="button" className="mj-press-sm" onClick={() => a.setTab('categories')}
-              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: 0, border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
-              <span style={{ width: '100%', aspectRatio: '1 / 0.82', borderRadius: 16, background: 'var(--surface-card)', border: '1px solid var(--border-default)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--brand)' }}>
-                <Icon name="layout-grid" size={24} />
-              </span>
-              <span style={{ font: 'var(--type-caption)', fontWeight: 600, color: 'var(--text-primary)' }}>{t.more}</span>
-            </button>
-          )}
         </div>
       </section>
 

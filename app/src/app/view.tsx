@@ -1,16 +1,24 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import { AppBar, Icon } from '../ds';
 import { logoUrl, photo, remote } from '../data/api';
-import type { Album, Branch, Catalog, Company, GovId, Service } from '../data/types';
+import type { Album, Branch, Catalog, Category, Company, GovId, Service } from '../data/types';
 import type { App } from './store';
 import { ALL_OMAN, findWilayat } from '../data/oman';
 import { isOpenNow } from './hours';
 import { arDigits } from '../i18n/strings';
 
+/** Category `id` (ids aren't positions in the list: deleted categories leave gaps). */
+const catIndex = new WeakMap<Catalog, Map<number, Category>>();
+export function catOf(catalog: Catalog, id: number): Category {
+  let m = catIndex.get(catalog);
+  if (!m) catIndex.set(catalog, (m = new Map(catalog.cats.map(c => [c.i, c]))));
+  return m.get(id)!;
+}
+
 /** Bilingual field helpers bound to the current language. */
 export function helpers(a: App) {
   const { ar, t, catalog } = a;
-  const cat = (i: number) => catalog.cats[i];
+  const cat = (i: number) => catOf(catalog, i);
   const cname = (i: number) => (ar ? cat(i).ar : cat(i).en);
   const cshort = (i: number) => (ar ? cat(i).sar : cat(i).sen);
   const gname = (g: string) => (catalog.gov as Record<string, [string, string]>)[g]?.[ar ? 0 : 1] ?? g;
@@ -92,7 +100,7 @@ function searchIndex(catalog: Catalog) {
     const svcs = catalog.services.filter(s => s.co === co.id);
     const albs = catalog.albums.filter(al => al.co === co.id);
     idx.set(co.id, {
-      strong: fold([co.ar, co.en, ...co.cats.map(i => catalog.cats[i].ar + ' ' + catalog.cats[i].en),
+      strong: fold([co.ar, co.en, ...co.cats.map(i => catOf(catalog, i)?.ar + ' ' + catOf(catalog, i)?.en),
         ...svcs.map(s => [s.ar, s.en, ...(s.kw || []), ...(s.sub || []).map(id => subName.get(id) || ''), ...(s.csub || [])].join(' '))].join(' | ')),
       weak: fold([...svcs.map(s => s.dar + ' ' + s.den), ...albs.map(al => [al.ar, al.en, al.dAr || '', al.dEn || ''].join(' '))].join(' | ')),
     });
