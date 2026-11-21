@@ -474,7 +474,7 @@ export function HomeOffers() {
   }
   if (!list.length) return null;
   return (
-    <section aria-label={a.t.featuredOffers} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <section aria-label={a.t.featuredOffers} style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div style={{ padding: '0 20px' }}><SectionHeader title={a.t.featuredOffers} action={a.t.seeAll} onAction={() => a.setTab('offers')} /></div>
       <HeroOffers list={list} />
     </section>

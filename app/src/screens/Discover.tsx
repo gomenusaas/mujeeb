@@ -9,6 +9,18 @@ import { HomeOffers, Masonry, PRJ_W, countOf } from './Provider';
 
 const ROOT_PAD = { padding: 'calc(var(--top-inset) + 8px) 20px 100px' };
 
+/** The flat 2D version of a category's 3D art (public/art/flat: Fluent emoji «Flat», MIT licence, plus our own camera
+ * and cupboard drawn to match), for the home services grid; other art is shown as it is. */
+const FLAT_ART: Record<string, string> = {
+  building_construction_3d: 'construction', snowflake_3d: 'snowflake', light_bulb_3d: 'bulb', shower_3d: 'shower',
+  couch_and_lamp_3d: 'couch', window_3d: 'window', fire_extinguisher_3d: 'extinguisher', potted_plant_3d: 'plant',
+  cctv: 'cctv', cupboard: 'cupboard',
+};
+const flatArt = (url: string) => {
+  const k = FLAT_ART[(url.split('/').pop() || '').replace(/\.(png|svg)$/, '')];
+  return k ? '/art/flat/' + k + '.svg' : url;
+};
+
 export function Home() {
   const a = useApp();
   const { t, catalog } = a;
@@ -45,16 +57,16 @@ export function Home() {
         <div aria-hidden="true" style={{ position: 'relative', height: 34, marginTop: -33, marginBottom: -1, borderRadius: '32px 32px 0 0', background: 'var(--bg-app)' }} />
       </div>
 
-      {/* Services: the categories as a 4 × 2 grid of icons (the category's 3D art on a soft tile in its colour, a
-          short name); the eighth opens all of them. */}
-      <section aria-label={t.categories} style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {/* Services: the categories as a 4 × 2 grid of icons (the category's art, flat 2D, on a white tile with a thin border,
+          like the cards on the «الخدمات» page, and a short name); the eighth opens all of them. */}
+      <section aria-label={t.categories} style={{ padding: '0 20px', marginTop: -18, display: 'flex', flexDirection: 'column', gap: 12 }}>
         <SectionHeader title={t.categories} action={t.seeAll} onAction={() => a.setTab('categories')} />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '14px 10px' }}>
           {catalog.cats.slice(0, catalog.cats.length > 8 ? 7 : 8).map(c => (
             <button key={c.i} type="button" className="mj-press-sm" onClick={() => a.go('listing', { cat: c.i })}
               style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: 0, border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
-              <span style={{ width: '100%', aspectRatio: '1 / 0.82', borderRadius: 16, background: 'var(--cat-' + c.color + '-50)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {c.art ? <img src={c.art} alt="" style={{ width: 38, height: 38, filter: 'drop-shadow(0 3px 4px oklch(0.3 0.1 285 / 0.2))' }} /> : <Icon name={c.icon} size={24} color={'var(--cat-' + c.color + '-600)'} />}
+              <span style={{ width: '100%', aspectRatio: '1 / 0.82', borderRadius: 16, background: 'var(--surface-card)', border: '1px solid var(--border-default)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {c.art ? <img src={flatArt(c.art)} alt="" style={{ width: 34, height: 34 }} /> : <Icon name={c.icon} size={24} color={'var(--cat-' + c.color + '-600)'} />}
               </span>
               <span style={{ font: 'var(--type-caption)', fontWeight: 600, color: 'var(--text-primary)', textAlign: 'center', lineHeight: 1.25 }}>{h.cshort(c.i)}</span>
             </button>
@@ -62,8 +74,8 @@ export function Home() {
           {catalog.cats.length > 8 && (
             <button type="button" className="mj-press-sm" onClick={() => a.setTab('categories')}
               style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: 0, border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
-              <span style={{ width: '100%', aspectRatio: '1 / 0.82', borderRadius: 16, background: 'var(--neutral-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
-                <Icon name="layout-grid" size={22} />
+              <span style={{ width: '100%', aspectRatio: '1 / 0.82', borderRadius: 16, background: 'var(--surface-card)', border: '1px solid var(--border-default)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--brand)' }}>
+                <Icon name="layout-grid" size={24} />
               </span>
               <span style={{ font: 'var(--type-caption)', fontWeight: 600, color: 'var(--text-primary)' }}>{t.more}</span>
             </button>
