@@ -399,7 +399,7 @@ export function AppBar({ title, subtitle, onBack, actions, style }: {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '8px 16px', fontFamily: 'var(--font-sans)', ...style }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, minHeight: 44 }}>
-        {onBack && <IconButton icon="arrow-left" variant="surface" size={40} onClick={onBack} label="Back" />}
+        {onBack && <IconButton icon="arrow-left" variant="surface" size={34} onClick={onBack} label="Back" />}
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: onBack ? 'center' : 'flex-start' }}>
           {title && <span style={{ font: 'var(--type-title)', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>{title}</span>}
           {subtitle && <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-medium)', color: 'var(--text-tertiary)' }}>{subtitle}</span>}

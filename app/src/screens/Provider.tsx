@@ -271,7 +271,7 @@ export function Listing() {
       <div style={{ position: 'sticky', top: 0, height: 0, zIndex: 15 }}>
         <div aria-hidden={!mini} inert={!mini} style={{ position: 'absolute', insetInline: 0, top: 0, padding: 'var(--top-inset) 0 10px', display: 'flex', flexDirection: 'column', gap: 8, background: 'var(--surface-card)', boxShadow: '0 1px 0 var(--border-subtle), 0 8px 18px oklch(0.2 0.03 285 / 0.1)', opacity: mini ? 1 : 0, transform: mini ? 'none' : 'translateY(-12px)', transition: 'opacity 200ms var(--ease-out), transform 200ms var(--ease-out)', pointerEvents: mini ? 'auto' : 'none' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0 12px' }}>
-            <IconButton icon="arrow-left" variant="plain" size={36} onClick={a.back} label="Back" />
+            <IconButton icon="arrow-left" variant="plain" size={34} onClick={a.back} label="Back" />
             <span style={{ flex: 1, minWidth: 0, font: 'var(--type-title)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</span>
           </div>
           {chipStrip(false)}
@@ -281,7 +281,7 @@ export function Listing() {
         <span style={{ position: 'absolute', insetInlineEnd: -50, top: -40, width: 200, height: 200, borderRadius: '50%', background: 'oklch(1 0 0 / 0.14)' }} />
         {/* Back, and the app's service location at the very top (it filters the list: only companies covering it). */}
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '8px 16px' }}>
-          <IconButton icon="arrow-left" variant="glass" size={40} onClick={a.back} label="Back" />
+          <IconButton icon="arrow-left" variant="glass" size={34} onClick={a.back} label="Back" />
           <LocationBar a={a} light />
         </div>
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 14, padding: '6px 20px 18px' }}>
@@ -815,8 +815,8 @@ export function OfferPage() {
       {/* The advert on a backdrop in a darker shade of its colour, with Back and share above it. */}
       <div style={{ position: 'relative', padding: 'calc(var(--top-inset) + 56px) 16px 48px', background: 'color-mix(in oklch, ' + offerColor(o.color) + ' 42%, black)' }}>
         <div style={{ position: 'absolute', top: 'calc(var(--top-inset) + 4px)', insetInline: 16, display: 'flex', justifyContent: 'space-between' }}>
-          <IconButton icon="arrow-left" variant="glass" size={40} onClick={a.back} label="Back" />
-          <IconButton icon="share-2" variant="glass" size={40} label={t.share} onClick={() => a.sharePage(top, o.title + ' · ' + name, about)} />
+          <IconButton icon="arrow-left" variant="glass" size={34} onClick={a.back} label="Back" />
+          <IconButton icon="share-2" variant="glass" size={34} label={t.share} onClick={() => a.sharePage(top, o.title + ' · ' + name, about)} />
         </div>
         <div style={{ borderRadius: 18, overflow: 'hidden', boxShadow: '0 10px 30px oklch(0 0 0 / 0.35)' }}>
           <OfferArt d={offerArt(t, o)} rtl={ar} />
@@ -983,13 +983,13 @@ export function CompanyPage() {
       <div style={{ position: 'relative', height: HERO_H, background: cv.c100 }}>
         <img src={photo(co.img, 900)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
         <div style={{ position: 'absolute', top: 'calc(var(--top-inset) + 4px)', insetInline: 16, display: 'flex', justifyContent: 'space-between' }}>
-          <IconButton icon="arrow-left" variant="glass" size={40} onClick={a.back} label="Back" />
+          <IconButton icon="arrow-left" variant="glass" size={34} onClick={a.back} label="Back" />
           <div style={{ display: 'flex', gap: 8 }}>
-            <IconButton icon="share-2" variant="glass" size={40} onClick={() => a.sharePage(top, cv.name, a.ar ? co.dar : co.den)} label={t.share} />
+            <IconButton icon="share-2" variant="glass" size={34} onClick={() => a.sharePage(top, cv.name, a.ar ? co.dar : co.den)} label={t.share} />
             {/* Directions, like «الاتجاهات»: branch picker when there are several branches. */}
-            <IconButton icon="navigation" variant="glass" size={40} label={t.directions}
+            <IconButton icon="navigation" variant="glass" size={34} label={t.directions}
               onClick={() => (co.branches.length > 1 ? a.setSheet('directions') : openDirections(a, co, co.branches[0]))} />
-            <IconButton icon="menu" variant="glass" size={40} onClick={() => a.setSheet('menu')} label={t.menu} />
+            <IconButton icon="menu" variant="glass" size={34} onClick={() => a.setSheet('menu')} label={t.menu} />
           </div>
         </div>
       </div>
@@ -1187,8 +1187,8 @@ export function ServicePage() {
       <div style={{ position: 'relative', height: HERO_H, background: 'var(--cat-' + color + '-100)' }}>
         <img src={photo(serviceImage(a, s), 900)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
         <div style={{ position: 'absolute', top: 'calc(var(--top-inset) + 4px)', insetInline: 16, display: 'flex', justifyContent: 'space-between' }}>
-          <IconButton icon="arrow-left" variant="glass" size={40} onClick={a.back} label="Back" />
-          <IconButton icon="share-2" variant="glass" size={40} label={t.share} onClick={() => a.sharePage(top, title + ' · ' + h.coName(co), desc || undefined)} />
+          <IconButton icon="arrow-left" variant="glass" size={34} onClick={a.back} label="Back" />
+          <IconButton icon="share-2" variant="glass" size={34} label={t.share} onClick={() => a.sharePage(top, title + ' · ' + h.coName(co), desc || undefined)} />
         </div>
       </div>
       <div style={{ position: 'relative', marginTop: -28, borderRadius: '28px 28px 0 0', background: 'var(--bg-app)', padding: '22px 20px 28px', display: 'flex', flexDirection: 'column', gap: 16, flex: 1 }}>
@@ -1417,8 +1417,8 @@ export function AlbumPage() {
       <div style={{ position: 'relative', height: HERO_H, background: 'var(--cat-' + color + '-100)' }}>
         <img src={photo(al.img || al.imgs[0], 900)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
         <div style={{ position: 'absolute', top: 'calc(var(--top-inset) + 4px)', insetInline: 16, display: 'flex', justifyContent: 'space-between' }}>
-          <IconButton icon="arrow-left" variant="glass" size={40} onClick={a.back} label="Back" />
-          <IconButton icon="share-2" variant="glass" size={40} label={t.share} onClick={() => a.sharePage(top, title + ' · ' + h.coName(co), desc || undefined)} />
+          <IconButton icon="arrow-left" variant="glass" size={34} onClick={a.back} label="Back" />
+          <IconButton icon="share-2" variant="glass" size={34} label={t.share} onClick={() => a.sharePage(top, title + ' · ' + h.coName(co), desc || undefined)} />
         </div>
       </div>
       <div style={{ position: 'relative', marginTop: -28, borderRadius: '28px 28px 0 0', background: 'var(--bg-app)', padding: '22px 20px 28px', display: 'flex', flexDirection: 'column', gap: 16, flex: 1 }}>
