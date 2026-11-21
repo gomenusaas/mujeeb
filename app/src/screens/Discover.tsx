@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Avatar, BottomSheet, Button, Chip, EmptyState, Icon, IconButton, SectionHeader } from '../ds';
 import { useApp } from '../app/store';
-import { ColorHeader, HScroll, Img, LocationBar, albumMedia, card, exploreMedia, helpers, myGov, searchMatch, servesArea } from '../app/view';
+import { ColorHeader, HScroll, Img, LocationBar, card, exploreMedia, helpers, myGov, searchMatch, servesArea } from '../app/view';
 import { ALL_OMAN } from '../data/oman';
 import { photo } from '../data/api';
 import type { Album } from '../data/types';
@@ -168,7 +168,7 @@ type ResultTab = 'work' | 'cos';
 /**
  * «استكشف» (the Explore tab), top to bottom: the service location (it filters everything here), the search field,
  * service chips («الكل» and each service with work in the area) and the gallery of photos from companies' projects
- * (the daily mix; a tap opens the full-screen viewer).
+ * (the daily mix; a tap opens the photo's project page).
  * A search runs when Enter is pressed: then two tabs appear, «المشاريع» (default: photos of matching projects) and
  * «الشركات» (matching companies). The service chip narrows both. Emptying the field goes back to the gallery.
  */
@@ -196,13 +196,8 @@ export function Explore() {
   const media = exploreMedia(a, cat ?? undefined).filter(x => !searching || (x.al && albumOk(x.al)));
   const projects = new Set(media.map(x => x.al?.id)).size;
   const cos = searching ? listCompanies(a, ran, cat) : [];
-  // A photo opens in the Explore viewer; found by a search, in its own project's viewer (the Explore viewer shows
-  // the unfiltered mix, so its numbering would point at another photo).
-  const open = (k: number) => {
-    const x = media[k];
-    if (searching && x.al) a.go('photo', { src: 'album', id: x.al.id, i: Math.max(0, albumMedia(x.al).findIndex(y => y.src === x.src)) });
-    else a.go('photo', { src: 'explore', i: k, ...(cat != null ? { cat } : {}) });
-  };
+  // A photo opens its project's page straight away (no full-screen viewer), in the gallery and in search results.
+  const open = (k: number) => { const x = media[k]; if (x.al) a.go('album', { id: x.al.id }); };
   const empty = (icon: string) => (
     <EmptyState icon={searching ? 'search-x' : icon} title={t.noResults} body={searching ? t.noResultsBody : myGov(a) ? t.noOffersAreaBody : undefined}
       action={searching ? <Button variant="secondary" onClick={() => onQ('')}>{t.clear}</Button>
