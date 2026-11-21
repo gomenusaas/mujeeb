@@ -19,7 +19,7 @@ const BROWSE: Route['s'][] = ['categories', 'listing', 'company', 'service', 'of
 
 const TABS: { id: RootTab; icon: string }[] = [
   // No «الخدمات» tab: home shows the services (its «عرض الكل» opens the full list when some aren't on the grid).
-  { id: 'home', icon: 'house' }, { id: 'explore', icon: 'search' }, { id: 'offers', icon: 'tag' },
+  { id: 'home', icon: 'house' }, { id: 'explore', icon: 'compass' }, { id: 'offers', icon: 'tag' },
   { id: 'profile', icon: 'user-round' },
 ];
 
