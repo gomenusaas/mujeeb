@@ -1,33 +1,13 @@
 import { useState } from 'react';
-import { Avatar, Badge, BottomSheet, Button, CategoryCard, Chip, EmptyState, Icon, SectionHeader } from '../ds';
+import { Avatar, BottomSheet, Button, CategoryCard, Chip, EmptyState, Icon, SectionHeader } from '../ds';
 import { useApp } from '../app/store';
-import { HScroll, Img, LocationBar, MetaLine, card, exploreMedia, helpers, myGov, servesArea } from '../app/view';
+import { HScroll, Img, LocationBar, card, exploreMedia, helpers, myGov, servesArea } from '../app/view';
 import { ALL_OMAN } from '../data/oman';
-import { logoUrl, photo } from '../data/api';
+import { photo } from '../data/api';
 import { StoryCircles } from './Stories';
-import { Masonry } from './Provider';
+import { HomeOffers, Masonry, PRJ_W, countOf } from './Provider';
 
 const ROOT_PAD = { padding: 'calc(var(--top-inset) + 8px) 20px 100px' };
-
-/** Cover photos of the nine projects most recently added to the platform: 3 × 3, edge to edge. Tap opens the project. */
-function LatestProjects() {
-  const a = useApp();
-  const latest = a.catalog.albums.filter(al => servesArea(a, al.co)).sort((x, y) => (y.added || '').localeCompare(x.added || '')).slice(0, 9);
-  if (!latest.length) return null;
-  return (
-    <section style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <div style={{ padding: '0 20px' }}><SectionHeader title={a.t.latestProjects} /></div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 2 }}>
-        {latest.map(al => (
-          <button key={al.id} type="button" className="mj-press-sm" onClick={() => a.go('album', { id: al.id })} aria-label={a.ar ? al.ar : al.en}
-            style={{ aspectRatio: '1', border: 'none', padding: 0, overflow: 'hidden', background: 'var(--neutral-200)', cursor: 'pointer' }}>
-            <Img src={photo(al.img, 400)} />
-          </button>
-        ))}
-      </div>
-    </section>
-  );
-}
 
 export function Home() {
   const a = useApp();
@@ -36,17 +16,13 @@ export function Home() {
   // Everything below follows the service location: companies (and their projects) that cover it.
   const local = catalog.companies.filter(co => servesArea(a, co.id));
   const localAlbums = catalog.albums.filter(al => servesArea(a, al.co));
-  const featCats = catalog.cats.map(c => ({
-    ...c, label: h.cname(c.i),
-    img: photo((catalog.companies.find(co => co.cats[0] === c.i) || catalog.companies[0]).img, 600),
-    count: local.filter(co => co.cats.includes(c.i)).length + ' ' + t.results,
-  }));
   // Suggested: verified companies covering the area first, then those with the most projects.
   const projects = (id: string) => catalog.albums.filter(al => al.co === id).length;
-  const recommended = local.slice().sort((x, y) => Number(y.verified) - Number(x.verified) || projects(y.id) - projects(x.id)).slice(0, 3);
+  const recommended = local.slice().sort((x, y) => Number(y.verified) - Number(x.verified) || projects(y.id) - projects(x.id)).slice(0, 8);
+  const latest = localAlbums.slice().sort((x, y) => (y.added || '').localeCompare(x.added || '')).slice(0, 10);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 26, paddingBottom: 100 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 28, paddingBottom: 100 }}>
       <div>
         <div style={{ position: 'relative', overflow: 'hidden', background: 'var(--brand)', color: '#fff', padding: 'calc(var(--top-inset) + 2px) 20px 56px' }}>
           <span style={{ position: 'absolute', insetInlineEnd: -60, top: -40, width: 200, height: 200, borderRadius: '50%', background: 'oklch(1 0 0 / .08)' }} />
@@ -69,77 +45,79 @@ export function Home() {
         <div aria-hidden="true" style={{ position: 'relative', height: 34, marginTop: -33, marginBottom: -1, borderRadius: '32px 32px 0 0', background: 'var(--bg-app)' }} />
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        {/* The categories as small white cards in two rows that scroll sideways (the category's icon in its colour, how
-            many companies serve the area, the name, a photo). */}
-        <div className="mj-s" style={{ display: 'grid', gridTemplateRows: 'repeat(2,auto)', gridAutoFlow: 'column', gridAutoColumns: 'calc(72% - 20px)', gap: 10, overflowX: 'auto', scrollSnapType: 'x mandatory', scrollPaddingInline: 20, padding: '4px 20px 12px', margin: '-4px 0 -12px', scrollbarWidth: 'none' }}>
-          {featCats.map(c => (
+      {/* Services: the categories as a 4 × 2 grid of icons (the category's 3D art on a soft tile in its colour, a
+          short name); the eighth opens all of them. */}
+      <section aria-label={t.categories} style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <SectionHeader title={t.categories} action={t.seeAll} onAction={() => a.setTab('categories')} />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '14px 10px' }}>
+          {catalog.cats.slice(0, catalog.cats.length > 8 ? 7 : 8).map(c => (
             <button key={c.i} type="button" className="mj-press-sm" onClick={() => a.go('listing', { cat: c.i })}
-              style={{ overflow: 'hidden', height: 74, border: '1px solid var(--border-default)', padding: 0, borderRadius: 'var(--radius-card)', background: 'var(--surface-card)', cursor: 'pointer', scrollSnapAlign: 'start', display: 'flex', alignItems: 'stretch', fontFamily: 'var(--font-sans)' }}>
-              <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', gap: 3, padding: '0 12px', textAlign: 'start' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--cat-' + c.color + '-600)' }}><Icon name={c.icon} size={15} /><span style={{ font: 'var(--type-caption)', color: 'var(--text-secondary)' }}>{c.count}</span></span>
-                <span style={{ font: 'var(--type-body-strong)', lineHeight: 1.3, color: 'var(--text-primary)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{c.label}</span>
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: 0, border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
+              <span style={{ width: '100%', aspectRatio: '1 / 0.82', borderRadius: 16, background: 'var(--cat-' + c.color + '-50)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {c.art ? <img src={c.art} alt="" style={{ width: 38, height: 38, filter: 'drop-shadow(0 3px 4px oklch(0.3 0.1 285 / 0.2))' }} /> : <Icon name={c.icon} size={24} color={'var(--cat-' + c.color + '-600)'} />}
               </span>
-              <img src={c.img} alt="" loading="lazy" style={{ flex: 'none', width: '32%', height: '100%', objectFit: 'cover' }} />
+              <span style={{ font: 'var(--type-caption)', fontWeight: 600, color: 'var(--text-primary)', textAlign: 'center', lineHeight: 1.25 }}>{h.cshort(c.i)}</span>
             </button>
           ))}
+          {catalog.cats.length > 8 && (
+            <button type="button" className="mj-press-sm" onClick={() => a.setTab('categories')}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: 0, border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
+              <span style={{ width: '100%', aspectRatio: '1 / 0.82', borderRadius: 16, background: 'var(--neutral-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
+                <Icon name="layout-grid" size={22} />
+              </span>
+              <span style={{ font: 'var(--type-caption)', fontWeight: 600, color: 'var(--text-primary)' }}>{t.more}</span>
+            </button>
+          )}
         </div>
-      </div>
+      </section>
 
-      <LatestProjects />
+      {/* Offers in the service location, as big adverts to swipe through. */}
+      <HomeOffers />
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <div style={{ padding: '0 20px' }}><SectionHeader title={t.featuredCo} action={t.seeAll} onAction={() => a.go('listing')} /></div>
-        <HScroll>
-          {local.slice(0, 6).map(h.coV).map(co => (
-            <div key={co.id} onClick={co.open} style={{ flex: 'none', width: 260, scrollSnapAlign: 'start', ...card, overflow: 'hidden', cursor: 'pointer' }}>
-              <div style={{ position: 'relative', aspectRatio: '16/9', background: co.c100 }}>
-                <Img src={co.cover} />
-              </div>
-              <div style={{ padding: '12px 14px 14px', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                <Avatar name={co.name} src={co.logo} size={44} verified={co.verified} />
-                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <span style={{ font: 'var(--type-title)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{co.name}</span>
-                  <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }}>{co.cat}</span>
-                  <MetaLine icon="map-pin" style={{ gap: 3 }}>{co.city}</MetaLine>
-                </div>
-              </div>
-            </div>
-          ))}
-        </HScroll>
-      </div>
+      {/* Recommended companies in the service location: verified first, then those with the most projects. */}
+      {recommended.length > 0 && (
+        <section aria-label={t.recommended} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ padding: '0 20px' }}><SectionHeader title={myGov(a) ? t.recommendedIn.replace('{area}', a.locLabel) : t.recommended} action={t.seeAll} onAction={() => a.go('listing')} /></div>
+          <HScroll>
+            {recommended.map(co => {
+              const v = h.coV(co);
+              return (
+                <button key={co.id} type="button" className="mj-press-sm" onClick={() => a.go('company', { id: co.id })}
+                  style={{ ...card, flex: 'none', width: 220, padding: 0, border: '1px solid var(--border-subtle)', overflow: 'hidden', cursor: 'pointer', scrollSnapAlign: 'start', textAlign: 'start', fontFamily: 'var(--font-sans)', color: 'var(--text-primary)' }}>
+                  <div style={{ position: 'relative', height: 112, background: v.c100 }}><Img src={v.cover} /></div>
+                  <div style={{ padding: '10px 12px 12px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <Avatar name={v.name} src={v.logo} size={34} verified={v.verified} />
+                    <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                      <span style={{ font: 'var(--type-body-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.name}</span>
+                      <span style={{ font: 'var(--type-caption)', color: 'var(--text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{countOf(a, projects(co.id), PRJ_W)} · {v.city}</span>
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </HScroll>
+        </section>
+      )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <div style={{ padding: '0 20px' }}><SectionHeader title={t.featuredPr} action={t.seeAll} onAction={() => a.setTab('explore')} /></div>
-        <HScroll>
-          {localAlbums.slice(0, 6).map(h.albV).map(p => (
-            <div key={p.id} onClick={p.open} style={{ flex: 'none', width: 232, scrollSnapAlign: 'start', ...card, overflow: 'hidden', cursor: 'pointer' }}>
-              <div style={{ position: 'relative', aspectRatio: '4/3', background: p.c100 }}>
-                <Img src={p.img} />
-                <span style={{ position: 'absolute', top: 10, insetInlineStart: 10 }}><Badge tone="dark" size="sm" icon="images">{p.count}</Badge></span>
-              </div>
-              <div style={{ padding: '12px 14px 14px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.company} · {p.place}</span>
-                <span style={{ font: 'var(--type-title)' }}>{p.title}</span>
-              </div>
-            </div>
-          ))}
-        </HScroll>
-      </div>
-
-      <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <SectionHeader title={myGov(a) ? t.recommendedIn.replace('{area}', a.locLabel) : t.recommended} subtitle={t.recSub} action={null} />
-        {recommended.map(co => co && (
-          <div key={co.id} onClick={() => a.go('company', { id: co.id })} style={{ display: 'flex', gap: 14, alignItems: 'center', padding: 14, ...card, cursor: 'pointer' }}>
-            <Avatar name={h.coName(co)} src={logoUrl(co.id)} size={60} verified={co.verified} />
-            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <span style={{ font: 'var(--type-title)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{h.coName(co)}</span>
-              <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }}>{h.cname(co.cats[0])}</span>
-              <MetaLine icon="map-pin" style={{ gap: 3 }}>{h.city(co)}</MetaLine>
-            </div>
-          </div>
-        ))}
-      </div>
+      {/* The latest projects in the service location, each with its title, company and place. */}
+      {latest.length > 0 && (
+        <section aria-label={t.latestProjects} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ padding: '0 20px' }}><SectionHeader title={t.latestProjects} action={t.seeAll} onAction={() => a.setTab('explore')} /></div>
+          <HScroll>
+            {latest.map(al => {
+              const p = h.albV(al);
+              return (
+                <button key={al.id} type="button" className="mj-press-sm" onClick={p.open}
+                  style={{ flex: 'none', width: 150, padding: 0, border: 'none', background: 'none', cursor: 'pointer', scrollSnapAlign: 'start', textAlign: 'start', fontFamily: 'var(--font-sans)', color: 'var(--text-primary)', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <span style={{ position: 'relative', width: '100%', aspectRatio: '1', borderRadius: 14, overflow: 'hidden', background: p.c100 }}><Img src={photo(al.img, 400)} /></span>
+                  <span style={{ font: 'var(--type-body-sm)', fontWeight: 700, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.title}</span>
+                  <span style={{ marginTop: -4, font: 'var(--type-caption)', color: 'var(--text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.company} · {p.place}</span>
+                </button>
+              );
+            })}
+          </HScroll>
+        </section>
+      )}
     </div>
   );
 }

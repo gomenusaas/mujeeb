@@ -439,6 +439,48 @@ export function OffersTab() {
   );
 }
 
+/**
+ * The home page's offers: one big advert per company covering the service location (the soonest-ending first,
+ * sponsored companies first: DEMO sponsors), up to 5, each a different offer in a different design, to swipe
+ * through. «الكل» opens the «العروض» tab.
+ */
+export function HomeOffers() {
+  const a = useApp();
+  const g = myGov(a);
+  const all = a.catalog.companies.filter(co => servesArea(a, co.id)).flatMap(co => companyOffers(a, co).map(o => ({ o, co, near: covers(co, g) })));
+  const ordered = sortOffers(all, 'soon').sort((x, y) => Number(isSponsored(y.co.id)) - Number(isSponsored(x.co.id)));
+  // A varied set: each advert a different offer and a different design (others fill in if there aren't enough such).
+  const MAX = 9;
+  // DEMO: «لمسات للديكور»'s first offer (15% on majlis design) always leads while it's a demo offer.
+  const pinned = all.find(x => x.co.id === 'g1-1' && x.o.i === 0 && !x.o.live);
+  const list: ListedOffer[] = [];
+  const cos = new Set<string>(), said = new Set<string>(), styles = new Set<number>(), colors = new Set<string>();
+  const text = (x: ListedOffer) => x.o.kicker + '|' + x.o.big;
+  const fresh = (x: ListedOffer) => !said.has(text(x)) && !styles.has(x.o.style);
+  // Rounds, from strictest to loosest: a new company, text, design and colour; a new company, text and design;
+  // a new text and design (a company's second offer); a new company and design; a new design; anything.
+  const rounds: ((x: ListedOffer) => boolean)[] = [
+    x => !cos.has(x.co.id) && fresh(x) && !colors.has(x.o.color),
+    x => !cos.has(x.co.id) && fresh(x),
+    fresh,
+    x => !cos.has(x.co.id) && !styles.has(x.o.style),
+    x => !styles.has(x.o.style),
+    () => true,
+  ];
+  const add = (x: ListedOffer) => { list.push(x); cos.add(x.co.id); said.add(text(x)); styles.add(x.o.style); colors.add(x.o.color); };
+  if (pinned) add(pinned);
+  for (const ok of rounds) for (const x of ordered) {
+    if (list.length < MAX && !list.includes(x) && ok(x)) add(x);
+  }
+  if (!list.length) return null;
+  return (
+    <section aria-label={a.t.featuredOffers} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ padding: '0 20px' }}><SectionHeader title={a.t.featuredOffers} action={a.t.seeAll} onAction={() => a.setTab('offers')} /></div>
+      <HeroOffers list={list} />
+    </section>
+  );
+}
+
 /** Offers ending within this many days go in «تنتهي قريبًا». */
 const ENDING_DAYS = 10;
 
@@ -622,11 +664,11 @@ function SponsoredStrip({ list, cat, sub }: { list: Company[]; cat: number | nul
 const activeAct = (co: Company, r: { act?: number }) => (co.cats.length < 2 ? null : r.act != null && co.cats.includes(r.act) ? r.act : co.cats[0]);
 
 /** "4 services" with Arabic number agreement (1 خدمة واحدة, 2 خدمتان, 3–10 خدمات, 11+ خدمة). */
-type Words = { ar: [string, string, string, string]; en: [string, string] };
+export type Words = { ar: [string, string, string, string]; en: [string, string] };
 const SVC_W: Words = { ar: ['خدمة واحدة', 'خدمتان', 'خدمات', 'خدمة'], en: ['service', 'services'] };
-const PRJ_W: Words = { ar: ['مشروع واحد', 'مشروعان', 'مشاريع', 'مشروعًا'], en: ['project', 'projects'] };
+export const PRJ_W: Words = { ar: ['مشروع واحد', 'مشروعان', 'مشاريع', 'مشروعًا'], en: ['project', 'projects'] };
 const OFFER_W: Words = { ar: ['عرض واحد', 'عرضان', 'عروض', 'عرضًا'], en: ['offer', 'offers'] };
-function countOf(a: ReturnType<typeof useApp>, n: number, w: Words) {
+export function countOf(a: ReturnType<typeof useApp>, n: number, w: Words) {
   if (!a.ar) return n + ' ' + (n === 1 ? w.en[0] : w.en[1]);
   return n === 1 ? w.ar[0] : n === 2 ? w.ar[1] : helpers(a).num(n) + ' ' + (n <= 10 ? w.ar[2] : w.ar[3]);
 }
@@ -667,7 +709,7 @@ function companyOffers(a: ReturnType<typeof useApp>, co: Company) {
       // Days left, counting today (it ends at the end of its last day, Oman time).
       const days = Math.max(1, Math.ceil((Date.parse(lo.ends + 'T23:59:59+04:00') - Date.now()) / 864e5));
       return {
-        i, svc: s, style: lo.style, color: lo.color, kicker, big, on, title: [kicker, big, on].filter(Boolean).join(' '),
+        i, live: true, svc: s, style: lo.style, color: lo.color, kicker, big, on, title: [kicker, big, on].filter(Boolean).join(' '),
         img: photo(lo.photo || serviceImage(a, s), 700), days, age: Math.max(0, Math.floor((Date.now() - Date.parse(lo.added)) / 864e5)), until: date(new Date(lo.ends + 'T12:00:00+04:00')),
         terms: pick(lo.tAr, lo.tEn).split('\n').map(x => x.trim()).filter(Boolean),
         open: () => a.go('offer', { id: co.id, i }),
@@ -678,7 +720,7 @@ function companyOffers(a: ReturnType<typeof useApp>, co: Company) {
   return offerServices(a.catalog, co.id).map((s, i) => {
     const o = OFFER_DEMO[offerKind(co.id, i)];
     return {
-      i, svc: s, ...demoOfferLook(co.id, i), kicker: L(o.kicker), big: L(o.big), on: L(o.on([s.ar, s.en])), title: L(o.title([s.ar, s.en])),
+      i, live: false, svc: s, ...demoOfferLook(co.id, i), kicker: L(o.kicker), big: L(o.big), on: L(o.on([s.ar, s.en])), title: L(o.title([s.ar, s.en])),
       img: photo(serviceImage(a, s), 700), days: o.days, age: offerAge(co.id, i), until: date(new Date(Date.now() + o.days * 864e5)), terms: [] as string[],
       open: () => a.go('offer', { id: co.id, i }),
     };

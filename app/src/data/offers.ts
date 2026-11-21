@@ -1,5 +1,4 @@
 import type { Catalog, LiveOffer, Service } from './types';
-import { OFFER_PALETTE, OFFER_STYLES } from '../ds/offer';
 
 /*
  * A company's offers: the ones it posted (Supabase `offers`) when it has any, otherwise DEMO offers until companies
@@ -27,10 +26,16 @@ export function demoOfferCount(coId: string): number {
  * kind, so not every company's first offer is the same («لمسات للديكور» keeps the plain order). */
 export const offerKind = (coId: string, i: number) => (i + (coId === 'g1-1' ? 0 : Math.floor(hash(coId) / 7))) % OFFER_KINDS;
 
+/** The designs demo offers use: the photo-led ones (fades, stickers, banners, the white card on a photo…), which make
+ * the best showcase. Companies' own offers can use all OFFER_STYLES. */
+const DEMO_STYLES = [2, 1, 28, 0, 24, 9, 5, 26, 13, 4];
+/** Rich colours for demo offers (no brand blue, so they stand out from the app around them). */
+const DEMO_COLORS = ['#E8590C', '#D6336C', '#0B9AA0', '#6C3FD1', '#3B5BDB', '#E03131', '#2F9E44', '#AE3EC9'];
+
 /** A demo offer's design and colour: different for each of a company's offers, and spread across companies. */
 export function demoOfferLook(coId: string, i: number): { style: number; color: string } {
   const h = hash('look:' + coId);
-  return { style: (h + i * 7) % OFFER_STYLES, color: OFFER_PALETTE[(Math.floor(h / 31) + i * 5) % OFFER_PALETTE.length] };
+  return { style: DEMO_STYLES[(h + i * 3) % DEMO_STYLES.length], color: DEMO_COLORS[(Math.floor(h / 31) + i * 3) % DEMO_COLORS.length] };
 }
 
 /** The service each of a company's demo offers is about (one per offer); empty when it has none. */
