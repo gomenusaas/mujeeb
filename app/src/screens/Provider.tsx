@@ -396,7 +396,7 @@ export function OffersTab() {
       <div style={{ padding: 'calc(var(--top-inset) + 8px) 20px 0', display: 'flex', flexDirection: 'column', gap: 12 }}>
         <LocationBar a={a} style={{ alignSelf: 'flex-start', maxWidth: '100%' }} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <span style={{ font: 'var(--type-h1)' }}>{t.offers}</span>
+          <span style={{ font: 'var(--type-h2)' }}>{t.offers}</span>
           <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-secondary)' }}>{countOf(a, all.length, OFFER_W)}</span>
         </div>
       </div>

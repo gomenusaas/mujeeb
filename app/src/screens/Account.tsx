@@ -42,7 +42,7 @@ export function Profile() {
   return (
     <div style={{ ...ROOT, gap: 18 }}>
       {/* Page title, like «جميع الخدمات» on the services tab. */}
-      <span style={{ font: 'var(--type-h1)' }}>{t.myAccount}</span>
+      <span style={{ font: 'var(--type-h2)' }}>{t.myAccount}</span>
       {live && !me ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: 18, ...card }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>

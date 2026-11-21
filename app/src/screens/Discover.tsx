@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Avatar, BottomSheet, Button, CategoryCard, Chip, EmptyState, Icon, SectionHeader } from '../ds';
+import { Avatar, BottomSheet, Button, Chip, EmptyState, Icon, SectionHeader } from '../ds';
 import { useApp } from '../app/store';
 import { HScroll, Img, LocationBar, card, exploreMedia, helpers, myGov, servesArea } from '../app/view';
 import { ALL_OMAN } from '../data/oman';
@@ -141,10 +141,17 @@ export function Categories() {
   return (
     <div style={{ ...ROOT_PAD, display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <span style={{ font: 'var(--type-h1)' }}>{t.allCats}</span>
+        <span style={{ font: 'var(--type-h2)' }}>{t.allCats}</span>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {catalog.cats.map(c => <CategoryCard key={c.i} label={h.cname(c.i)} art={c.art && flatArt(c.art)} icon={c.icon} color={c.color} onClick={() => a.go('listing', { cat: c.i })} />)}
+      {/* A plain list on the page: each service's flat icon and name, a thin line between rows (no cards). */}
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        {catalog.cats.map((c, k) => (
+          <button key={c.i} type="button" onClick={() => a.go('listing', { cat: c.i })}
+            style={{ display: 'flex', alignItems: 'center', gap: 14, width: '100%', minHeight: 60, padding: '10px 0', border: 'none', borderTop: k ? '1px solid var(--border-default)' : 'none', background: 'none', cursor: 'pointer', textAlign: 'start', fontFamily: 'var(--font-sans)' }}>
+            {c.art ? <img src={flatArt(c.art)} alt="" style={{ flex: 'none', width: 30, height: 30 }} /> : <Icon name={c.icon} size={26} color={'var(--cat-' + c.color + '-600)'} />}
+            <span style={{ flex: 1, font: 'var(--type-title)', fontWeight: 'var(--fw-medium)', color: 'var(--text-primary)' }}>{h.cname(c.i)}</span>
+          </button>
+        ))}
       </div>
     </div>
   );
@@ -169,7 +176,7 @@ export function Explore() {
       <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
         {/* The app's service location, at the very top (only work from companies covering it). */}
         <LocationBar a={a} style={{ alignSelf: 'flex-start', maxWidth: '100%' }} />
-        <span style={{ font: 'var(--type-h1)' }}>{t.exploreTitle}</span>
+        <span style={{ font: 'var(--type-h2)' }}>{t.exploreTitle}</span>
       </div>
       <div className="mj-s" style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '0 20px', scrollbarWidth: 'none' }}>
         <Chip selected={exCat < 0} onClick={() => setExCat(-1)}>{t.all}</Chip>
