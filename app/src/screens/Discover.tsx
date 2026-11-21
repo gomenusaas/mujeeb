@@ -4,7 +4,7 @@ import { useApp } from '../app/store';
 import { HScroll, Img, LocationBar, MetaLine, card, exploreMedia, helpers, myGov, servesArea } from '../app/view';
 import { ALL_OMAN } from '../data/oman';
 import { logoUrl, photo } from '../data/api';
-import { StoryRow } from './Stories';
+import { StoryCircles } from './Stories';
 import { Masonry } from './Provider';
 
 const ROOT_PAD = { padding: 'calc(var(--top-inset) + 8px) 20px 100px' };
@@ -48,37 +48,43 @@ export function Home() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 26, paddingBottom: 100 }}>
       <div>
-        <div style={{ position: 'relative', overflow: 'hidden', background: 'var(--brand)', color: '#fff', padding: 'calc(var(--top-inset) + 8px) 20px 20px', borderRadius: '0 0 32px 32px' }}>
+        <div style={{ position: 'relative', overflow: 'hidden', background: 'var(--brand)', color: '#fff', padding: 'calc(var(--top-inset) + 2px) 20px 56px' }}>
           <span style={{ position: 'absolute', insetInlineEnd: -60, top: -40, width: 200, height: 200, borderRadius: '50%', background: 'oklch(1 0 0 / .08)' }} />
           <span style={{ position: 'absolute', insetInlineEnd: 40, bottom: -70, width: 140, height: 140, borderRadius: '50%', background: 'oklch(1 0 0 / .06)' }} />
           {/* The header: the app's service location at the very top (it filters the sections below), then the search bar
               inside the header. No logo, language or bell: language is in «حسابي», and new notifications show as a dot
               on its tab. */}
-          <LocationBar a={a} light style={{ position: 'relative', marginTop: 8 }} />
-          <button type="button" onClick={() => a.go('listing')} style={{ position: 'relative', width: '100%', marginTop: 16, display: 'flex', alignItems: 'center', gap: 10, height: 52, paddingInline: '18px 6px', border: 'none', cursor: 'pointer', borderRadius: 'var(--radius-pill)', background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)', fontFamily: 'var(--font-sans)' }}>
+          {/* The MUJEEB logo (white, public/logo-white.png), centred at the top. */}
+          <img src="/logo-white.png" alt={t.brand} style={{ position: 'relative', display: 'block', height: 28, width: 'auto', margin: '4px auto 24px' }} />
+          <LocationBar a={a} light style={{ position: 'relative' }} />
+          <button type="button" onClick={() => a.go('listing')} style={{ position: 'relative', width: '100%', marginTop: 20, display: 'flex', alignItems: 'center', gap: 10, height: 44, paddingInline: '16px 5px', border: 'none', cursor: 'pointer', borderRadius: 'var(--radius-pill)', background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)', fontFamily: 'var(--font-sans)' }}>
             <Icon name="search" size={20} color="var(--text-tertiary)" />
             <span style={{ flex: 1, minWidth: 0, font: 'var(--type-body)', fontWeight: 500, color: 'var(--text-tertiary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'start' }}>{t.search}</span>
-            <span style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--brand)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="sliders-horizontal" size={18} /></span>
+            <span style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--brand)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="sliders-horizontal" size={16} /></span>
           </button>
+          {/* Companies' stories as circles, under the search bar. */}
+          <div style={{ marginTop: 18 }}><StoryCircles /></div>
         </div>
+        {/* Reversed corners: the page curves up into the header (the purple shows at the two corners). */}
+        <div aria-hidden="true" style={{ position: 'relative', height: 34, marginTop: -33, marginBottom: -1, borderRadius: '32px 32px 0 0', background: 'var(--bg-app)' }} />
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <div className="mj-s" style={{ display: 'grid', gridTemplateRows: 'repeat(2,auto)', gridAutoFlow: 'column', gridAutoColumns: 'calc(100% - 64px)', gap: 10, overflowX: 'auto', scrollSnapType: 'x mandatory', scrollPaddingInline: 20, padding: '4px 20px 12px', margin: '-4px 0 -12px', scrollbarWidth: 'none' }}>
+        {/* The categories as small white cards in two rows that scroll sideways (the category's icon in its colour, how
+            many companies serve the area, the name, a photo). */}
+        <div className="mj-s" style={{ display: 'grid', gridTemplateRows: 'repeat(2,auto)', gridAutoFlow: 'column', gridAutoColumns: 'calc(72% - 20px)', gap: 10, overflowX: 'auto', scrollSnapType: 'x mandatory', scrollPaddingInline: 20, padding: '4px 20px 12px', margin: '-4px 0 -12px', scrollbarWidth: 'none' }}>
           {featCats.map(c => (
             <button key={c.i} type="button" className="mj-press-sm" onClick={() => a.go('listing', { cat: c.i })}
-              style={{ overflow: 'hidden', height: 92, border: 'none', padding: 0, borderRadius: 'var(--radius-card)', background: 'var(--cat-' + c.color + '-600)', cursor: 'pointer', scrollSnapAlign: 'start', display: 'flex', alignItems: 'stretch', fontFamily: 'var(--font-sans)' }}>
-              <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', gap: 6, padding: '0 16px', textAlign: 'start' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#fff', opacity: 0.92 }}><Icon name={c.icon} size={18} /><span style={{ font: 'var(--type-caption)' }}>{c.count}</span></span>
-                <span style={{ font: 'var(--type-title)', color: '#fff' }}>{c.label}</span>
+              style={{ overflow: 'hidden', height: 74, border: '1px solid var(--border-default)', padding: 0, borderRadius: 'var(--radius-card)', background: 'var(--surface-card)', cursor: 'pointer', scrollSnapAlign: 'start', display: 'flex', alignItems: 'stretch', fontFamily: 'var(--font-sans)' }}>
+              <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', gap: 3, padding: '0 12px', textAlign: 'start' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--cat-' + c.color + '-600)' }}><Icon name={c.icon} size={15} /><span style={{ font: 'var(--type-caption)', color: 'var(--text-secondary)' }}>{c.count}</span></span>
+                <span style={{ font: 'var(--type-body-strong)', lineHeight: 1.3, color: 'var(--text-primary)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{c.label}</span>
               </span>
-              <img src={c.img} alt="" loading="lazy" style={{ flex: 'none', width: '38%', height: '100%', objectFit: 'cover' }} />
+              <img src={c.img} alt="" loading="lazy" style={{ flex: 'none', width: '32%', height: '100%', objectFit: 'cover' }} />
             </button>
           ))}
         </div>
       </div>
-
-      <StoryRow />
 
       <LatestProjects />
 
@@ -223,7 +229,7 @@ export function LocationSheet() {
           style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', minHeight: 48, padding: '0 4px', border: 'none', borderBottom: '1px solid var(--border-subtle)', background: 'none', cursor: 'pointer', textAlign: 'start', fontFamily: 'var(--font-sans)', font: 'var(--type-body)', fontWeight: cur === ALL_OMAN ? 700 : 500, color: cur === ALL_OMAN ? 'var(--brand)' : 'var(--text-primary)' }}>
           <Icon name="globe" size={18} color={cur === ALL_OMAN ? 'var(--brand)' : 'var(--text-secondary)'} />
           <span style={{ flex: 1 }}>{t.allOman}</span>
-          {cur === ALL_OMAN && <Icon name="check" size={20} color="var(--brand)" />}
+          {cur === ALL_OMAN && <Icon name="check" size={20} color="var(--accent)" />}
         </button>
       )}
       {!groups.length && <div style={{ padding: '24px 0', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-tertiary)' }}>{t.noWilayat}</div>}
@@ -241,7 +247,7 @@ export function LocationSheet() {
               <button key={x.id} type="button" onClick={() => pick(x.id)} aria-pressed={on}
                 style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 48, padding: '0 4px', border: 'none', borderBottom: '1px solid var(--border-subtle)', background: 'none', cursor: 'pointer', textAlign: 'start', fontFamily: 'var(--font-sans)', font: 'var(--type-body)', fontWeight: on ? 700 : 500, color: on ? 'var(--brand)' : 'var(--text-primary)' }}>
                 <span style={{ flex: 1 }}>{ar ? x.ar : x.en}</span>
-                {on && <Icon name="check" size={20} color="var(--brand)" />}
+                {on && <Icon name="check" size={20} color="var(--accent)" />}
               </button>
             );
           })}

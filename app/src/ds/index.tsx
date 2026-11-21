@@ -43,7 +43,7 @@ export function Avatar({ name = '', src, size = 44, online, verified, style }: {
       </span>
       {online && <span style={{ position: 'absolute', right: 0, bottom: 0, width: Math.max(10, size * 0.26), height: Math.max(10, size * 0.26), borderRadius: '50%', background: 'var(--success)', boxShadow: '0 0 0 2px var(--surface-card)' }} />}
       {verified && (
-        <span style={{ position: 'absolute', right: -2, bottom: -2, width: Math.max(16, size * 0.34), height: Math.max(16, size * 0.34), borderRadius: '50%', background: 'var(--brand)', boxShadow: '0 0 0 2px var(--surface-card)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ position: 'absolute', right: -2, bottom: -2, width: Math.max(16, size * 0.34), height: Math.max(16, size * 0.34), borderRadius: '50%', background: 'var(--accent)', boxShadow: '0 0 0 2px var(--surface-card)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Icon name="check" size={Math.max(10, size * 0.2)} color="#fff" strokeWidth={3} />
         </span>
       )}
@@ -248,7 +248,7 @@ export function EmptyState({ icon = 'calendar-x', color = 'violet', title, body,
   );
 }
 
-const TOAST: Record<string, [string, string]> = { success: ['circle-check', 'var(--success)'], error: ['circle-alert', 'var(--danger)'], info: ['info', 'var(--violet-300)'] };
+const TOAST: Record<string, [string, string]> = { success: ['circle-check', 'var(--success)'], error: ['circle-alert', 'var(--danger)'], info: ['info', 'var(--brand-300)'] };
 export function Toast({ message, tone = 'success', style }: { message: ReactNode; tone?: string; style?: Style }) {
   const [ic, c] = TOAST[tone] || TOAST.success;
   return (
@@ -353,7 +353,7 @@ export function ChatBubble({ children, mine, time, style }: { children?: ReactNo
 export function PromoBanner({ eyebrow, title, cta = 'Book now', color = 'violet', imageLabel = 'promo image', onClick, style }: {
   eyebrow?: ReactNode; title: ReactNode; cta?: ReactNode; color?: string; imageLabel?: string; onClick?: () => void; style?: Style;
 }) {
-  const bg = color === 'brand' || color === 'violet' ? 'var(--violet-600)' : color === 'dark' ? 'var(--neutral-900)' : 'var(--cat-' + color + '-600)';
+  const bg = color === 'brand' ? 'var(--brand)' : color === 'violet' ? 'var(--violet-600)' : color === 'dark' ? 'var(--neutral-900)' : 'var(--cat-' + color + '-600)';
   return (
     <div onClick={onClick} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter') onClick?.(); }}
       style={{ position: 'relative', display: 'flex', height: 156, borderRadius: 'var(--radius-card)', overflow: 'hidden', background: bg, color: '#fff', cursor: 'pointer', fontFamily: 'var(--font-sans)', ...style }}>
@@ -447,15 +447,17 @@ export function SegmentedControl<T extends string>({ options, value, onChange, s
   );
 }
 
-export function TabBar<T extends string>({ items, active, onChange, style }: {
+export function TabBar<T extends string>({ items, active, onChange, style, labels = true }: {
   items: { id: T; icon: string; label: ReactNode; badge?: string; dot?: boolean }[]; active: T; onChange?: (id: T) => void; style?: Style;
+  /** false: icons only (each label is then the button's accessible name). */
+  labels?: boolean;
 }) {
   return (
     <nav style={{ display: 'flex', alignItems: 'stretch', height: 'calc(var(--tabbar-height) + var(--safe-bottom))', padding: '6px 8px calc(14px + var(--safe-bottom))', background: 'oklch(1 0 0 / 0.92)', backdropFilter: 'var(--blur-bar)', WebkitBackdropFilter: 'var(--blur-bar)', boxShadow: 'var(--shadow-up)', fontFamily: 'var(--font-sans)', ...style }}>
       {items.map(it => {
         const on = it.id === active;
         return (
-          <button key={it.id} type="button" aria-current={on ? 'page' : undefined} onClick={() => onChange && onChange(it.id)}
+          <button key={it.id} type="button" aria-current={on ? 'page' : undefined} aria-label={!labels && typeof it.label === 'string' ? it.label : undefined} onClick={() => onChange && onChange(it.id)}
             style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, border: 'none', background: 'none', cursor: 'pointer', color: on ? 'var(--brand)' : 'var(--text-tertiary)', position: 'relative' }}>
             <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 56, height: 30, borderRadius: 'var(--radius-pill)', background: on ? 'var(--brand-tint-strong)' : 'transparent', transition: 'background var(--dur-base) var(--ease-out)', position: 'relative' }}>
               <Icon name={it.icon} size={22} />
@@ -463,7 +465,7 @@ export function TabBar<T extends string>({ items, active, onChange, style }: {
               {it.dot && !it.badge && <span aria-hidden="true" style={{ position: 'absolute', top: 2, insetInlineEnd: 15, width: 9, height: 9, borderRadius: 9, background: 'var(--danger)', boxShadow: '0 0 0 2px #fff' }} />}
               {it.badge && <span style={{ position: 'absolute', top: 0, insetInlineEnd: 12, minWidth: 16, height: 16, padding: '0 4px', borderRadius: 16, background: 'var(--accent)', color: '#fff', font: '700 10px/16px var(--font-sans)', boxShadow: '0 0 0 2px #fff' }}>{it.badge}</span>}
             </span>
-            <span style={{ font: 'var(--type-overline)', fontWeight: on ? 700 : 600 }}>{it.label}</span>
+            {labels && <span style={{ font: 'var(--type-overline)', fontWeight: on ? 700 : 600 }}>{it.label}</span>}
           </button>
         );
       })}

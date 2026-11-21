@@ -548,7 +548,7 @@ export function SortSheet() {
           <button key={k} type="button" role="radio" aria-checked={cur === k} onClick={() => choose(k)}
             style={{ display: 'flex', alignItems: 'center', gap: 12, height: 52, padding: 0, border: 'none', borderTop: n ? '1px solid var(--border-subtle)' : 'none', background: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'start', font: cur === k ? 'var(--type-body-strong)' : 'var(--type-body)', color: cur === k ? 'var(--brand)' : 'var(--text-primary)' }}>
             <span style={{ flex: 1 }}>{t[name]}</span>
-            {cur === k && <Icon name="check" size={20} />}
+            {cur === k && <Icon name="check" size={20} color="var(--accent)" />}
           </button>
         ))}
       </div>
@@ -807,7 +807,7 @@ export function OfferPage() {
           {/* The company's own conditions, or the usual ones when it wrote none. */}
           {(o.terms.length ? o.terms : OFFER_TERMS.map(term => L(term(o.until)))).map((term, k) => (
             <span key={k} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }}>
-              <Icon name="check" size={16} color="var(--brand)" style={{ flex: 'none', marginTop: 2 }} />{term}
+              <Icon name="check" size={16} color="var(--accent)" style={{ flex: 'none', marginTop: 2 }} />{term}
             </span>
           ))}
         </section>
@@ -884,7 +884,7 @@ export function ActivitySheet() {
     setSheet(null);
     if (v !== cur) a.replace('company', { id: co.id, act: v });
   };
-  const check = (on: boolean) => (on ? <Icon name="check" size={20} color="var(--brand)" /> : null);
+  const check = (on: boolean) => (on ? <Icon name="check" size={20} color="var(--accent)" /> : null);
   return (
     <BottomSheet open={open} onClose={() => setSheet(null)} title={t.activity}>
       {cats.map(c => (

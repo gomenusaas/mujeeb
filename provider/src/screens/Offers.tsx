@@ -201,7 +201,7 @@ function OfferEditor({ offer, services, onClose, onSaved }: { offer: Offer; serv
                 <button key={s} type="button" aria-label={t.offerStyle + ' ' + (s + 1)} aria-pressed={o.style === s} onClick={() => set({ style: s })}
                   style={{ position: 'relative', padding: 0, border: 'none', borderRadius: 10, overflow: 'hidden', cursor: 'pointer', background: 'none', boxShadow: o.style === s ? '0 0 0 3px var(--brand)' : '0 1px 4px oklch(0.2 0.03 285 / 0.18)' }}>
                   <OfferArt d={art({ ...o, style: s }, svc)} rtl={p.ar} />
-                  {o.style === s && <span style={{ position: 'absolute', top: 6, insetInlineEnd: 6, width: 22, height: 22, borderRadius: '50%', background: 'var(--brand)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="check" size={14} /></span>}
+                  {o.style === s && <span style={{ position: 'absolute', top: 6, insetInlineEnd: 6, width: 22, height: 22, borderRadius: '50%', background: 'var(--accent)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="check" size={14} /></span>}
                 </button>
               ))}
             </div>

@@ -19,7 +19,7 @@ function useLang() {
 
 export function Frame({ children, flip, other, wide }: { children: ReactNode; flip: () => void; other: string; wide?: boolean }) {
   return (
-    <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, background: 'linear-gradient(160deg, var(--violet-600), var(--violet-800, #2a1670))' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, background: 'linear-gradient(160deg, var(--brand-600), var(--brand-800))' }}>
       <div style={{ width: '100%', maxWidth: wide ? 560 : 420, display: 'flex', flexDirection: 'column', gap: 18, padding: '30px 26px', borderRadius: 26, background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ font: '800 24px/28px var(--font-sans)' }}>مجيب<span style={{ color: 'var(--brand)' }}>.</span></span>
@@ -160,7 +160,7 @@ export function RegisterCompany({ repo, email, refs, onDone, onSignOut }: {
             return (
               <button key={c.id} type="button" aria-pressed={k >= 0} onClick={() => toggle(c.id)}
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 36, padding: '0 14px', borderRadius: 999, cursor: 'pointer', font: '600 13px var(--font-sans)',
-                  border: k >= 0 ? '1.5px solid var(--brand)' : '1px solid var(--border-default)', background: k >= 0 ? 'var(--violet-50, #f3efff)' : 'var(--surface-card)', color: k >= 0 ? 'var(--brand)' : 'var(--text-primary)' }}>
+                  border: k >= 0 ? '1.5px solid var(--brand)' : '1px solid var(--border-default)', background: k >= 0 ? 'var(--brand-tint)' : 'var(--surface-card)', color: k >= 0 ? 'var(--brand)' : 'var(--text-primary)' }}>
                 {k >= 0 && <span style={{ width: 18, height: 18, borderRadius: '50%', background: 'var(--brand)', color: '#fff', font: '700 11px/18px var(--font-sans)', textAlign: 'center' }}>{ar ? '١٢٣'[k] : k + 1}</span>}
                 {pick(c.name_ar, c.name_en)}
               </button>

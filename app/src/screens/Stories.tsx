@@ -298,3 +298,49 @@ export function StoryViewer() {
     </div>
   );
 }
+
+/**
+ * The home header's stories: one circle per company (its newest story's picture inside a ring: bright while any of
+ * its stories is unwatched, faint once all are), the company name under it, in a sideways row on the purple header.
+ * Tapping opens the company's first unwatched story (else its first), and the viewer carries on through the rest.
+ * `bg`: the header colour behind them (the gap inside each ring); `ink`: the names' colour.
+ */
+export function StoryCircles({ bg = 'var(--brand)', ink = '#fff' }: { bg?: string; ink?: string }) {
+  const a = useApp();
+  const h = helpers(a);
+  const list = storiesFor(a);
+  if (!list.length) return null;
+  const order: string[] = [];
+  const byCo = new Map<string, Story[]>();
+  for (const s of list) {
+    if (!byCo.has(s.co)) { byCo.set(s.co, []); order.push(s.co); }
+    byCo.get(s.co)!.push(s);
+  }
+  const groups = order.map(co => {
+    const ss = byCo.get(co)!;
+    return { co, ss, seen: ss.every(s => a.seen[s.id]), open: (ss.find(s => !a.seen[s.id]) || ss[0]).id };
+  });
+  // Unwatched companies first (each group keeps its place otherwise).
+  groups.sort((x, y) => Number(x.seen) - Number(y.seen));
+  return (
+    <section aria-label={a.t.stories} className="mj-s"
+      style={{ position: 'relative', display: 'flex', gap: 14, overflowX: 'auto', margin: '0 -20px', padding: '2px 20px 4px', scrollbarWidth: 'none' }}>
+      {groups.map(g => {
+        const co = a.idx.co.get(g.co)!;
+        const name = h.coName(co);
+        return (
+          <button key={g.co} type="button" className="mj-press-sm" onClick={() => a.go('story', { id: g.open })} aria-label={name}
+            style={{ flex: 'none', width: 68, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: 0, border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', color: ink }}>
+            {/* The ring, a thin purple gap, then the picture. */}
+            <span style={{ display: 'inline-flex', padding: 2.5, borderRadius: '50%', background: g.seen ? (ink === '#fff' ? 'oklch(1 0 0 / .35)' : 'oklch(0 0 0 / .2)') : 'linear-gradient(135deg, #FFE08A, var(--accent) 60%, var(--accent-ink))' }}>
+              <span style={{ display: 'inline-flex', padding: 2.5, borderRadius: '50%', background: bg }}>
+                <img src={g.ss[0].poster} alt="" loading="lazy" decoding="async" draggable={false} style={{ width: 58, height: 58, borderRadius: '50%', objectFit: 'cover', display: 'block', background: 'oklch(1 0 0 / .2)' }} />
+              </span>
+            </span>
+            <span style={{ width: '100%', font: '600 11px/14px var(--font-sans)', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', opacity: g.seen ? 0.75 : 1 }}>{name}</span>
+          </button>
+        );
+      })}
+    </section>
+  );
+}

@@ -79,7 +79,7 @@ export function Profile() {
               style={{ display: 'flex', alignItems: 'center', gap: 14, width: '100%', minHeight: 56, padding: '10px 4px', border: 'none', background: 'none', cursor: c.live ? 'pointer' : 'default', textAlign: 'start', fontFamily: 'var(--font-sans)', opacity: c.live ? 1 : 0.55 }}>
               <span aria-hidden="true" style={{ flex: 'none', width: 40, height: 40, borderRadius: 12, background: 'var(--neutral-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>{c.flag}</span>
               <span style={{ flex: 1, font: 'var(--type-body-strong)', color: 'var(--text-primary)' }}>{ar ? c.ar : c.en}</span>
-              {c.live ? <Icon name="check" size={20} color="var(--brand)" /> : <Badge tone="neutral" size="sm">{t.comingSoon}</Badge>}
+              {c.live ? <Icon name="check" size={20} color="var(--accent)" /> : <Badge tone="neutral" size="sm">{t.comingSoon}</Badge>}
             </button>
           ))}
         </BottomSheet>

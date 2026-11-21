@@ -132,7 +132,7 @@ function Phone() {
         {showTabs && (
           <div style={{ position: 'absolute', insetInline: 0, bottom: 0, zIndex: 10 }}>
             {/* A red dot on «حسابي» while there are notifications not yet looked at (demo notifications; see NOTIFS). */}
-            <TabBar items={TABS.map(x => ({ ...x, label: t[x.id], dot: x.id === 'profile' && !auth.enabled && NOTIFS.length > 0 && !a.notifsSeen }))} active={tab} onChange={a.setTab} />
+            <TabBar items={TABS.map(x => ({ ...x, label: t[x.id], dot: x.id === 'profile' && !auth.enabled && NOTIFS.length > 0 && !a.notifsSeen }))} active={tab} onChange={a.setTab} labels={false} />
           </div>
         )}
         {reachCo && <CompanySheet co={reachCo} />}

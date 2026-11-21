@@ -98,7 +98,7 @@ function Bars({ data }: { data: { day: string; n: number }[] }) {
       <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} preserveAspectRatio="none" role="img" aria-label={p.t.dailyViews} style={{ transform: p.ar ? 'scaleX(-1)' : undefined }}>
         {data.map((d, k) => {
           const h = Math.max(3, (d.n / max) * (H - 8));
-          return <rect key={d.day} x={k * (bw + gap)} y={H - h} width={bw} height={h} rx={5} fill={k === data.length - 1 ? 'var(--brand)' : 'var(--violet-200, oklch(0.88 0.06 292))'}><title>{fmt(d.day) + ': ' + d.n}</title></rect>;
+          return <rect key={d.day} x={k * (bw + gap)} y={H - h} width={bw} height={h} rx={5} fill={k === data.length - 1 ? 'var(--brand)' : 'var(--brand-200)'}><title>{fmt(d.day) + ': ' + d.n}</title></rect>;
         })}
       </svg>
       <span style={{ display: 'flex', justifyContent: 'space-between', font: 'var(--type-caption)', color: 'var(--text-tertiary)' }}>

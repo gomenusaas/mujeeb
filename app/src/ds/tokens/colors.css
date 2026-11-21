@@ -11,6 +11,18 @@
   --violet-800: oklch(0.36 0.17 292);
   --violet-900: oklch(0.27 0.12 292);
 
+  /* MUJEEB blue, the brand colour (600 ≈ #1E5FD8). */
+  --brand-50: oklch(0.97 0.02 262);
+  --brand-100: oklch(0.93 0.045 262);
+  --brand-200: oklch(0.86 0.09 262);
+  --brand-300: oklch(0.76 0.13 262);
+  --brand-400: oklch(0.66 0.17 262);
+  --brand-500: oklch(0.58 0.19 262);
+  --brand-600: oklch(0.52 0.19 262);
+  --brand-700: oklch(0.45 0.17 262);
+  --brand-800: oklch(0.37 0.14 262);
+  --brand-900: oklch(0.28 0.1 262);
+
   /* Neutrals (cool, faintly violet) */
   --neutral-0: oklch(1 0 0);
   --neutral-25: oklch(0.985 0.004 285);
@@ -79,19 +91,21 @@
   --star: oklch(0.8 0.16 80);
 
   /* Aliases */
-  --brand: var(--violet-600);
-  --brand-pressed: var(--violet-700);
-  --brand-tint: var(--violet-50);
-  --brand-tint-strong: var(--violet-100);
-  --brand-ink: var(--violet-700);
-  --accent: var(--cat-coral-600);
-  --accent-tint: var(--cat-coral-50);
+  --brand: var(--brand-600);
+  --brand-pressed: var(--brand-700);
+  --brand-tint: var(--brand-50);
+  --brand-tint-strong: var(--brand-100);
+  --brand-ink: var(--brand-700);
+  /* The accent with the green: a warm gold, for check marks, the verified badge, story rings and small highlights. */
+  --accent: oklch(0.72 0.15 70);
+  --accent-ink: oklch(0.52 0.12 62);
+  --accent-tint: oklch(0.97 0.035 85);
 
   --bg-app: var(--neutral-25);
   --surface-card: var(--neutral-0);
   --surface-sunken: var(--neutral-50);
   --surface-inverse: var(--neutral-900);
-  --surface-brand: var(--violet-600);
+  --surface-brand: var(--brand-600);
   --surface-scrim: oklch(0.2 0.02 285 / 0.45);
 
   --text-primary: var(--neutral-900);
@@ -99,10 +113,10 @@
   --text-tertiary: var(--neutral-500);
   --text-disabled: var(--neutral-400);
   --text-on-brand: var(--neutral-0);
-  --text-link: var(--violet-600);
+  --text-link: var(--brand-600);
 
   --border-subtle: var(--neutral-100);
   --border-default: var(--neutral-200);
   --border-strong: var(--neutral-300);
-  --focus-ring: oklch(0.58 0.23 292 / 0.35);
+  --focus-ring: oklch(0.52 0.19 262 / 0.35);
 }
