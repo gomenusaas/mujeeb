@@ -10,7 +10,7 @@ import { HomeOffers, Masonry, PRJ_W, countOf } from './Provider';
 const ROOT_PAD = { padding: 'calc(var(--top-inset) + 8px) 20px 100px' };
 
 /** The flat 2D version of a category's 3D art (public/art/flat: Fluent emoji «Flat», MIT licence, plus our own camera
- * and cupboard drawn to match), for the home services grid; other art is shown as it is. */
+ * and cupboard drawn to match), for the home services grid and the «الخدمات» page; other art is shown as it is. */
 const FLAT_ART: Record<string, string> = {
   building_construction_3d: 'construction', snowflake_3d: 'snowflake', light_bulb_3d: 'bulb', shower_3d: 'shower',
   couch_and_lamp_3d: 'couch', window_3d: 'window', fire_extinguisher_3d: 'extinguisher', potted_plant_3d: 'plant',
@@ -144,7 +144,7 @@ export function Categories() {
         <span style={{ font: 'var(--type-h1)' }}>{t.allCats}</span>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {catalog.cats.map(c => <CategoryCard key={c.i} label={h.cname(c.i)} art={c.art} icon={c.icon} color={c.color} onClick={() => a.go('listing', { cat: c.i })} />)}
+        {catalog.cats.map(c => <CategoryCard key={c.i} label={h.cname(c.i)} art={c.art && flatArt(c.art)} icon={c.icon} color={c.color} onClick={() => a.go('listing', { cat: c.i })} />)}
       </div>
     </div>
   );

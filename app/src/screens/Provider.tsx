@@ -73,11 +73,11 @@ export function Masonry({ items, onOpen, cols = 2 }: { items: Media[]; onOpen: (
  * The company page's gallery: square photos and videos, three across with thin gaps (like a business profile).
  * More than `per` become a sideways strip of pages of `per` (3 × 4), the next page peeking in at the edge.
  */
-function SquareGrid({ items, onOpen, per = 12 }: { items: Media[]; onOpen: (k: number) => void; per?: number }) {
+function SquareGrid({ items, onOpen, per = 12, zoom = true }: { items: Media[]; onOpen: (k: number) => void; per?: number; zoom?: boolean }) {
   const fill: CSSProperties = { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' };
   const tile = (m: Media, k: number) => (
     <button key={k} type="button" onClick={() => onOpen(k)} aria-label={m.video ? 'video' : 'photo'}
-      style={{ position: 'relative', aspectRatio: '1/1', padding: 0, border: 'none', borderRadius: 6, overflow: 'hidden', background: 'var(--neutral-100)', cursor: 'zoom-in' }}>
+      style={{ position: 'relative', aspectRatio: '1/1', padding: 0, border: 'none', borderRadius: 6, overflow: 'hidden', background: 'var(--neutral-100)', cursor: zoom ? 'zoom-in' : 'pointer' }}>
       {m.video
         ? <video src={m.src + '#t=0.1'} muted loop playsInline autoPlay preload="metadata" style={fill} />
         : <img src={photo(m.src, 360)} alt="" loading="lazy" decoding="async" style={fill} />}
@@ -103,6 +103,9 @@ function SquareGrid({ items, onOpen, per = 12 }: { items: Media[]; onOpen: (k: n
     </div>
   );
 }
+
+/** How many photos and videos the company page's «معرض الأعمال» shows (3 × 5). */
+const GALLERY_SHOWN = 15;
 
 /** A project's number within its company («مشروع رقم N»): its place when the company's projects are in the order they were added. */
 function projectNumber(a: ReturnType<typeof useApp>, al: Album) {
@@ -1047,10 +1050,15 @@ export function CompanyPage() {
         {allMedia.length > 0 && (
             <section aria-label={t.gallery} style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 10 }}>
               <SectionHeader title={<>{t.workGallery} <span style={{ color: 'var(--text-tertiary)' }}>{h.num(gallery.length)}</span></>}
-                action={gallery.length > 12 ? t.seeAll : null} onAction={() => a.setSheet('gallery')} />
-              {/* Square tiles in line with the page content: pages of 12 (3 × 4) scrolling sideways when there are more. */}
+                action={gallery.length > GALLERY_SHOWN ? t.seeAll : null} onAction={() => a.setSheet('gallery')} />
+              {/* Square tiles in line with the page content: the first GALLERY_SHOWN (3 × 5), no sideways scrolling;
+                  «عرض الكل» opens the rest. A tile opens the project it's from (a photo viewer when it has none). */}
               {gallery.length
-                ? <SquareGrid key={act ?? 'all'} items={gallery} onOpen={k => a.go('photo', { src: 'gallery', id: co.id, i: k, ...(act != null ? { act } : {}) })} />
+                ? <SquareGrid key={act ?? 'all'} items={gallery.slice(0, GALLERY_SHOWN)} per={GALLERY_SHOWN} zoom={false} onOpen={k => {
+                    const al = gallery[k].al;
+                    if (al) a.go('album', { id: al.id });
+                    else a.go('photo', { src: 'gallery', id: co.id, i: k, ...(act != null ? { act } : {}) });
+                  }} />
                 : <EmptyLine>{t.actNoMedia}</EmptyLine>}
             </section>
         )}

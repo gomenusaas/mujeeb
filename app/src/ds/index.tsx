@@ -321,7 +321,8 @@ export function TextField({ label, placeholder, value, onChange, icon, helper, e
   );
 }
 
-/** CategoryCard — only the `row` variant is used by the app: a white card with a border, the category's art on a tile in its colour. */
+/** CategoryCard — only the `row` variant is used by the app: a white card with a border, the category's art (flat 2D) on a
+ * white tile with a thin border, like the home services grid; without art, its icon on a tile in its colour. */
 export function CategoryCard({ icon, art, label, color = 'violet', count, onClick, style }: {
   icon: string; art?: string; label: ReactNode; color?: string; count?: number; onClick?: () => void; style?: Style;
 }) {
@@ -330,8 +331,8 @@ export function CategoryCard({ icon, art, label, color = 'violet', count, onClic
   return (
     <button type="button" onClick={onClick} {...press(setP)}
       style={{ display: 'flex', alignItems: 'center', gap: 14, width: '100%', padding: 12, border: '1px solid var(--border-default)', borderRadius: 'var(--radius-card)', background: 'var(--surface-card)', cursor: 'pointer', textAlign: 'start', fontFamily: 'var(--font-sans)', transform: p ? 'scale(0.95)' : 'none', transition: 'transform var(--dur-base) var(--ease-spring)', ...style }}>
-      <span style={{ flex: 'none', width: 52, height: 52, borderRadius: 'var(--radius-tile)', background: art ? c(100) : c(500), color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        {art ? <img src={art} alt="" style={{ width: 38, height: 38, filter: 'drop-shadow(0 4px 5px oklch(0.3 0.1 285 / 0.25))' }} /> : <Icon name={icon} size={26} />}
+      <span style={{ flex: 'none', width: 52, height: 52, borderRadius: 'var(--radius-tile)', background: art ? 'var(--surface-card)' : c(500), border: art ? '1px solid var(--border-default)' : 'none', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {art ? <img src={art} alt="" style={{ width: 32, height: 32 }} /> : <Icon name={icon} size={26} />}
       </span>
       <span style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
         <span style={{ font: 'var(--type-title)', color: 'var(--text-primary)' }}>{label}</span>
