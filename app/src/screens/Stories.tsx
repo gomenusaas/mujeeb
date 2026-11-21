@@ -78,8 +78,8 @@ export function StoryRow() {
               </span>
             )}
             <span style={{ position: 'absolute', insetInline: 8, bottom: 9, display: 'flex', flexDirection: 'column', gap: 1, color: '#fff' }}>
-              <span style={{ font: '700 12px/15px var(--font-sans)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{name}</span>
-              <span style={{ font: '500 11px/14px var(--font-sans)', opacity: 0.8 }}>{ago(a, s)}</span>
+              <span style={{ font: 'var(--fw-bold) 12px/15px var(--font-sans)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{name}</span>
+              <span style={{ font: 'var(--fw-medium) 11px/14px var(--font-sans)', opacity: 0.8 }}>{ago(a, s)}</span>
             </span>
           </button>
         );
@@ -123,8 +123,8 @@ export function CategoryStoryRow({ cat }: { cat: number }) {
               </span>
             )}
             <span style={{ position: 'absolute', insetInline: 8, bottom: 9, display: 'flex', flexDirection: 'column', gap: 1, color: '#fff' }}>
-              <span style={{ font: '700 12px/15px var(--font-sans)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{name}</span>
-              <span style={{ font: '500 11px/14px var(--font-sans)', opacity: 0.8 }}>{ago(a, latest)}</span>
+              <span style={{ font: 'var(--fw-bold) 12px/15px var(--font-sans)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{name}</span>
+              <span style={{ font: 'var(--fw-medium) 11px/14px var(--font-sans)', opacity: 0.8 }}>{ago(a, latest)}</span>
             </span>
           </button>
         );
@@ -279,7 +279,7 @@ export function StoryViewer() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 12 }}>
           <StoryLogo src={logoUrl(co.id)} name={name} size={32} seen />
           <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-            <span style={{ font: '700 14px/18px var(--font-sans)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
+            <span style={{ font: 'var(--fw-bold) 14px/18px var(--font-sans)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
             <span style={{ font: 'var(--type-caption)', opacity: 0.8 }}>{ago(a, story)}</span>
           </span>
           <span style={{ pointerEvents: 'auto', display: 'flex', gap: 8 }}>
@@ -337,7 +337,7 @@ export function StoryCircles({ bg = 'var(--brand)', ink = '#fff' }: { bg?: strin
                 <img src={g.ss[0].poster} alt="" loading="lazy" decoding="async" draggable={false} style={{ width: 58, height: 58, borderRadius: '50%', objectFit: 'cover', display: 'block', background: 'oklch(1 0 0 / .2)' }} />
               </span>
             </span>
-            <span style={{ width: '100%', font: '600 11px/14px var(--font-sans)', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', opacity: g.seen ? 0.75 : 1 }}>{name}</span>
+            <span style={{ width: '100%', font: 'var(--fw-semibold) 11px/14px var(--font-sans)', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', opacity: g.seen ? 0.75 : 1 }}>{name}</span>
           </button>
         );
       })}

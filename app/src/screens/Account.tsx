@@ -41,6 +41,8 @@ export function Profile() {
   };
   return (
     <div style={{ ...ROOT, gap: 18 }}>
+      {/* Page title, like «جميع الخدمات» on the services tab. */}
+      <span style={{ font: 'var(--type-h1)' }}>{t.myAccount}</span>
       {live && !me ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: 18, ...card }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -58,7 +60,7 @@ export function Profile() {
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
             <span style={{ font: 'var(--type-h3)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{live ? me!.name || me!.email.split('@')[0] : t.userName}</span>
             <span style={{ alignSelf: 'flex-start', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }} dir="ltr">{live ? me!.email : '+968 9123 4567'}</span>
-            {!live && <span style={{ font: 'var(--type-caption)', fontWeight: 500, color: 'var(--text-tertiary)' }}>{t.memberSince}</span>}
+            {!live && <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-medium)', color: 'var(--text-tertiary)' }}>{t.memberSince}</span>}
           </div>
         </div>
       )}
@@ -136,7 +138,7 @@ export function Bookings() {
               <span style={{ marginTop: -6, font: 'var(--type-mono)', fontSize: 11, color: 'var(--text-tertiary)' }}>{b.id}</span>
               {resched && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--info-tint)', font: 'var(--type-body-sm)', color: 'var(--info)' }}>
-                  <Icon name="calendar-clock" size={16} /><span style={{ fontWeight: 700 }}>{t.proposed}:</span>{(ar ? b.nAr : b.nEn) + ' · ' + b.nTime}
+                  <Icon name="calendar-clock" size={16} /><span style={{ fontWeight: 'var(--fw-bold)' }}>{t.proposed}:</span>{(ar ? b.nAr : b.nEn) + ' · ' + b.nTime}
                 </div>
               )}
               <div style={{ display: 'flex', gap: 10 }}>

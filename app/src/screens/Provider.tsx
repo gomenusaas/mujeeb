@@ -187,8 +187,8 @@ export function WorkPreviewSheet() {
               : <img src={photo(m.src, SHEET_W)} alt="" loading={k < 4 ? 'eager' : 'lazy'} decoding="async" style={fill} />}
             {m.al && (
               <span style={{ position: 'absolute', insetInline: 0, bottom: 0, padding: '36px 14px 12px', background: 'linear-gradient(to top, oklch(0.12 0.02 285 / 0.78), oklch(0.12 0.02 285 / 0.4) 55%, transparent)', color: '#fff', display: 'flex', flexDirection: 'column', gap: 2, pointerEvents: 'none' }}>
-                <span style={{ font: '700 15px/1.3 var(--font-sans)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.ar ? m.al.ar : m.al.en}</span>
-                <span style={{ font: '600 12px var(--font-sans)', opacity: 0.85 }}>{t.projectNo.replace('{n}', h.num(projectNumber(a, m.al)))}</span>
+                <span style={{ font: 'var(--fw-bold) 15px/1.3 var(--font-sans)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.ar ? m.al.ar : m.al.en}</span>
+                <span style={{ font: 'var(--fw-semibold) 12px var(--font-sans)', opacity: 0.85 }}>{t.projectNo.replace('{n}', h.num(projectNumber(a, m.al)))}</span>
               </span>
             )}
           </div>
@@ -287,7 +287,7 @@ export function Listing() {
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 14, padding: '6px 20px 18px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
             <span style={{ font: 'var(--type-h1)' }}>{title}</span>
-            <span style={{ font: 'var(--type-body-sm)', fontWeight: 600, opacity: 0.9 }}>{res.length + ' ' + t.results}</span>
+            <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', opacity: 0.9 }}>{res.length + ' ' + t.results}</span>
           </div>
         </div>
         {/* The search box (searches this category only; every company on the all-companies page). */}
@@ -397,7 +397,7 @@ export function OffersTab() {
         <LocationBar a={a} style={{ alignSelf: 'flex-start', maxWidth: '100%' }} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <span style={{ font: 'var(--type-h1)' }}>{t.offers}</span>
-          <span style={{ font: 'var(--type-body-sm)', fontWeight: 600, color: 'var(--text-secondary)' }}>{countOf(a, all.length, OFFER_W)}</span>
+          <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-secondary)' }}>{countOf(a, all.length, OFFER_W)}</span>
         </div>
       </div>
       {/* Nothing in this area: say so, and offer all of Oman. */}
@@ -525,9 +525,9 @@ function StripOffer({ x: { o, co }, countdown }: { x: ListedOffer; countdown?: b
       <button type="button" onClick={() => a.go('company', { id: co.id, act: o.svc.cat })}
         style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 0, border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'start', color: 'var(--text-primary)' }}>
         <Avatar name={v.name} src={v.logo} size={24} />
-        <span style={{ flex: 1, minWidth: 0, font: 'var(--type-body-sm)', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.name}</span>
+        <span style={{ flex: 1, minWidth: 0, font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.name}</span>
         {/* Under the advert, so it never covers part of the design. */}
-        {countdown && <span style={{ flex: 'none', height: 22, padding: '0 8px', borderRadius: 999, background: 'var(--danger)', color: '#fff', display: 'inline-flex', alignItems: 'center', gap: 4, font: '800 11px var(--font-sans)' }}><Icon name="clock" size={12} />{daysLeft(a, o.days)}</span>}
+        {countdown && <span style={{ flex: 'none', height: 22, padding: '0 8px', borderRadius: 999, background: 'var(--danger)', color: '#fff', display: 'inline-flex', alignItems: 'center', gap: 4, font: 'var(--fw-extrabold) 11px var(--font-sans)' }}><Icon name="clock" size={12} />{daysLeft(a, o.days)}</span>}
       </button>
     </div>
   );
@@ -838,8 +838,8 @@ export function OfferPage() {
           <h1 style={{ margin: 0, font: 'var(--type-h1)', fontSize: 22 }}>{o.title}</h1>
           {/* How long it lasts. */}
           <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, font: 'var(--type-body-sm)', fontWeight: 600, color: 'var(--text-secondary)' }}><Icon name="calendar-clock" size={16} />{t.offerValid} {o.until}</span>
-            <span style={{ height: 24, padding: '0 10px', borderRadius: 999, background: 'var(--cat-coral-100)', color: 'var(--cat-coral-800)', display: 'inline-flex', alignItems: 'center', font: '700 12px var(--font-sans)' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-secondary)' }}><Icon name="calendar-clock" size={16} />{t.offerValid} {o.until}</span>
+            <span style={{ height: 24, padding: '0 10px', borderRadius: 999, background: 'var(--cat-coral-100)', color: 'var(--cat-coral-800)', display: 'inline-flex', alignItems: 'center', font: 'var(--fw-bold) 12px var(--font-sans)' }}>
               {ar ? t.offerLeft + ' ' + countOf(a, o.days, DAY_W) : countOf(a, o.days, DAY_W) + ' ' + t.offerLeft}
             </span>
           </span>
@@ -878,7 +878,7 @@ function ActivityPicker({ co, act }: { co: Company; act: number | null }) {
   const h = helpers(a);
   const many = co.cats.length > 1;
   const cur = act ?? co.cats[0];
-  const box: CSSProperties = { flex: '0 1 auto', minWidth: 0, minHeight: 44, display: 'flex', alignItems: 'center', gap: 8, padding: '0 18px', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-pill)', background: 'var(--surface-card)', color: 'var(--text-primary)', font: 'var(--type-body)', fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-sans)', textAlign: 'start' };
+  const box: CSSProperties = { flex: '0 1 auto', minWidth: 0, minHeight: 44, display: 'flex', alignItems: 'center', gap: 8, padding: '0 18px', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-pill)', background: 'var(--surface-card)', color: 'var(--text-primary)', font: 'var(--type-body)', fontSize: 16, fontWeight: 'var(--fw-bold)', fontFamily: 'var(--font-sans)', textAlign: 'start' };
   const inner = (
     <>
       <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.cname(cur)}</span>
@@ -954,7 +954,7 @@ function FollowLine({ co }: { co: Company }) {
   const a = useApp();
   const n = (a.catalog.followers?.[co.id] ?? 0) + (a.follows[co.id] ? 1 : 0);
   return (
-    <span style={{ font: 'var(--type-body)', fontSize: 16, fontWeight: 700, color: 'var(--text-secondary)', textAlign: 'center' }}>
+    <span style={{ font: 'var(--type-body)', fontSize: 16, fontWeight: 'var(--fw-bold)', color: 'var(--text-secondary)', textAlign: 'center' }}>
       {n ? countOf(a, n, { ar: ['متابع واحد', 'متابعان', 'متابعين', 'متابعًا'], en: ['follower', 'followers'] }) : a.t.firstFollower}
     </span>
   );
@@ -1079,7 +1079,7 @@ function ServiceNavCard({ title, img, open, sub, icon }: { title: string; img: s
         {icon ? <Icon name={icon} size={22} color="var(--text-tertiary)" /> : <Img src={img} style={{ position: 'absolute', inset: 0 }} />}
       </span>
       <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 1, padding: '8px 0' }}>
-        <span style={{ font: 'var(--type-body-sm)', fontWeight: 700, lineHeight: 1.35, color: 'var(--text-primary)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{title}</span>
+        <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)', lineHeight: 1.35, color: 'var(--text-primary)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{title}</span>
         <span style={{ font: 'var(--type-caption)', color: icon ? 'var(--text-tertiary)' : 'var(--text-secondary)' }}>{sub}</span>
       </span>
     </button>
@@ -1207,7 +1207,7 @@ export function ServicePage() {
           <h1 style={{ margin: 0, font: 'var(--type-h1)', fontSize: 22 }}>{title}</h1>
           {desc && <span style={{ font: 'var(--type-body)', color: 'var(--text-secondary)', textWrap: 'pretty', ...(full ? {} : { display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }) }}>{desc}</span>}
           {desc.length > 140 && (
-            <button type="button" onClick={() => setFull(m => !m)} style={{ alignSelf: 'flex-start', border: 'none', padding: 0, background: 'none', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 700, fontFamily: 'var(--font-sans)', color: 'var(--brand)' }}>{full ? t.showLess : t.readMore}</button>
+            <button type="button" onClick={() => setFull(m => !m)} style={{ alignSelf: 'flex-start', border: 'none', padding: 0, background: 'none', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)', fontFamily: 'var(--font-sans)', color: 'var(--brand)' }}>{full ? t.showLess : t.readMore}</button>
           )}
         </div>
         {albums.length > 0 && line}
@@ -1238,7 +1238,7 @@ function ClampedAbout({ text }: { text: string }) {
   }, [text]);
   const more = (
     <button type="button" onClick={() => a.setSheet('about')}
-      style={{ padding: 0, border: 'none', background: 'none', cursor: 'pointer', font: 'inherit', fontWeight: 700, color: 'var(--brand)' }}>
+      style={{ padding: 0, border: 'none', background: 'none', cursor: 'pointer', font: 'inherit', fontWeight: 'var(--fw-bold)', color: 'var(--brand)' }}>
       {a.t.readMore}
     </button>
   );
@@ -1265,7 +1265,7 @@ function HoursSheet({ co }: { co: Company }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '14px 16px', borderRadius: 'var(--radius-card)', background: 'var(--surface-sunken)' }}>
         {catalog.hours.map((hr, k) => (
           <div key={k} style={{ display: 'flex', justifyContent: 'space-between', font: 'var(--type-body)', color: 'var(--text-secondary)' }}>
-            <span>{ar ? hr[0] : hr[1]}</span><span style={{ color: 'var(--text-primary)', fontWeight: 600 }} dir="ltr">{hr[2] || t.closed}</span>
+            <span>{ar ? hr[0] : hr[1]}</span><span style={{ color: 'var(--text-primary)', fontWeight: 'var(--fw-semibold)' }} dir="ltr">{hr[2] || t.closed}</span>
           </div>
         ))}
       </div>
@@ -1276,7 +1276,7 @@ function HoursSheet({ co }: { co: Company }) {
   const today = muscatToday();
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <span style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 6, height: 30, padding: '0 12px', borderRadius: 999, background: open ? 'var(--success-tint)' : 'var(--danger-tint)', color: open ? 'var(--success)' : 'var(--danger)', font: 'var(--type-body-sm)', fontWeight: 700 }}>
+      <span style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 6, height: 30, padding: '0 12px', borderRadius: 999, background: open ? 'var(--success-tint)' : 'var(--danger-tint)', color: open ? 'var(--success)' : 'var(--danger)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)' }}>
         <span style={{ width: 8, height: 8, borderRadius: 8, background: 'currentColor' }} />{open ? t.openNow : t.closedNow}
       </span>
       <div style={{ display: 'flex', flexDirection: 'column', borderRadius: 'var(--radius-card)', background: 'var(--surface-sunken)', overflow: 'hidden' }}>
@@ -1286,7 +1286,7 @@ function HoursSheet({ co }: { co: Company }) {
           return (
             <div key={day} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, padding: '12px 16px', background: isToday ? 'var(--brand-tint)' : undefined, font: 'var(--type-body)', color: isToday ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: isToday ? 700 : 400 }}>
               <span>{dayName(day, ar)}{isToday && <span style={{ marginInlineStart: 8, font: 'var(--type-caption)', color: 'var(--brand)' }}>{t.today}</span>}</span>
-              <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2, color: sh.length ? 'var(--text-primary)' : 'var(--danger)', fontWeight: 600 }}>
+              <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2, color: sh.length ? 'var(--text-primary)' : 'var(--danger)', fontWeight: 'var(--fw-semibold)' }}>
                 {sh.length ? sh.map(([o, c], k) => <span key={k}>{fmtTime(o, ar) + ' – ' + fmtTime(c, ar)}</span>) : t.closed}
               </span>
             </div>
@@ -1307,7 +1307,7 @@ export const CatTag = ({ color, children, h = 28, pad = 12 }: { color: string; c
  */
 function PillDivider({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {
   const line = <span aria-hidden="true" style={{ flex: 1, minWidth: 16, height: 1, background: 'var(--border-default)' }} />;
-  const pill: CSSProperties = { flex: 'none', minHeight: 44, display: 'flex', alignItems: 'center', gap: 8, padding: '0 18px', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-pill)', background: 'var(--surface-card)', color: 'var(--text-primary)', font: 'var(--type-body)', fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-sans)' };
+  const pill: CSSProperties = { flex: 'none', minHeight: 44, display: 'flex', alignItems: 'center', gap: 8, padding: '0 18px', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-pill)', background: 'var(--surface-card)', color: 'var(--text-primary)', font: 'var(--type-body)', fontSize: 16, fontWeight: 'var(--fw-bold)', fontFamily: 'var(--font-sans)' };
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 -20px' }}>
       {line}
@@ -1359,7 +1359,7 @@ function ProjectsBlock({ albums }: { albums: Album[] }) {
             return (
               <div key={al.id} onClick={v.open} style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6, cursor: 'pointer' }}>
                 <div style={{ position: 'relative', aspectRatio: '4/3', borderRadius: 'var(--radius-md)', overflow: 'hidden', background: v.c100 }}><Img src={v.img} />{al.feat && <FeatStar />}</div>
-                <span style={{ font: 'var(--type-body-sm)', fontWeight: 700, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{v.title}</span>
+                <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{v.title}</span>
                 {v.place && <MetaLine icon="map-pin" size={12}>{v.place}</MetaLine>}
               </div>
             );
@@ -1407,7 +1407,7 @@ export function AlbumPage() {
   const link = location.origin + '/album/' + al.id;
   const waText = t.waProject.replace('{p}', title).replace('{url}', link);
   const chip = (icon: string, text: string) => (
-    <span key={icon} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 32, padding: '0 12px', borderRadius: 'var(--radius-pill)', background: 'var(--neutral-100)', font: 'var(--type-body-sm)', fontWeight: 600, color: 'var(--text-secondary)' }}>
+    <span key={icon} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 32, padding: '0 12px', borderRadius: 'var(--radius-pill)', background: 'var(--neutral-100)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-secondary)' }}>
       <Icon name={icon} size={15} />{text}
     </span>
   );
@@ -1449,7 +1449,7 @@ export function AlbumPage() {
             <span style={{ font: 'var(--type-body)', color: 'var(--text-secondary)', textWrap: 'pretty', ...(more ? {} : { display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }) }}>{desc}</span>
           )}
           {desc.length > 140 && (
-            <button type="button" onClick={() => setMore(m => !m)} style={{ alignSelf: 'flex-start', border: 'none', padding: 0, background: 'none', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 700, fontFamily: 'var(--font-sans)', color: 'var(--brand)' }}>{more ? t.showLess : t.readMore}</button>
+            <button type="button" onClick={() => setMore(m => !m)} style={{ alignSelf: 'flex-start', border: 'none', padding: 0, background: 'none', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)', fontFamily: 'var(--font-sans)', color: 'var(--brand)' }}>{more ? t.showLess : t.readMore}</button>
           )}
           <span style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
             {al.area ? chip('ruler', h.num(al.area) + ' ' + t.areaM2) : null}
@@ -1528,7 +1528,7 @@ export function CompanySheet({ co }: { co: Company }) {
     <div style={{ position: 'absolute', inset: 0, zIndex: 40, pointerEvents: 'none' }}>
       <BottomSheet open={sheet === 'menu' || !!cur} onClose={() => setSheet(null)} title={cur ? t[cur[3]] : t.menu}>
         {cur && (
-          <button type="button" onClick={() => setSheet('menu')} style={{ display: 'flex', alignItems: 'center', gap: 6, margin: '-4px 0 8px', padding: '6px 0', border: 'none', background: 'none', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 700, color: 'var(--brand)' }}>
+          <button type="button" onClick={() => setSheet('menu')} style={{ display: 'flex', alignItems: 'center', gap: 6, margin: '-4px 0 8px', padding: '6px 0', border: 'none', background: 'none', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)', color: 'var(--brand)' }}>
             <Icon name="arrow-left" size={16} />{t.menu}
           </button>
         )}

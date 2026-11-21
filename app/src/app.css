@@ -12,8 +12,13 @@
   --cat-steel-50: oklch(0.97 0.008 250); --cat-steel-100: oklch(0.92 0.018 250); --cat-steel-500: oklch(0.6 0.04 250); --cat-steel-600: oklch(0.5 0.045 250); --cat-steel-700: oklch(0.42 0.04 250); --cat-steel-800: oklch(0.33 0.035 250);
   --cat-wood-50: oklch(0.97 0.02 60); --cat-wood-100: oklch(0.92 0.045 60); --cat-wood-500: oklch(0.6 0.1 55); --cat-wood-600: oklch(0.5 0.1 52); --cat-wood-700: oklch(0.42 0.085 50); --cat-wood-800: oklch(0.34 0.07 48);
 
-  /* Plus Jakarta Sans has no Arabic glyphs; IBM Plex Sans Arabic covers them. */
-  --font-sans: 'Plus Jakarta Sans', 'IBM Plex Sans Arabic', ui-sans-serif, system-ui, sans-serif;
+  /* Readex Pro: one family for Arabic and Latin (so they match), weights 300–700. Its strokes are heavier than IBM
+     Plex's, so every weight is one step lighter here (the provider and admin apps keep the design system's). Offer
+     adverts' big type (extrabold) stays bold. */
+  --font-sans: 'Readex Pro', ui-sans-serif, system-ui, sans-serif;
+  --fw-semibold: 500; --fw-bold: 600; --fw-extrabold: 700;
+  --type-display: var(--fw-bold) var(--fs-display)/var(--lh-display) var(--font-sans);
+  --type-h1: var(--fw-bold) var(--fs-h1)/var(--lh-h1) var(--font-sans);
 
   /* Phone-frame mode: a fake 44px status bar; no home-indicator inset. */
   --top-inset: 44px;

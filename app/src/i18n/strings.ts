@@ -2,7 +2,7 @@ import type { Pair } from '../data/types';
 
 /** Centralized UI strings: [arabic, english]. Copied from the MUJEEB App design. */
 export const STR = {
-  home: ['الرئيسية', 'Home'], categories: ['الخدمات', 'Services'], explore: ['استكشف', 'Explore'], profile: ['حسابي', 'Profile'],
+  home: ['الرئيسية', 'Home'], categories: ['الخدمات', 'Services'], explore: ['استكشف', 'Explore'], profile: ['حسابي', 'Profile'], myAccount: ['حسابي', 'My account'],
   brand: ['مجيب', 'MUJEEB'], serviceLoc: ['موقع الخدمة', 'Service location'], searchWilayat: ['ابحث عن ولايتك', 'Search your wilayat'], noWilayat: ['لا توجد ولاية بهذا الاسم', 'No wilayat by that name'], otherLang: ['EN', 'عربي'],
   greeting: ['مرحبًا أحمد، كيف نساعدك اليوم؟', 'Hi Ahmed, how can we help today?'], search: ['ما الخدمة التي تبحث عنها؟', 'What service are you looking for?'],
   viewAll: ['عرض الكل', 'View all'], seeAll: ['عرض الكل', 'See all'],

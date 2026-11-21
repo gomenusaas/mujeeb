@@ -370,7 +370,7 @@ export function ContactGrid({ a, co, waText, follow = true }: { a: App; co: Comp
     <div style={{ display: 'grid', gridAutoFlow: 'column', gridAutoColumns: 'minmax(0,1fr)', gap: 8 }}>
       {items.map(x => (
         <button key={x.label} type="button" className="mj-press" onClick={x.go} aria-pressed={'on' in x ? x.on : undefined}
-          style={{ minWidth: 0, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, padding: '0 8px', border: 'none', borderRadius: 10, cursor: 'pointer', fontFamily: 'var(--font-sans)', font: 'var(--type-body-sm)', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap',
+          style={{ minWidth: 0, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, padding: '0 8px', border: 'none', borderRadius: 10, cursor: 'pointer', fontFamily: 'var(--font-sans)', font: 'var(--type-body-sm)', fontSize: 13, fontWeight: 'var(--fw-bold)', whiteSpace: 'nowrap',
             background: 'on' in x && x.on ? 'var(--brand-tint-strong)' : 'var(--cat-' + x.tone + '-100)', color: 'on' in x && x.on ? 'var(--brand)' : 'var(--cat-' + x.tone + '-800)', transition: 'background var(--dur-base), color var(--dur-base)' }}>
           <Icon name={x.icon} size={15} style={{ flex: 'none' }} />
           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{x.label}</span>
@@ -420,9 +420,9 @@ export function LocationBar({ a, light, style }: { a: App; light?: boolean; styl
       <Icon name="map-pin" size={16} color={light ? '#fff' : 'var(--brand)'} />
       {/* Label (medium) and area (semibold) in one text run, so they share a baseline and colour. */}
       <span style={{ minWidth: 0, font: 'var(--type-title)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-        <span style={{ fontWeight: 500 }}>{a.t.serviceLoc}</span>
+        <span style={{ fontWeight: 'var(--fw-medium)' }}>{a.t.serviceLoc}</span>
         <span aria-hidden="true" style={{ display: 'inline-block', width: 1, height: '0.85em', margin: '0 8px', verticalAlign: '-0.1em', background: light ? 'oklch(1 0 0 / 0.5)' : 'var(--border-default)' }} />
-        <span style={{ fontWeight: 600 }}>{a.locLabel}</span>
+        <span style={{ fontWeight: 'var(--fw-semibold)' }}>{a.locLabel}</span>
       </span>
       <Icon name="chevron-down" size={16} color={light ? '#fff' : 'var(--text-secondary)'} />
     </button>

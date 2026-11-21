@@ -42,7 +42,7 @@ export function BookingPage() {
       <div style={{ flex: 1, padding: '12px 20px 28px', ...col(22) }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 'var(--radius-md)', background: 'var(--cat-amber-50)' }}>
           <span style={{ width: 32, height: 32, borderRadius: 10, background: 'var(--cat-amber-100)', color: 'var(--cat-amber-600)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="calendar-check" size={18} /></span>
-          <span style={{ flex: 1, font: 'var(--type-body-sm)', color: 'var(--cat-amber-800)', fontWeight: 600 }}>{t.bkTitle} · {h.coName(co)}</span>
+          <span style={{ flex: 1, font: 'var(--type-body-sm)', color: 'var(--cat-amber-800)', fontWeight: 'var(--fw-semibold)' }}>{t.bkTitle} · {h.coName(co)}</span>
         </div>
         {bk.step === 0 && (
           <div style={col(10)}>
@@ -59,7 +59,7 @@ export function BookingPage() {
             <div style={col(12)}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                 <span style={{ font: 'var(--type-h3)' }}>{ar ? days[0].monthAr : days[0].monthEn}</span>
-                <span style={{ font: 'var(--type-caption)', fontWeight: 500, color: 'var(--text-tertiary)' }}>{t.muscatTime}</span>
+                <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-medium)', color: 'var(--text-tertiary)' }}>{t.muscatTime}</span>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,minmax(0,1fr))', gap: 8 }}>
                 {days.map((day, k) => {

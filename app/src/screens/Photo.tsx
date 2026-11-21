@@ -74,7 +74,7 @@ export function PhotoViewer() {
 
       <div style={{ position: 'absolute', insetInline: 0, top: 0, display: 'flex', alignItems: 'center', gap: 10, padding: 'calc(var(--top-inset) + 6px) 16px 30px', background: 'linear-gradient(to bottom, oklch(0 0 0 / .6), transparent)' }}>
         <IconButton icon="x" variant="glass" size={40} label={t.close} onClick={a.back} />
-        <span style={{ flex: 1, textAlign: 'center', font: 'var(--type-body-sm)', fontWeight: 700 }}>{h.num(i + 1) + ' / ' + h.num(items.length)}</span>
+        <span style={{ flex: 1, textAlign: 'center', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)' }}>{h.num(i + 1) + ' / ' + h.num(items.length)}</span>
         <IconButton icon="share-2" variant="glass" size={40} label={t.share} onClick={share} />
       </div>
 
@@ -89,7 +89,7 @@ export function PhotoViewer() {
                 <Avatar name={h.coName(co)} src={logoUrl(co.id)} size={44} verified={co.verified} />
               </span>
               <span style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <span style={{ font: 'var(--type-body-strong)', fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.coName(co)}</span>
+                <span style={{ font: 'var(--type-body-strong)', fontWeight: 'var(--fw-extrabold)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.coName(co)}</span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 4, font: 'var(--type-body-sm)', opacity: 0.85, overflow: 'hidden', whiteSpace: 'nowrap' }}>
                   <Icon name="map-pin" size={14} style={{ flex: 'none' }} />
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{h.city(co)}</span>

@@ -36,7 +36,7 @@ export default function App() {
 function Splash({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, background: 'var(--brand)', color: '#fff', textAlign: 'center', padding: 24 }}>
-      <span style={{ font: '800 34px/40px var(--font-sans)' }}>مجيب<span style={{ opacity: 0.6 }}>.</span></span>
+      <span style={{ font: 'var(--fw-extrabold) 34px/40px var(--font-sans)' }}>مجيب<span style={{ opacity: 0.6 }}>.</span></span>
       <span style={{ font: 'var(--type-body-sm)', opacity: 0.85 }}>{children}</span>
     </div>
   );
@@ -190,7 +190,7 @@ function DemoPanel() {
   return (
     <aside className="mj-panel">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <span style={{ font: '800 22px/26px var(--font-sans)', letterSpacing: '-.02em' }}>MUJEEB<span style={{ color: 'var(--brand)' }}>.</span></span>
+        <span style={{ font: 'var(--fw-extrabold) 22px/26px var(--font-sans)', letterSpacing: '-.02em' }}>MUJEEB<span style={{ color: 'var(--brand)' }}>.</span></span>
         <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }}>Customer app · demo data is fictional · source: {dataSource === 'supabase' ? 'Supabase' : 'bundled demo'}</span>
       </div>
       <SegmentedControl options={[{ value: 'ar', label: 'العربية' }, { value: 'en', label: 'English' }]} value={a.lang} onChange={a.setLang} />

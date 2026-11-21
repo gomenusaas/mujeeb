@@ -38,7 +38,7 @@ export function Avatar({ name = '', src, size = 44, online, verified, style }: {
   const h = AV_HUES[(name.charCodeAt(0) || 0) % AV_HUES.length];
   return (
     <span style={{ position: 'relative', display: 'inline-flex', flex: 'none', width: size, height: size, ...style }}>
-      <span style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'oklch(0.92 0.06 ' + h + ')', color: 'oklch(0.38 0.1 ' + h + ')', fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: Math.round(size * 0.36) }}>
+      <span style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'oklch(0.92 0.06 ' + h + ')', color: 'oklch(0.38 0.1 ' + h + ')', fontFamily: 'var(--font-sans)', fontWeight: 'var(--fw-bold)', fontSize: Math.round(size * 0.36) }}>
         {src ? <img src={src} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
       </span>
       {online && <span style={{ position: 'absolute', right: 0, bottom: 0, width: Math.max(10, size * 0.26), height: Math.max(10, size * 0.26), borderRadius: '50%', background: 'var(--success)', boxShadow: '0 0 0 2px var(--surface-card)' }} />}
@@ -69,7 +69,7 @@ export function Badge({ children, tone = 'brand', icon, size = 'md', style }: {
   const [bg, fg] = BADGE[tone] || BADGE.brand;
   const sm = size === 'sm';
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, height: sm ? 20 : 24, padding: sm ? '0 7px' : '0 9px', borderRadius: 'var(--radius-pill)', background: bg, color: fg, fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: sm ? 11 : 12, lineHeight: 1, whiteSpace: 'nowrap', ...style }}>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, height: sm ? 20 : 24, padding: sm ? '0 7px' : '0 9px', borderRadius: 'var(--radius-pill)', background: bg, color: fg, fontFamily: 'var(--font-sans)', fontWeight: 'var(--fw-bold)', fontSize: sm ? 11 : 12, lineHeight: 1, whiteSpace: 'nowrap', ...style }}>
       {icon && <Icon name={icon} size={sm ? 11 : 13} />}{children}
     </span>
   );
@@ -93,7 +93,7 @@ export function Button({ children, variant = 'primary', size = 'md', iconLeft, i
   const off = disabled || loading;
   return (
     <button type="button" disabled={off} onClick={onClick} {...press(setP)}
-      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, height: s.h, padding: '0 ' + s.px + 'px', width: fullWidth ? '100%' : undefined, border: 'none', borderRadius: 'var(--radius-pill)', fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: s.fs, letterSpacing: '-0.005em', whiteSpace: 'nowrap', cursor: off ? 'default' : 'pointer', transform: p && !off ? 'scale(var(--press-scale))' : 'none', filter: p && !off ? 'brightness(0.94)' : 'none', transition: 'transform var(--dur-fast) var(--ease-out), filter var(--dur-fast)', ...BTN_VARIANTS[variant], ...(disabled ? { background: 'var(--neutral-100)', color: 'var(--text-disabled)', boxShadow: 'none' } : {}), ...style }}>
+      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, height: s.h, padding: '0 ' + s.px + 'px', width: fullWidth ? '100%' : undefined, border: 'none', borderRadius: 'var(--radius-pill)', fontFamily: 'var(--font-sans)', fontWeight: 'var(--fw-bold)', fontSize: s.fs, letterSpacing: '-0.005em', whiteSpace: 'nowrap', cursor: off ? 'default' : 'pointer', transform: p && !off ? 'scale(var(--press-scale))' : 'none', filter: p && !off ? 'brightness(0.94)' : 'none', transition: 'transform var(--dur-fast) var(--ease-out), filter var(--dur-fast)', ...BTN_VARIANTS[variant], ...(disabled ? { background: 'var(--neutral-100)', color: 'var(--text-disabled)', boxShadow: 'none' } : {}), ...style }}>
       {loading
         ? <span style={{ width: s.ic, height: s.ic, borderRadius: '50%', border: '2px solid currentColor', borderRightColor: 'transparent', animation: 'sv-spin 0.7s linear infinite' }} />
         : iconLeft && <Icon name={iconLeft} size={s.ic} />}
@@ -109,7 +109,7 @@ export function Chip({ children, icon, selected, onClick, trailingIcon, size = '
   const h = size === 'sm' ? 32 : 38;
   return (
     <button type="button" onClick={onClick}
-      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flex: 'none', height: h, padding: '0 ' + (size === 'sm' ? 12 : 14) + 'px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: size === 'sm' ? 13 : 14, whiteSpace: 'nowrap', transition: 'background var(--dur-base) var(--ease-out), color var(--dur-base)', background: selected ? 'var(--neutral-900)' : 'var(--surface-card)', color: selected ? 'var(--neutral-0)' : 'var(--text-primary)', boxShadow: selected ? 'none' : 'inset 0 0 0 1px var(--border-default)', ...style }}>
+      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flex: 'none', height: h, padding: '0 ' + (size === 'sm' ? 12 : 14) + 'px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontWeight: 'var(--fw-semibold)', fontSize: size === 'sm' ? 13 : 14, whiteSpace: 'nowrap', transition: 'background var(--dur-base) var(--ease-out), color var(--dur-base)', background: selected ? 'var(--neutral-900)' : 'var(--surface-card)', color: selected ? 'var(--neutral-0)' : 'var(--text-primary)', boxShadow: selected ? 'none' : 'inset 0 0 0 1px var(--border-default)', ...style }}>
       {icon && <Icon name={icon} size={16} />}{children}{trailingIcon && <Icon name={trailingIcon} size={14} />}
     </button>
   );
@@ -254,7 +254,7 @@ export function Toast({ message, tone = 'success', style }: { message: ReactNode
   return (
     <div role="status" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px 12px 16px', borderRadius: 'var(--radius-md)', background: 'var(--surface-inverse)', color: 'var(--neutral-0)', boxShadow: 'var(--shadow-lg)', fontFamily: 'var(--font-sans)', animation: 'sv-rise var(--dur-slow) var(--ease-out)', ...style }}>
       <Icon name={ic} size={20} color={c} />
-      <span style={{ flex: 1, font: 'var(--type-body-sm)', fontWeight: 600 }}>{message}</span>
+      <span style={{ flex: 1, font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)' }}>{message}</span>
     </div>
   );
 }
@@ -283,7 +283,7 @@ export function SearchBar({ placeholder, value, onChange, onFilter, onClear, cle
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, height: 52, paddingInline: '18px 6px', borderRadius: 'var(--radius-pill)', background: 'var(--surface-card)', boxShadow: elevated ? 'var(--shadow-md)' : 'inset 0 0 0 1.5px var(--border-default)', fontFamily: 'var(--font-sans)', ...style }}>
       <Icon name="search" size={20} color="var(--text-tertiary)" />
       <input type="search" value={value} onChange={onChange} placeholder={placeholder} aria-label={placeholder}
-        style={{ flex: 1, minWidth: 0, height: '100%', border: 'none', outline: 'none', background: 'transparent', font: 'var(--type-body)', fontWeight: 500, color: 'var(--text-primary)' }} />
+        style={{ flex: 1, minWidth: 0, height: '100%', border: 'none', outline: 'none', background: 'transparent', font: 'var(--type-body)', fontWeight: 'var(--fw-medium)', color: 'var(--text-primary)' }} />
       {onClear && value && (
         <button type="button" onClick={onClear} aria-label={clearLabel}
           style={{ flex: 'none', width: 28, height: 28, marginInlineEnd: 8, borderRadius: '50%', border: 'none', background: 'var(--neutral-100)', color: 'var(--text-secondary)', display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
@@ -305,18 +305,18 @@ export function TextField({ label, placeholder, value, onChange, icon, helper, e
 }) {
   const [f, setF] = useState(false);
   const ring = error ? 'var(--danger)' : f ? 'var(--brand)' : 'var(--border-default)';
-  const inputStyle: Style = { flex: 1, minWidth: 0, border: 'none', outline: 'none', background: 'transparent', resize: 'none', font: 'var(--type-body)', fontWeight: 500, color: 'var(--text-primary)', padding: 0 };
+  const inputStyle: Style = { flex: 1, minWidth: 0, border: 'none', outline: 'none', background: 'transparent', resize: 'none', font: 'var(--type-body)', fontWeight: 'var(--fw-medium)', color: 'var(--text-primary)', padding: 0 };
   const common = { placeholder, value, onFocus: () => setF(true), onBlur: () => setF(false), style: inputStyle };
   return (
     <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontFamily: 'var(--font-sans)', textAlign: 'start', ...style }}>
-      {label && <span style={{ font: 'var(--type-body-sm)', fontWeight: 600, color: 'var(--text-primary)' }}>{label}</span>}
+      {label && <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-primary)' }}>{label}</span>}
       <span style={{ display: 'flex', alignItems: multiline ? 'flex-start' : 'center', gap: 10, minHeight: 52, padding: multiline ? '14px 16px' : '0 16px', borderRadius: 'var(--radius-md)', background: 'var(--surface-card)', boxShadow: 'inset 0 0 0 ' + (f || error ? 2 : 1.5) + 'px ' + ring + (f && !error ? ', 0 0 0 4px var(--focus-ring)' : ''), transition: 'box-shadow var(--dur-base) var(--ease-out)' }}>
         {icon && <Icon name={icon} size={20} color={f ? 'var(--brand)' : 'var(--text-tertiary)'} />}
         {multiline
           ? <textarea rows={3} {...common} onChange={e => onChange?.(e.target.value)} />
           : <input type={type} {...common} onChange={e => onChange?.(e.target.value)} style={{ ...inputStyle, height: 50 }} />}
       </span>
-      {(helper || error) && <span style={{ font: 'var(--type-caption)', fontWeight: 500, color: error ? 'var(--danger)' : 'var(--text-tertiary)' }}>{error || helper}</span>}
+      {(helper || error) && <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-medium)', color: error ? 'var(--danger)' : 'var(--text-tertiary)' }}>{error || helper}</span>}
     </label>
   );
 }
@@ -346,7 +346,7 @@ export function ChatBubble({ children, mine, time, style }: { children?: ReactNo
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: mine ? 'flex-end' : 'flex-start', gap: 4, fontFamily: 'var(--font-sans)', ...style }}>
       <div style={{ maxWidth: '78%', padding: '10px 14px', font: 'var(--type-body)', textWrap: 'pretty', borderRadius: 20, borderEndEndRadius: mine ? 6 : 20, borderEndStartRadius: mine ? 20 : 6, background: mine ? 'var(--brand)' : 'var(--surface-card)', color: mine ? 'var(--text-on-brand)' : 'var(--text-primary)', boxShadow: mine ? 'none' : 'var(--shadow-xs)' }}>{children}</div>
-      {time && <span style={{ font: 'var(--type-caption)', fontWeight: 500, color: 'var(--text-tertiary)', padding: '0 6px' }}>{time}</span>}
+      {time && <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-medium)', color: 'var(--text-tertiary)', padding: '0 6px' }}>{time}</span>}
     </div>
   );
 }
@@ -364,7 +364,7 @@ export function PromoBanner({ eyebrow, title, cta = 'Book now', color = 'violet'
           {eyebrow && <span style={{ font: 'var(--type-overline)', letterSpacing: 'var(--ls-wide)', textTransform: 'uppercase', opacity: 0.85 }}>{eyebrow}</span>}
           <span style={{ font: 'var(--type-h3)', letterSpacing: 'var(--ls-snug)', textWrap: 'balance' }}>{title}</span>
         </div>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 34, padding: '0 14px', borderRadius: 'var(--radius-pill)', background: '#fff', color: 'var(--text-primary)', font: 'var(--type-body-sm)', fontWeight: 700 }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 34, padding: '0 14px', borderRadius: 'var(--radius-pill)', background: '#fff', color: 'var(--text-primary)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)' }}>
           {cta}<Icon name="arrow-right" size={15} />
         </span>
       </div>
@@ -385,7 +385,7 @@ export function SectionHeader({ title, subtitle, action, onAction, style }: {
         {subtitle && <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-secondary)' }}>{subtitle}</span>}
       </div>
       {action && (
-        <button type="button" onClick={onAction} style={{ display: 'inline-flex', alignItems: 'center', gap: 2, border: 'none', background: 'none', padding: '4px 0', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 700, color: 'var(--brand)' }}>
+        <button type="button" onClick={onAction} style={{ display: 'inline-flex', alignItems: 'center', gap: 2, border: 'none', background: 'none', padding: '4px 0', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)', color: 'var(--brand)' }}>
           {action}<Icon name="chevron-right" size={16} />
         </button>
       )}
@@ -402,7 +402,7 @@ export function AppBar({ title, subtitle, onBack, actions, style }: {
         {onBack && <IconButton icon="arrow-left" variant="surface" size={40} onClick={onBack} label="Back" />}
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: onBack ? 'center' : 'flex-start' }}>
           {title && <span style={{ font: 'var(--type-title)', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>{title}</span>}
-          {subtitle && <span style={{ font: 'var(--type-caption)', fontWeight: 500, color: 'var(--text-tertiary)' }}>{subtitle}</span>}
+          {subtitle && <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-medium)', color: 'var(--text-tertiary)' }}>{subtitle}</span>}
         </div>
         <div style={{ display: 'flex', gap: 8, minWidth: onBack ? 40 : 0, justifyContent: 'flex-end' }}>{actions}</div>
       </div>
@@ -439,7 +439,7 @@ export function SegmentedControl<T extends string>({ options, value, onChange, s
         const on = o.value === value;
         return (
           <button key={o.value} type="button" role="tab" aria-selected={on} onClick={() => onChange && onChange(o.value)}
-            style={{ flex: 1, height: 38, border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 700, textAlign: 'center', background: on ? 'var(--surface-card)' : 'transparent', color: on ? 'var(--text-primary)' : 'var(--text-secondary)', boxShadow: on ? 'var(--shadow-sm)' : 'none', transition: 'all var(--dur-base) var(--ease-out)' }}>
+            style={{ flex: 1, height: 38, border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)', textAlign: 'center', background: on ? 'var(--surface-card)' : 'transparent', color: on ? 'var(--text-primary)' : 'var(--text-secondary)', boxShadow: on ? 'var(--shadow-sm)' : 'none', transition: 'all var(--dur-base) var(--ease-out)' }}>
             {o.label}
           </button>
         );
@@ -464,7 +464,7 @@ export function TabBar<T extends string>({ items, active, onChange, style, label
               <Icon name={it.icon} size={22} />
               {/* `dot`: something new (a small red dot on the icon). */}
               {it.dot && !it.badge && <span aria-hidden="true" style={{ position: 'absolute', top: 2, insetInlineEnd: 15, width: 9, height: 9, borderRadius: 9, background: 'var(--danger)', boxShadow: '0 0 0 2px #fff' }} />}
-              {it.badge && <span style={{ position: 'absolute', top: 0, insetInlineEnd: 12, minWidth: 16, height: 16, padding: '0 4px', borderRadius: 16, background: 'var(--accent)', color: '#fff', font: '700 10px/16px var(--font-sans)', boxShadow: '0 0 0 2px #fff' }}>{it.badge}</span>}
+              {it.badge && <span style={{ position: 'absolute', top: 0, insetInlineEnd: 12, minWidth: 16, height: 16, padding: '0 4px', borderRadius: 16, background: 'var(--accent)', color: '#fff', font: 'var(--fw-bold) 10px/16px var(--font-sans)', boxShadow: '0 0 0 2px #fff' }}>{it.badge}</span>}
             </span>
             {labels && <span style={{ font: 'var(--type-overline)', fontWeight: on ? 700 : 600 }}>{it.label}</span>}
           </button>

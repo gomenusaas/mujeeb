@@ -65,11 +65,11 @@ const fill: Css = { position: 'absolute', inset: 0 };
 const box: Css = { ...fill, padding: '4.6cqw 5.2cqw', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' };
 
 const T = {
-  tag: (bg: string, ink: string): Css => ({ display: 'inline-flex', alignItems: 'center', height: '8.2cqw', padding: '0 3.3cqw', borderRadius: 999, background: bg, color: ink, font: '800 3.8cqw/1 var(--font-sans)', whiteSpace: 'nowrap' }),
-  kicker: { font: '700 4.8cqw/1.25 var(--font-sans)', opacity: 0.92 } as Css,
-  big: (k = 1): Css => ({ font: '800 ' + 13 * k + 'cqw/1.04 var(--font-sans)', letterSpacing: '-0.01em' }),
-  sub: { font: '600 4.6cqw/1.3 var(--font-sans)', opacity: 0.92, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' } as Css,
-  until: { display: 'inline-flex', alignItems: 'center', gap: '1.2cqw', font: '600 3.9cqw/1 var(--font-sans)', opacity: 0.88, whiteSpace: 'nowrap' } as Css,
+  tag: (bg: string, ink: string): Css => ({ display: 'inline-flex', alignItems: 'center', height: '8.2cqw', padding: '0 3.3cqw', borderRadius: 999, background: bg, color: ink, font: 'var(--fw-extrabold) 3.8cqw/1 var(--font-sans)', whiteSpace: 'nowrap' }),
+  kicker: { font: 'var(--fw-bold) 4.8cqw/1.25 var(--font-sans)', opacity: 0.92 } as Css,
+  big: (k = 1): Css => ({ font: 'var(--fw-extrabold) ' + 13 * k + 'cqw/1.04 var(--font-sans)', letterSpacing: '-0.01em' }),
+  sub: { font: 'var(--fw-semibold) 4.6cqw/1.3 var(--font-sans)', opacity: 0.92, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' } as Css,
+  until: { display: 'inline-flex', alignItems: 'center', gap: '1.2cqw', font: 'var(--fw-semibold) 3.9cqw/1 var(--font-sans)', opacity: 0.88, whiteSpace: 'nowrap' } as Css,
 };
 
 const Clock = () => (
@@ -222,7 +222,7 @@ function draw(d: OfferArtData, rtl: boolean): ReactNode {
           </div>
           <div style={{ ...box, [stubAtEnd ? 'insetInlineEnd' : 'insetInlineStart']: '34%', ...(stubAtEnd ? {} : { paddingInlineStart: '6cqw' }) }}>
             {d.tag && <span style={stubAtEnd ? T.tag(c, ink) : T.tag('#fff', dk)}>{d.tag}</span>}
-            <span style={{ ...T.sub, marginTop: '3cqw', fontSize: '5.4cqw', fontWeight: 700, color: stubAtEnd ? DARK_INK : '#fff', opacity: 1, WebkitLineClamp: 3 }}>{d.sub}</span>
+            <span style={{ ...T.sub, marginTop: '3cqw', fontSize: '5.4cqw', fontWeight: 'var(--fw-bold)', color: stubAtEnd ? DARK_INK : '#fff', opacity: 1, WebkitLineClamp: 3 }}>{d.sub}</span>
             <Until d={d} ink={stubAtEnd ? dk : '#fff'} />
           </div>
         </div>
@@ -316,7 +316,7 @@ function draw(d: OfferArtData, rtl: boolean): ReactNode {
         return (
           <>
             <Photo d={d} c={c} />
-            {d.tag && <span style={{ position: 'absolute', top: '7cqw', insetInlineEnd: '-15cqw', width: '56cqw', height: '8cqw', background: '#fff', color: dk, display: 'flex', alignItems: 'center', justifyContent: 'center', font: '800 3.8cqw/1 var(--font-sans)', transform: 'rotate(' + (rtl ? -35 : 35) + 'deg)', boxShadow: '0 1cqw 2cqw oklch(0 0 0 / 0.25)' }}>{d.tag}</span>}
+            {d.tag && <span style={{ position: 'absolute', top: '7cqw', insetInlineEnd: '-15cqw', width: '56cqw', height: '8cqw', background: '#fff', color: dk, display: 'flex', alignItems: 'center', justifyContent: 'center', font: 'var(--fw-extrabold) 3.8cqw/1 var(--font-sans)', transform: 'rotate(' + (rtl ? -35 : 35) + 'deg)', boxShadow: '0 1cqw 2cqw oklch(0 0 0 / 0.25)' }}>{d.tag}</span>}
             <div style={{ position: 'absolute', insetInline: 0, bottom: 0, height: '50%', background: c, padding: '3cqw 5.2cqw', display: 'flex', alignItems: 'center', gap: '4cqw', color: ink }}>
               <span style={{ display: 'flex', flexDirection: 'column', flex: 'none' }}>
                 {d.kicker && <span style={{ ...T.kicker, fontSize: '4.2cqw' }}>{d.kicker}</span>}

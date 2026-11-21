@@ -54,7 +54,7 @@ export function Home() {
           <LocationBar a={a} light style={{ position: 'relative' }} />
           <button type="button" onClick={() => a.go('listing')} style={{ position: 'relative', width: '100%', marginTop: 20, display: 'flex', alignItems: 'center', gap: 10, height: 44, paddingInline: '16px 5px', border: 'none', cursor: 'pointer', borderRadius: 'var(--radius-pill)', background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)', fontFamily: 'var(--font-sans)' }}>
             <Icon name="search" size={20} color="var(--text-tertiary)" />
-            <span style={{ flex: 1, minWidth: 0, font: 'var(--type-body)', fontWeight: 500, color: 'var(--text-tertiary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'start' }}>{t.search}</span>
+            <span style={{ flex: 1, minWidth: 0, font: 'var(--type-body)', fontWeight: 'var(--fw-medium)', color: 'var(--text-tertiary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'start' }}>{t.search}</span>
             <span style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--brand)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="sliders-horizontal" size={16} /></span>
           </button>
           {/* Companies' stories as circles, under the search bar. */}
@@ -77,7 +77,7 @@ export function Home() {
               <span style={{ width: '100%', aspectRatio: '1 / 0.68', borderRadius: 16, background: 'var(--surface-card)', border: '1px solid var(--border-default)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {art ? <img src={art} alt="" style={{ width: 36, height: 36 }} /> : <Icon name={c.icon} size={24} color={'var(--cat-' + c.color + '-600)'} />}
               </span>
-              <span style={{ font: 'var(--type-caption)', fontWeight: 600, color: 'var(--text-primary)', textAlign: 'center', lineHeight: 1.25 }}>{name}</span>
+              <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-primary)', textAlign: 'center', lineHeight: 1.25 }}>{name}</span>
             </button>
           ))}
         </div>
@@ -122,7 +122,7 @@ export function Home() {
                 <button key={al.id} type="button" className="mj-press-sm" onClick={p.open}
                   style={{ flex: 'none', width: 150, padding: 0, border: 'none', background: 'none', cursor: 'pointer', scrollSnapAlign: 'start', textAlign: 'start', fontFamily: 'var(--font-sans)', color: 'var(--text-primary)', display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <span style={{ position: 'relative', width: '100%', aspectRatio: '1', borderRadius: 14, overflow: 'hidden', background: p.c100 }}><Img src={photo(al.img, 400)} /></span>
-                  <span style={{ font: 'var(--type-body-sm)', fontWeight: 700, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.title}</span>
+                  <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)', lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.title}</span>
                   <span style={{ marginTop: -4, font: 'var(--type-caption)', color: 'var(--text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.company} · {p.place}</span>
                 </button>
               );
@@ -228,8 +228,8 @@ export function LocationSheet() {
           {/* Governorate heading: a tinted band with the name in bold and how many wilayats it has. */}
           <span style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 14, marginBottom: 2, padding: '9px 12px', borderRadius: 12, background: 'var(--brand-tint)', color: 'var(--brand-ink)' }}>
             <Icon name="map-pin" size={15} />
-            <span style={{ flex: 1, font: 'var(--type-body-strong)', fontWeight: 800 }}>{ar ? g.ar : g.en}</span>
-            <span style={{ font: 'var(--type-caption)', fontWeight: 600, opacity: 0.75 }}>{helpers(a).num(g.wilayats.length)}</span>
+            <span style={{ flex: 1, font: 'var(--type-body-strong)', fontWeight: 'var(--fw-extrabold)' }}>{ar ? g.ar : g.en}</span>
+            <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', opacity: 0.75 }}>{helpers(a).num(g.wilayats.length)}</span>
           </span>
           {list.map(x => {
             const on = x.id === cur;

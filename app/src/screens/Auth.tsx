@@ -61,7 +61,7 @@ export function AuthSheet() {
 
   const title = step === 'signup' ? t.createAccount : step === 'reset' ? t.resetTitle : step === 'newpw' ? t.newPwTitle : t.signIn;
   const link = (label: string, onClick: () => void) => (
-    <button type="button" onClick={onClick} style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 700, color: 'var(--brand)' }}>{label}</button>
+    <button type="button" onClick={onClick} style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)', color: 'var(--brand)' }}>{label}</button>
   );
   const muted = { font: 'var(--type-body-sm)', color: 'var(--text-secondary)', margin: 0 } as const;
 
@@ -92,7 +92,7 @@ export function AuthSheet() {
                 <TextField label={step === 'newpw' ? t.newPwTitle : t.password} type="password" value={pw} onChange={setPw} icon="lock"
                   helper={step === 'signup' || step === 'newpw' ? t.pwHint : undefined} />
               )}
-              {err && <p role="alert" style={{ ...muted, color: 'var(--danger)', fontWeight: 600 }}>{err}</p>}
+              {err && <p role="alert" style={{ ...muted, color: 'var(--danger)', fontWeight: 'var(--fw-semibold)' }}>{err}</p>}
               <Button fullWidth loading={busy} onClick={submit}>
                 {step === 'signup' ? t.createAccount : step === 'reset' ? t.sendLink : step === 'newpw' ? t.savePw : t.signIn}
               </Button>
