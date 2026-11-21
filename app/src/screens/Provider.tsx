@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
-import { Avatar, Badge, BottomSheet, Button, Chip, EmptyState, Icon, IconButton, ListItem, OfferArt, SearchBar, SectionHeader, offerColor, type OfferArtData } from '../ds';
+import { Avatar, Badge, BottomSheet, Button, Chip, EmptyState, Icon, IconButton, ListItem, OfferArt, SectionHeader, offerColor, type OfferArtData } from '../ds';
 import { DEFAULT_F, useApp, type CoSort, type Filters, type OfferSort, type SheetKey } from '../app/store';
 import { catOf, ContactGrid, HScroll, Img, MetaLine, preloadPhotos, useNear, albumMedia, callPhone, card, categoryServiceChips, companyGallery, companyPreview, covers, helpers, listingCompanies, LocationBar, myGov, servesArea, openDirections, openWhatsApp, serviceImage, type Media } from '../app/view';
 import { logoUrl, photo, remote } from '../data/api';
@@ -277,22 +277,25 @@ export function Listing() {
           {chipStrip(false)}
         </div>
       </div>
-      <div ref={headRef} style={{ position: 'relative', overflow: 'hidden', padding: 'var(--top-inset) 0 4px', background: 'var(--cat-' + color + '-600)', borderRadius: '0 0 28px 28px', color: '#fff' }}>
+      <div ref={headRef} style={{ position: 'relative', overflow: 'hidden', padding: 'var(--top-inset) 0 4px', background: 'var(--cat-' + color + '-600)', color: '#fff' }}>
         <span style={{ position: 'absolute', insetInlineEnd: -50, top: -40, width: 200, height: 200, borderRadius: '50%', background: 'oklch(1 0 0 / 0.14)' }} />
-        {/* Back, and the app's service location at the very top (it filters the list: only companies covering it). */}
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '8px 16px' }}>
+        {/* Top row: Back, and a small search box half the width at the other end (searches this category only; every company on the
+            all-companies page). */}
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px' }}>
           <IconButton icon="arrow-left" variant="glass" size={34} onClick={a.back} label="Back" />
-          <LocationBar a={a} light />
+          <label style={{ flex: '0 1 50%', minWidth: 0, marginInlineStart: 'auto', display: 'flex', alignItems: 'center', gap: 8, height: 34, paddingInline: 12, borderRadius: 'var(--radius-pill)', background: 'var(--surface-card)', color: 'var(--text-primary)', cursor: 'text' }}>
+            <Icon name="search" size={16} color="var(--text-tertiary)" />
+            <input type="search" value={f.q} onChange={e => set({ q: e.target.value })} placeholder={t.searchCos} aria-label={t.searchCos}
+              style={{ flex: 1, minWidth: 0, height: '100%', padding: 0, border: 'none', outline: 'none', background: 'transparent', font: 'var(--fw-regular) 12px/16px var(--font-sans)', color: 'var(--text-primary)' }} />
+          </label>
         </div>
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 14, padding: '6px 20px 18px' }}>
+        {/* The app's service location (it filters the list: only companies covering it), then the title. */}
+        <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 10, padding: '10px 20px 20px' }}>
+          <LocationBar a={a} light style={{ alignSelf: 'flex-start' }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
             <span style={{ font: 'var(--type-h2)' }}>{title}</span>
             <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', opacity: 0.9 }}>{res.length + ' ' + t.results}</span>
           </div>
-        </div>
-        {/* The search box (searches this category only; every company on the all-companies page). */}
-        <div style={{ position: 'relative', padding: '0 20px 20px' }}>
-          <SearchBar placeholder={t.search} value={f.q} onChange={e => set({ q: e.target.value })} onFilter={null} elevated style={{ height: 46 }} />
         </div>
       </div>
       {/* The category's common services as chips: one at a time (another chip switches to it; the selected one again

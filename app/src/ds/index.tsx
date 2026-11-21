@@ -121,7 +121,8 @@ const IB: Record<string, Style> = {
   surface: { background: 'var(--surface-card)', color: 'var(--text-primary)', boxShadow: 'var(--shadow-sm)' },
   outline: { background: 'transparent', color: 'var(--text-primary)', boxShadow: 'inset 0 0 0 1.5px var(--border-default)' },
   plain: { background: 'transparent', color: 'var(--text-primary)' },
-  glass: { background: 'oklch(1 0 0 / 0.85)', color: 'var(--text-primary)', backdropFilter: 'var(--blur-bar)', WebkitBackdropFilter: 'var(--blur-bar)' },
+  // Solid white (no see-through), with a soft shadow so it stands out on photos and coloured headers.
+  glass: { background: '#fff', color: 'var(--text-primary)', boxShadow: '0 1px 4px oklch(0.2 0.03 285 / 0.18)' },
 };
 export function IconButton({ icon, variant = 'surface', size = 44, dot, active, label, onClick, style }: {
   icon: string; variant?: keyof typeof IB; size?: number; dot?: boolean; active?: boolean; label?: string;

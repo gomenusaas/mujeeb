@@ -47,7 +47,9 @@ export function pathToStack(path: string, catalog: Catalog, stories: Story[]): {
     const cat = b === 'photo' ? undefined : Number(b);
     return { stack: [{ s: 'explore' }, { s: 'photo', src: 'explore', ...(cat != null && !isNaN(cat) ? { cat } : {}), i: Number(b === 'photo' ? c : d) || 0 }], tab: 'explore' };
   }
-  if (a === 'categories' || a === 'offers' || a === 'explore' || a === 'profile') return { stack: [{ s: a }], tab: a };
+  // All services: a page opened from home (no tab of its own).
+  if (a === 'categories') return { stack: [home, { s: 'categories' }], tab: 'home' };
+  if (a === 'offers' || a === 'explore' || a === 'profile') return { stack: [{ s: a }], tab: a };
   // A service opens over its company's page (in the service's activity), so Back goes to the company.
   const atService = (id: string): Route[] => { const sv = catalog.services.find(x => x.id === id)!; return [{ s: 'company', id: sv.co, act: sv.cat }, { s: 'service', id: sv.id }]; };
   if (a === 'company' && b && has.co(b)) {

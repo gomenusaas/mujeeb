@@ -14,8 +14,12 @@ import { STORIES } from './data/stories';
 import { Bookings, Notifications, Profile } from './screens/Account';
 import { AuthSheet } from './screens/Auth';
 
+/** Pages opened while browsing that keep the bottom bar (see Phone). */
+const BROWSE: Route['s'][] = ['categories', 'listing', 'company', 'service', 'offer', 'album'];
+
 const TABS: { id: RootTab; icon: string }[] = [
-  { id: 'home', icon: 'house' }, { id: 'categories', icon: 'layout-grid' }, { id: 'explore', icon: 'search' }, { id: 'offers', icon: 'tag' },
+  // No «الخدمات» tab: home shows the services (its «عرض الكل» opens the full list when some aren't on the grid).
+  { id: 'home', icon: 'house' }, { id: 'explore', icon: 'search' }, { id: 'offers', icon: 'tag' },
   { id: 'profile', icon: 'user-round' },
 ];
 
@@ -110,7 +114,11 @@ function Phone() {
     return () => { stop(); evs.forEach(e => el.removeEventListener(e, stop)); };
   }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const showTabs = stack.length === 1 && TABS.some(x => x.id === top.s);
+  // The bottom bar: on the five tab pages, and while browsing from them (category, company, service, offer and project
+  // pages). Hidden for focused steps: booking, bookings and notifications (own top bar), and the photo and story viewers.
+  // The highlighted tab is the one the browsing started from; tapping a tab goes back to its page.
+  const rootPage = stack.length === 1 && TABS.some(x => x.id === top.s);
+  const showTabs = rootPage || (BROWSE.includes(top.s) && !overlay);
   const company = top.s === 'company' ? a.idx.co.get(top.id!) : undefined;
   // Company behind the menu and directions on the company page.
   const reachCo = company;
@@ -124,6 +132,8 @@ function Phone() {
         </div>
         <div className="mj-s mj-scroll" ref={scrollRef}>
           <ScreenSwitch route={base} />
+          {/* Room under a browsing page's content for the bottom bar (the tab pages leave their own). */}
+          {showTabs && !rootPage && <div aria-hidden="true" style={{ height: 'calc(84px + var(--safe-bottom))' }} />}
         </div>
         {/* Long pages (category list and gallery, company page, Explore) get a back-to-top button. */}
         {!overlay && (base.s === 'listing' || base.s === 'offers' || base.s === 'company' || base.s === 'explore') && <BackToTop key={key} el={scrollRef} aboveTabs={showTabs} />}
@@ -181,7 +191,7 @@ function DemoPanel() {
   const jump = (routes: Route[], tb: RootTab = 'home') => () => a.reset(routes, tb);
   const H: Route = { s: 'home' };
   const jumps: [string, () => void][] = [
-    ['Home', jump([H])], ['Categories', jump([{ s: 'categories' }], 'categories')], ['Offers', jump([{ s: 'offers' }], 'offers')], ['Listing · AC', jump([H, { s: 'listing', cat: 1 }])],
+    ['Home', jump([H])], ['Categories', jump([H, { s: 'categories' }])], ['Offers', jump([{ s: 'offers' }], 'offers')], ['Listing · AC', jump([H, { s: 'listing', cat: 1 }])],
     ['Company profile', jump([H, { s: 'company', id: 'c4' }])], ['Service details', jump([H, { s: 'company', id: 'g1-1', act: 4 }, { s: 'service', id: 'sg1-1-2' }])], ['Album', jump([H, { s: 'album', id: 'a3' }])],
     ['Book site visit', () => { a.reset([H, { s: 'company', id: 'c4' }], 'home'); setTimeout(() => a.startBk('c4'), 0); }],
     ['My bookings', jump([{ s: 'profile' }, { s: 'bookings' }], 'profile')], ['Explore', jump([{ s: 'explore' }], 'explore')],

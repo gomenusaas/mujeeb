@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Avatar, BottomSheet, Button, Chip, EmptyState, Icon, SectionHeader } from '../ds';
+import { Avatar, BottomSheet, Button, Chip, EmptyState, Icon, IconButton, SectionHeader } from '../ds';
 import { useApp } from '../app/store';
 import { HScroll, Img, LocationBar, card, exploreMedia, helpers, myGov, servesArea } from '../app/view';
 import { ALL_OMAN } from '../data/oman';
@@ -32,6 +32,7 @@ export function Home() {
       return c ? [{ c, name: a.ar ? x.ar : x.en, art: x.icon ? '/art/flat/' + x.icon + '.svg' : c.art && flatArt(c.art) }] : [];
     })
     : catalog.cats.slice(0, 9).map(c => ({ c, name: h.cshort(c.i), art: c.art && flatArt(c.art) }));
+  const more = catalog.cats.some(c => !tiles.some(x => x.c.i === c.i));
   // Everything below follows the service location: companies (and their projects) that cover it.
   const local = catalog.companies.filter(co => servesArea(a, co.id));
   const localAlbums = catalog.albums.filter(al => servesArea(a, al.co));
@@ -69,7 +70,8 @@ export function Home() {
           their names and icons (catalog.home, up to 9); otherwise the first 9 categories with their short names. No «عرض الكل»:
           all services are here (and in the «الخدمات» tab). */}
       <section aria-label={t.categories} style={{ padding: '0 20px', marginTop: -18, display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <SectionHeader title={t.categories} action={null} />
+        {/* «عرض الكل» only when some services aren't on the grid (the admin picked fewer, or there are more than 9). */}
+        <SectionHeader title={t.categories} action={more ? t.seeAll : null} onAction={() => a.go('categories')} />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '14px 12px' }}>
           {tiles.map(({ c, name, art }, k) => (
             <button key={k} type="button" className="mj-press-sm" onClick={() => a.go('listing', { cat: c.i })}
@@ -140,7 +142,9 @@ export function Categories() {
   const h = helpers(a);
   return (
     <div style={{ ...ROOT_PAD, display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      {/* Opened from home's «عرض الكل» (no tab of its own), so it has Back. */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 12 }}>
+        {a.stack.length > 1 && <IconButton icon="arrow-left" variant="glass" size={34} onClick={a.back} label="Back" />}
         <span style={{ font: 'var(--type-h2)' }}>{t.allCats}</span>
       </div>
       {/* A plain list on the page: each service's flat icon and name, a thin line between rows (no cards). */}
