@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { Avatar, Badge, BottomSheet, Button, Chip, EmptyState, Icon, IconButton, ListItem, OfferArt, SectionHeader, offerColor, type OfferArtData } from '../ds';
 import { DEFAULT_F, useApp, type CoSort, type Filters, type OfferSort, type SheetKey } from '../app/store';
-import { catOf, ColorHeader, ContactGrid, HScroll, Img, MetaLine, preloadPhotos, useNear, albumMedia, callPhone, card, categoryServiceChips, companyGallery, companyPreview, covers, helpers, listingCompanies, myGov, servesArea, openDirections, openWhatsApp, serviceImage, type Media } from '../app/view';
+import { catOf, ColorHeader, companyMatches, searchMatch, ContactGrid, HScroll, Img, MetaLine, preloadPhotos, useNear, albumMedia, callPhone, card, categoryServiceChips, companyGallery, companyPreview, covers, helpers, listingCompanies, myGov, servesArea, openDirections, openWhatsApp, serviceImage, type Media } from '../app/view';
 import { logoUrl, photo, remote } from '../data/api';
 import { ALL_OMAN } from '../data/oman';
 import { demoOfferLook, liveOffersOf, offerAge, offerKind, offerServices } from '../data/offers';
@@ -321,11 +321,11 @@ export function Listing() {
   );
 }
 
-type ListedOffer = { o: Offer; co: Company; near: boolean };
+export type ListedOffer = { o: Offer; co: Company; near: boolean };
 
 /** One offer in a list: the advert (opens the offer) with the company on a slim line under it (opens the company,
  * in the offer's activity or `cat`). */
-function OfferItem({ x: { o, co }, cat }: { x: ListedOffer; cat?: number | null }) {
+export function OfferItem({ x: { o, co }, cat }: { x: ListedOffer; cat?: number | null }) {
   const a = useApp();
   const v = helpers(a).coV(co);
   const act = cat ?? o.svc.cat;
@@ -343,23 +343,90 @@ function OfferItem({ x: { o, co }, cat }: { x: ListedOffer; cat?: number | null 
   );
 }
 
+/** Companies covering the service location, in category `cat` (null: all), matching the search `q` (see
+ * companyMatches; best matches first), then verified first and those with the most projects. */
+export function listCompanies(a: ReturnType<typeof useApp>, q: string, cat: number | null): Company[] {
+  const hits = companyMatches(a, q);
+  const projects = (id: string) => a.catalog.albums.filter(al => al.co === id).length;
+  return a.catalog.companies
+    .filter(co => servesArea(a, co.id) && (cat == null || co.cats.includes(cat)) && (!hits || hits.has(co.id)))
+    .sort((x, y) => (hits ? (hits.get(y.id) ?? 0) - (hits.get(x.id) ?? 0) : 0) || Number(y.verified) - Number(x.verified) || projects(y.id) - projects(x.id));
+}
+
+/** Explore's «الشركات» segment: the companies as cards (cover photo, then logo, name, town and coverage), PAGE at a time. */
+export function CompaniesFeed({ list }: { list: Company[] }) {
+  const a = useApp();
+  const h = helpers(a);
+  const [shown, setShown] = useState(PAGE);
+  useEffect(() => setShown(PAGE), [list.length]);
+  const more = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = more.current;
+    if (!el) return;
+    const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) setShown(n => n + PAGE); }, { rootMargin: '600px 0px' });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [shown, list.length]);
+  return (
+    <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {list.slice(0, shown).map(co => {
+        const v = h.coV(co);
+        return (
+          <div key={co.id} onClick={v.open} style={{ ...card, overflow: 'hidden', cursor: 'pointer' }}>
+            <div style={{ position: 'relative', aspectRatio: '16/9', maxHeight: 190, width: '100%', background: v.c100 }}><Img src={v.cover} /></div>
+            <CompanyCardInfo v={v} />
+          </div>
+        );
+      })}
+      {shown < list.length && <div ref={more} aria-hidden="true" style={{ height: 1 }} />}
+    </div>
+  );
+}
+
 /**
- * The «العروض» tab, only offers from companies covering the app's service location (LocationBar at the top), in
- * sections like a store's deals page: «عروض مميزة» (a big swipeable advert per sponsored company; DEMO sponsors, a
- * paid spot later), «تنتهي قريبًا» (a sideways strip of smaller adverts, one per company), then «كل العروض»:
- * category chips, the sort button and every offer as a wide advert with its company line, PAGE at a time.
+ * Offers from companies covering the app's service location (all of them for all of Oman), in category `cat` (null:
+ * all), that match the search `q` (offer text, service, category and company names).
  */
-export function OffersTab() {
+export function listOffers(a: ReturnType<typeof useApp>, q: string, cat: number | null = null): ListedOffer[] {
+  const g = myGov(a);
+  const m = searchMatch(q);
+  const c = (i: number) => catOf(a.catalog, i);
+  const hit = (x: ListedOffer) => !m || m(x.o.title, x.o.kicker, x.o.big, x.o.on, x.o.svc.ar, x.o.svc.en, x.co.ar, x.co.en, c(x.o.svc.cat)?.ar, c(x.o.svc.cat)?.en);
+  return a.catalog.companies.filter(co => servesArea(a, co.id)).flatMap(co => companyOffers(a, co).map(o => ({ o, co, near: covers(co, g) })))
+    .filter(x => (cat == null || x.o.svc.cat === cat) && hit(x));
+}
+/** How many offers listOffers found, in words («٥٢ عرضًا»). */
+export const offersCount = (a: ReturnType<typeof useApp>, n: number) => countOf(a, n, OFFER_W);
+
+/**
+ * «العروض»: every offer in the service location, a page of its own opened from home's «عرض الكل» by its offers
+ * (Back returns home). White header with the location, title, count and a search field for the offers.
+ */
+export function OffersPage() {
+  const a = useApp();
+  const [q, setQ] = useState('');
+  const n = listOffers(a, q).length;
+  return (
+    <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column', gap: 16, background: 'var(--surface-card)' }}>
+      <ColorHeader a={a} back title={a.t.offers} count={offersCount(a, n)} q={q} onQ={setQ} placeholder={a.t.searchOffers} />
+      <OffersFeed q={q} onClear={() => setQ('')} />
+    </div>
+  );
+}
+
+/**
+ * The offers page's content, in sections like a store's deals page: «عروض مميزة» (a big swipeable advert per
+ * sponsored company; DEMO sponsors, a paid spot later), «تنتهي قريبًا» (a sideways strip of smaller adverts, one per
+ * company), then «كل العروض»: category chips, the sort button and every offer as a wide advert with its company line,
+ * PAGE at a time. `q`: the page's search; `onClear` empties it.
+ */
+export function OffersFeed({ q, onClear }: { q: string; onClear: () => void }) {
   const a = useApp();
   const { t, catalog, ofCat, setOfCat, ofSort } = a;
   const h = helpers(a);
   const g = myGov(a);
-  // Only offers from companies covering the service location (all of them for all of Oman).
-  // The search box in the header narrows the whole page (offer text, service and company names).
-  const [q, setQ] = useState('');
   const n = q.trim().toLowerCase();
-  const hit = (x: ListedOffer) => !n || [x.o.title, x.o.kicker, x.o.big, x.o.on, x.o.svc.ar, x.o.svc.en, x.co.ar, x.co.en].some(v => (v || '').toLowerCase().includes(n));
-  const all = catalog.companies.filter(co => servesArea(a, co.id)).flatMap(co => companyOffers(a, co).map(o => ({ o, co, near: covers(co, g) }))).filter(hit);
+  const all = listOffers(a, q);
   const chips = catalog.cats.map(x => x.i).filter(i => all.some(x => x.o.svc.cat === i));
   const cat = ofCat >= 0 && chips.includes(ofCat) ? ofCat : null;
   const offers = sortOffers(all.filter(x => cat == null || x.o.svc.cat === cat), ofSort);
@@ -381,11 +448,9 @@ export function OffersTab() {
   }, [shown, offers.length]);
   const title = (x: string) => <div style={{ padding: '0 20px' }}><SectionHeader title={x} action={null} /></div>;
   return (
-    <div style={{ minHeight: '100%', paddingBottom: 100, display: 'flex', flexDirection: 'column', gap: 24, background: 'var(--surface-card)' }}>
-      {/* The page is white all the way down. The header (like the category pages): search, the service location, the title and how many offers. */}
-      <ColorHeader a={a} title={t.offers} count={countOf(a, all.length, OFFER_W)} q={q} onQ={setQ} placeholder={t.searchOffers} />
-      {/* Nothing in this area: say so, and offer all of Oman. */}
-      {!all.length && n && <EmptyState icon="search-x" title={t.noResults} body={t.noResultsBody} action={<Button variant="secondary" onClick={() => setQ('')}>{t.clear}</Button>} />}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      {/* Nothing matches the search: say so, with a way back. Nothing in this area: offer all of Oman. */}
+      {!all.length && n && <EmptyState icon="search-x" title={t.noResults} body={t.noResultsBody} action={<Button variant="secondary" onClick={onClear}>{t.clear}</Button>} />}
       {!all.length && !n && g && (
         <EmptyState icon="badge-percent" title={t.noOffersArea} body={t.noOffersAreaBody}
           action={<Button variant="secondary" iconLeft="globe" onClick={() => a.setWilayat(ALL_OMAN)}>{t.showAllOman}</Button>} />
@@ -430,7 +495,7 @@ export function OffersTab() {
 /**
  * The home page's offers: one big advert per company covering the service location (the soonest-ending first,
  * sponsored companies first: DEMO sponsors), up to 5, each a different offer in a different design, to swipe
- * through. «الكل» opens the «العروض» tab.
+ * through. «عرض الكل» opens the offers page.
  */
 export function HomeOffers() {
   const a = useApp();
@@ -463,7 +528,7 @@ export function HomeOffers() {
   if (!list.length) return null;
   return (
     <section aria-label={a.t.featuredOffers} style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <div style={{ padding: '0 20px' }}><SectionHeader title={a.t.featuredOffers} action={a.t.seeAll} onAction={() => a.setTab('offers')} /></div>
+      <div style={{ padding: '0 20px' }}><SectionHeader title={a.t.featuredOffers} action={a.t.seeAll} onAction={() => a.go('offers')} /></div>
       <HeroOffers list={list} />
     </section>
   );
@@ -501,7 +566,7 @@ function HeroOffers({ list }: { list: ListedOffer[] }) {
 }
 
 /** A smaller advert in a sideways strip, the company's logo and name under it. `countdown`: a red «باقٍ …» pill beside the name. */
-function StripOffer({ x: { o, co }, countdown }: { x: ListedOffer; countdown?: boolean }) {
+export function StripOffer({ x: { o, co }, countdown }: { x: ListedOffer; countdown?: boolean }) {
   const a = useApp();
   const v = helpers(a).coV(co);
   return (
@@ -543,7 +608,7 @@ function sortOffers(list: ListedOffer[], by: OfferSort): ListedOffer[] {
 
 const CO_SORTS: [CoSort, 'relevance' | 'sortRecentWork' | 'sortProjects' | 'sortFollowers'][] = [['rel', 'relevance'], ['recent', 'sortRecentWork'], ['projects', 'sortProjects'], ['followers', 'sortFollowers']];
 const OFFER_SORTS: [OfferSort, 'relevance' | 'sortSoon' | 'recent'][] = [['rel', 'relevance'], ['soon', 'sortSoon'], ['new', 'recent']];
-/** The current order and its choices: the companies' on a category page, the offers' on the «العروض» tab. */
+/** The current order and its choices: the companies' on a category page, the offers' on the offers page. */
 function useListSort() {
   const a = useApp();
   const offers = a.page.s === 'offers';

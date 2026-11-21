@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Avatar, Badge, BottomSheet, Button, Icon, ListItem } from '../ds';
+import { Avatar, Badge, BottomSheet, Button, EmptyState, Icon, ListItem } from '../ds';
 import { useApp } from '../app/store';
 import { TopBar, card, helpers, openWhatsApp } from '../app/view';
 import { BK_ST, NOTIFS, PURPOSES } from '../i18n/strings';
@@ -93,6 +93,19 @@ export function Profile() {
           </div>
         </BottomSheet>
       </div>, document.querySelector('.mj-frame') || document.body)}
+    </div>
+  );
+}
+
+/**
+ * «المحفوظات» (Saved tab): a placeholder for now. Later it lists the companies, projects and offers the customer saved.
+ */
+export function Saved() {
+  const { t } = useApp();
+  return (
+    <div style={{ ...ROOT, gap: 18 }}>
+      <span style={{ font: 'var(--type-h2)' }}>{t.saved}</span>
+      <EmptyState icon="bookmark" title={t.savedSoon} body={t.savedSoonBody} />
     </div>
   );
 }

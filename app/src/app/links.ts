@@ -31,7 +31,7 @@ export function routeToPath(r: Route): string {
       : r.src === 'explore' ? '/explore/' + (r.cat != null ? r.cat + '/' : '') + 'photo/' + (r.i ?? 0)
       : '/' + (r.src === 'service' ? 'service' : 'album') + '/' + r.id + '/photo/' + (r.i ?? 0);
     case 'story': return '/story/' + r.id;
-    case 'categories': case 'offers': case 'explore': case 'profile': return '/' + r.s;
+    case 'categories': case 'offers': case 'explore': case 'saved': case 'profile': return '/' + r.s;
     default: return '/';
   }
 }
@@ -49,7 +49,9 @@ export function pathToStack(path: string, catalog: Catalog, stories: Story[]): {
   }
   // All services: a page opened from home (no tab of its own).
   if (a === 'categories') return { stack: [home, { s: 'categories' }], tab: 'home' };
-  if (a === 'offers' || a === 'explore' || a === 'profile') return { stack: [{ s: a }], tab: a };
+  // The offers page opens from home, so Back goes there.
+  if (a === 'offers') return { stack: [home, { s: 'offers' }], tab: 'home' };
+  if (a === 'explore' || a === 'saved' || a === 'profile') return { stack: [{ s: a }], tab: a };
   // A service opens over its company's page (in the service's activity), so Back goes to the company.
   const atService = (id: string): Route[] => { const sv = catalog.services.find(x => x.id === id)!; return [{ s: 'company', id: sv.co, act: sv.cat }, { s: 'service', id: sv.id }]; };
   if (a === 'company' && b && has.co(b)) {

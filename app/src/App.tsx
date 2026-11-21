@@ -6,20 +6,21 @@ import type { Catalog, CustomerSeed } from './data/types';
 import { NOTIFS, STR } from './i18n/strings';
 import { useDragScroll } from './app/useDragScroll';
 import { Categories, Explore, Home, LocationSheet } from './screens/Discover';
-import { ActivitySheet, AlbumPage, CompanyPage, CompanySheet, GallerySheet, Listing, OfferPage, OffersTab, ReachSheets, ServicePage, ServicesSheet, SortSheet, WorkPreviewSheet } from './screens/Provider';
+import { ActivitySheet, AlbumPage, CompanyPage, CompanySheet, GallerySheet, Listing, OfferPage, OffersPage, ReachSheets, ServicePage, ServicesSheet, SortSheet, WorkPreviewSheet } from './screens/Provider';
 import { BookingPage, DonePage } from './screens/Flows';
 import { StoryViewer } from './screens/Stories';
 import { PhotoViewer } from './screens/Photo';
 import { STORIES } from './data/stories';
-import { Bookings, Notifications, Profile } from './screens/Account';
+import { Bookings, Notifications, Profile, Saved } from './screens/Account';
 import { AuthSheet } from './screens/Auth';
 
 /** Pages opened while browsing that keep the bottom bar (see Phone). */
-const BROWSE: Route['s'][] = ['categories', 'listing', 'company', 'service', 'offer', 'album'];
+const BROWSE: Route['s'][] = ['categories', 'offers', 'listing', 'company', 'service', 'offer', 'album'];
 
 const TABS: { id: RootTab; icon: string }[] = [
   // No «الخدمات» tab: home shows the services (its «عرض الكل» opens the full list when some aren't on the grid).
-  { id: 'home', icon: 'house' }, { id: 'explore', icon: 'compass' }, { id: 'offers', icon: 'tag' },
+  // Offers are a page opened from home («عرض الكل» by its offers); «المحفوظات» took their tab.
+  { id: 'home', icon: 'house' }, { id: 'explore', icon: 'compass' }, { id: 'saved', icon: 'bookmark' },
   { id: 'profile', icon: 'user-round' },
 ];
 
@@ -169,8 +170,9 @@ function ScreenSwitch({ route }: { route: Route }) {
   switch (route.s) {
     case 'home': return <Home />;
     case 'categories': return <Categories />;
-    case 'offers': return <OffersTab />;
+    case 'offers': return <OffersPage />;
     case 'explore': return <Explore />;
+    case 'saved': return <Saved />;
     case 'profile': return <Profile />;
     case 'listing': return <Listing />;
     case 'company': return <CompanyPage />;
@@ -191,7 +193,7 @@ function DemoPanel() {
   const jump = (routes: Route[], tb: RootTab = 'home') => () => a.reset(routes, tb);
   const H: Route = { s: 'home' };
   const jumps: [string, () => void][] = [
-    ['Home', jump([H])], ['Categories', jump([H, { s: 'categories' }])], ['Offers', jump([{ s: 'offers' }], 'offers')], ['Listing · AC', jump([H, { s: 'listing', cat: 1 }])],
+    ['Home', jump([H])], ['Categories', jump([H, { s: 'categories' }])], ['Offers', jump([H, { s: 'offers' }])], ['Listing · AC', jump([H, { s: 'listing', cat: 1 }])],
     ['Company profile', jump([H, { s: 'company', id: 'c4' }])], ['Service details', jump([H, { s: 'company', id: 'g1-1', act: 4 }, { s: 'service', id: 'sg1-1-2' }])], ['Album', jump([H, { s: 'album', id: 'a3' }])],
     ['Book site visit', () => { a.reset([H, { s: 'company', id: 'c4' }], 'home'); setTimeout(() => a.startBk('c4'), 0); }],
     ['My bookings', jump([{ s: 'profile' }, { s: 'bookings' }], 'profile')], ['Explore', jump([{ s: 'explore' }], 'explore')],

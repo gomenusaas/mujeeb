@@ -111,6 +111,31 @@ function searchIndex(catalog: Catalog) {
 /** The words of a search, folded. A leading «ال» is dropped from longer words, so «المطابخ» also finds «مطابخ». */
 const searchWords = (q: string) => fold(q).trim().split(' ').filter(Boolean).map(w => (w.length > 4 && w.startsWith('ال') ? w.slice(2) : w));
 
+/**
+ * A matcher for the search `q`, null when it's empty: true when every search word appears (folded, «ال» dropped)
+ * somewhere in the fields given. Used by Explore and the offers page.
+ */
+export function searchMatch(q: string): ((...fields: (string | undefined | null)[]) => boolean) | null {
+  const words = searchWords(q);
+  if (!words.length) return null;
+  return (...fields) => { const hay = fold(fields.filter(Boolean).join(' | ')); return words.every(w => hay.includes(w)); };
+}
+/**
+ * The companies matching the search `q` with the category page's index (names, categories, services, keywords,
+ * sub-services, descriptions, project titles): id → how many words matched the strong fields. Null when `q` is empty.
+ */
+export function companyMatches(a: App, q: string): Map<string, number> | null {
+  const words = searchWords(q);
+  if (!words.length) return null;
+  const idx = searchIndex(a.catalog);
+  const out = new Map<string, number>();
+  for (const co of a.catalog.companies) {
+    const { strong, weak } = idx.get(co.id)!;
+    if (words.every(w => strong.includes(w) || weak.includes(w))) out.set(co.id, words.filter(w => strong.includes(w)).length);
+  }
+  return out;
+}
+
 /** The governorate of the customer's service location (what company coverage is checked against); null when unknown. */
 export function myGov(a: App): GovId | null {
   if (a.wilayat === ALL_OMAN) return null;
@@ -435,23 +460,27 @@ export function LocationBar({ a, light, style }: { a: App; light?: boolean; styl
  * `color`: the header colour (a category's); none = a white header, title first (Explore, Offers). `boxRef`: the header
  * element (the category page watches it to show its slim header).
  */
-export function ColorHeader({ a, title, count, color, back, q, onQ, placeholder, boxRef }: {
-  a: App; title: ReactNode; count?: ReactNode; color?: string; back?: boolean; q: string; onQ: (v: string) => void;
-  placeholder: string; boxRef?: Ref<HTMLDivElement>;
+export function ColorHeader({ a, title, count, color, back, q, onQ, placeholder, boxRef, onSubmit }: {
+  a: App; title?: ReactNode; count?: ReactNode; color?: string; back?: boolean; q: string; onQ: (v: string) => void;
+  placeholder: string; boxRef?: Ref<HTMLDivElement>; onSubmit?: () => void;
 }) {
   const light = !!color;
   // White pages (Explore, Offers): title first. The location, the title and count, then a full-width search field.
   if (!light) {
     return (
       <div ref={boxRef} style={{ padding: 'calc(var(--top-inset) + 8px) 20px 14px', display: 'flex', flexDirection: 'column', gap: 10, background: 'var(--surface-card)', color: 'var(--text-primary)' }}>
+        {back && <IconButton icon="arrow-left" variant="glass" size={34} onClick={a.back} label="Back" style={{ alignSelf: 'flex-start' }} />}
         <LocationBar a={a} style={{ alignSelf: 'flex-start', maxWidth: '100%' }} />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-          <span style={{ font: 'var(--type-h2)' }}>{title}</span>
-          {count != null && <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-secondary)' }}>{count}</span>}
-        </div>
+        {title != null && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+            <span style={{ font: 'var(--type-h2)' }}>{title}</span>
+            {count != null && <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-secondary)' }}>{count}</span>}
+          </div>
+        )}
         <label style={{ display: 'flex', alignItems: 'center', gap: 8, height: 40, marginTop: 4, paddingInline: 14, borderRadius: 'var(--radius-pill)', background: 'var(--surface-card)', boxShadow: 'inset 0 0 0 1px var(--border-default)', cursor: 'text' }}>
           <Icon name="search" size={17} color="var(--text-tertiary)" />
           <input type="search" value={q} onChange={e => onQ(e.target.value)} placeholder={placeholder} aria-label={placeholder}
+            onKeyDown={e => { if (e.key === 'Enter') { onSubmit?.(); (e.target as HTMLInputElement).blur(); } }}
             style={{ flex: 1, minWidth: 0, height: '100%', padding: 0, border: 'none', outline: 'none', background: 'transparent', font: 'var(--fw-regular) 14px/20px var(--font-sans)', color: 'var(--text-primary)' }} />
         </label>
       </div>

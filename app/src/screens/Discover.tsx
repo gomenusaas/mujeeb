@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Avatar, BottomSheet, Button, Chip, EmptyState, Icon, IconButton, SectionHeader } from '../ds';
 import { useApp } from '../app/store';
-import { ColorHeader, HScroll, Img, LocationBar, albumMedia, card, exploreMedia, helpers, myGov, servesArea } from '../app/view';
+import { ColorHeader, HScroll, Img, LocationBar, albumMedia, card, exploreMedia, helpers, myGov, searchMatch, servesArea } from '../app/view';
 import { ALL_OMAN } from '../data/oman';
 import { photo } from '../data/api';
 import type { Album } from '../data/types';
 import { StoryCircles } from './Stories';
-import { HomeOffers, Masonry, PRJ_W, countOf } from './Provider';
+import { CompaniesFeed, HomeOffers, Masonry, PRJ_W, countOf, listCompanies } from './Provider';
 
 const ROOT_PAD = { padding: 'calc(var(--top-inset) + 8px) 20px 100px' };
 
@@ -163,52 +163,83 @@ export function Categories() {
 }
 
 
+type ResultTab = 'work' | 'cos';
+
 /**
- * «استكشف الأعمال»: photos and videos from inside companies' projects (minus what they hid), in the
- * daily mix, as a 3-column masonry that loads 30 at a time. A tap opens the full-screen viewer,
- * which links to the project.
+ * «استكشف» (the Explore tab), top to bottom: the service location (it filters everything here), the search field,
+ * service chips («الكل» and each service with work in the area) and the gallery of photos from companies' projects
+ * (the daily mix; a tap opens the full-screen viewer).
+ * A search runs when Enter is pressed: then two tabs appear, «المشاريع» (default: photos of matching projects) and
+ * «الشركات» (matching companies). The service chip narrows both. Emptying the field goes back to the gallery.
  */
 export function Explore() {
   const a = useApp();
-  const { t, catalog, exCat, setExCat } = a;
+  const { t, catalog } = a;
   const h = helpers(a);
-  // A chip for every category with published projects in the service location.
-  const chips = catalog.cats.map(c => c.i).filter(i => catalog.albums.some(al => al.cat === i && servesArea(a, al.co)));
-  const cat = exCat < 0 ? undefined : exCat;
-  // The search box in the header narrows the photos to projects whose title, place, company or service matches.
   const [q, setQ] = useState('');
-  const n = q.trim().toLowerCase();
-  const match = (al: Album) => {
+  // The search that ran (Enter); '' = none, the plain gallery shows.
+  const [ran, setRan] = useState('');
+  const [cat, setCat] = useState<number | null>(null);
+  const [tab, setTab] = useState<ResultTab>('work');
+  const onQ = (v: string) => { setQ(v); if (!v.trim()) setRan(''); };
+  const run = () => { setRan(q.trim()); setTab('work'); };
+  const searching = !!ran;
+
+  // Chips: every service with published work in the service location.
+  const chips = catalog.cats.map(c => c.i).filter(i => catalog.albums.some(al => al.cat === i && servesArea(a, al.co)));
+  // Photos: the area's projects (in the chosen service), and while searching, only projects matching the search.
+  const m = searchMatch(ran);
+  const albumOk = (al: Album) => {
     const co = a.idx.co.get(al.co);
-    return [al.ar, al.en, al.pAr, al.pEn, co?.ar, co?.en, h.cname(al.cat)].some(v => (v || '').toLowerCase().includes(n));
+    return !m || m(al.ar, al.en, al.pAr, al.pEn, al.dAr, al.dEn, co?.ar, co?.en, h.cname(al.cat));
   };
-  const items = exploreMedia(a, cat).filter(m => !n || (m.al && match(m.al)));
-  const projects = new Set(items.map(m => m.al?.id)).size;
-  // A tapped photo opens in the Explore viewer; while searching, in its own project's viewer (the Explore viewer
-  // doesn't know about the search, so its numbering would point at another photo).
+  const media = exploreMedia(a, cat ?? undefined).filter(x => !searching || (x.al && albumOk(x.al)));
+  const projects = new Set(media.map(x => x.al?.id)).size;
+  const cos = searching ? listCompanies(a, ran, cat) : [];
+  // A photo opens in the Explore viewer; found by a search, in its own project's viewer (the Explore viewer shows
+  // the unfiltered mix, so its numbering would point at another photo).
   const open = (k: number) => {
-    const m = items[k];
-    if (n && m.al) a.go('photo', { src: 'album', id: m.al.id, i: Math.max(0, albumMedia(m.al).findIndex(x => x.src === m.src)) });
+    const x = media[k];
+    if (searching && x.al) a.go('photo', { src: 'album', id: x.al.id, i: Math.max(0, albumMedia(x.al).findIndex(y => y.src === x.src)) });
     else a.go('photo', { src: 'explore', i: k, ...(cat != null ? { cat } : {}) });
   };
+  const empty = (icon: string) => (
+    <EmptyState icon={searching ? 'search-x' : icon} title={t.noResults} body={searching ? t.noResultsBody : myGov(a) ? t.noOffersAreaBody : undefined}
+      action={searching ? <Button variant="secondary" onClick={() => onQ('')}>{t.clear}</Button>
+        : myGov(a) ? <Button variant="secondary" iconLeft="globe" onClick={() => a.setWilayat(ALL_OMAN)}>{t.showAllOman}</Button> : undefined} />
+  );
+
   return (
-    <div style={{ minHeight: '100%', padding: '0 0 100px', display: 'flex', flexDirection: 'column', gap: 16, background: 'var(--surface-card)' }}>
-      {/* The coloured header (like the category pages): search, the service location (only work from companies
-          covering it), the title and how many projects. */}
-      <ColorHeader a={a} title={t.exploreTitle} count={countOf(a, projects, PRJ_W)} q={q} onQ={setQ} placeholder={t.searchWork} />
-      <div className="mj-s" style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '0 20px', scrollbarWidth: 'none' }}>
-        <Chip selected={exCat < 0} onClick={() => setExCat(-1)}>{t.all}</Chip>
-        {chips.map(i => <Chip key={i} selected={exCat === i} onClick={() => setExCat(i)}>{h.cshort(i)}</Chip>)}
+    <div style={{ minHeight: '100%', padding: '0 0 100px', display: 'flex', flexDirection: 'column', gap: 14, background: 'var(--surface-card)' }}>
+      {/* The service location, then the search field (runs on Enter). */}
+      <ColorHeader a={a} q={q} onQ={onQ} placeholder={t.searchAll} onSubmit={run} />
+      {/* Service chips: narrow the gallery, or both result tabs. */}
+      <div className="mj-s" style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '0 20px', scrollbarWidth: 'none', marginTop: -6 }}>
+        <Chip selected={cat == null} onClick={() => setCat(null)}>{t.all}</Chip>
+        {chips.map(i => <Chip key={i} selected={cat === i} onClick={() => setCat(i)}>{h.cshort(i)}</Chip>)}
       </div>
-      {/* Narrow side margins (same as the gap between tiles) so the pictures get the width. */}
-      {/* Nothing from this area: say so, and offer all of Oman. */}
-      {!items.length && (
-        <EmptyState icon="images" title={t.noResults} body={myGov(a) ? t.noOffersAreaBody : undefined}
-          action={myGov(a) ? <Button variant="secondary" iconLeft="globe" onClick={() => a.setWilayat(ALL_OMAN)}>{t.showAllOman}</Button> : undefined} />
+      {/* After a search: «المشاريع» (default) and «الشركات», with how many each found. */}
+      {searching && (
+        <div role="tablist" style={{ display: 'flex', borderBottom: '1px solid var(--border-subtle)', padding: '0 20px' }}>
+          {([['work', t.segProjects, projects], ['cos', t.segCos, cos.length]] as [ResultTab, string, number][]).map(([k, label, n]) => (
+            <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
+              style={{ flex: 1, height: 44, marginBottom: -1, padding: 0, border: 'none', borderBottom: '2px solid ' + (tab === k ? 'var(--brand)' : 'transparent'), background: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', font: 'var(--type-body)', fontWeight: tab === k ? 'var(--fw-semibold)' : 'var(--fw-regular)', color: tab === k ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
+              {label + ' ' + h.num(n)}
+            </button>
+          ))}
+        </div>
       )}
-      <div style={{ padding: '0 6px' }}>
-        <Masonry key={exCat + '|' + n} cols={3} items={items} onOpen={open} />
-      </div>
+      {(!searching || tab === 'work') && <>
+        {!media.length && empty('images')}
+        {/* Narrow side margins (same as the gap between tiles) so the pictures get the width. */}
+        <div style={{ padding: '0 6px' }}>
+          <Masonry key={ran + '|' + cat} cols={3} items={media} onOpen={open} />
+        </div>
+      </>}
+      {searching && tab === 'cos' && <>
+        {!cos.length && empty('building-2')}
+        <CompaniesFeed list={cos} />
+      </>}
     </div>
   );
 }

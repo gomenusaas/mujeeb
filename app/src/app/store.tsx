@@ -7,9 +7,9 @@ import { hasOffer, pathToStack, routeToPath, shareLink } from './links';
 import { shownStories } from '../data/stories';
 import { ALL_OMAN, DEFAULT_WILAYAT, OMAN, findWilayat, wilayatLabel } from '../data/oman';
 
-export type Screen = 'home' | 'categories' | 'offers' | 'explore' | 'profile' | 'listing' | 'company' | 'service' | 'offer' | 'album'
+export type Screen = 'home' | 'categories' | 'offers' | 'explore' | 'saved' | 'profile' | 'listing' | 'company' | 'service' | 'offer' | 'album'
   | 'booking' | 'bkDone' | 'bookings' | 'notifs' | 'story' | 'photo';
-export type RootTab = 'home' | 'categories' | 'offers' | 'explore' | 'profile';
+export type RootTab = 'home' | 'categories' | 'offers' | 'explore' | 'saved' | 'profile';
 /** `src` + `i`: which photo a `photo` route shows (of the album or service `id`). */
 export interface Route { s: Screen; id?: string; cat?: number; co?: string; src?: 'album' | 'service' | 'gallery' | 'explore'; i?: number;
   /** Company page (and its gallery viewer): the activity (category) shown; missing = all activities. */
@@ -86,7 +86,6 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
   /** The company whose work the «preview» sheet shows (from a category page card). */
   const [previewCo, setPreviewCo] = useState<string | null>(null);
   const openPreview = useCallback((id: string) => { setPreviewCo(id); setSheet('preview'); }, []);
-  const [exCat, setExCat] = useState(-1);
   // Notifications looked at this session (the «حسابي» tab shows a dot until then).
   const [notifsSeen, setNotifsSeen] = useState(false);
   // The «العروض» tab: its category chip (-1: all) and order.
@@ -305,7 +304,7 @@ export function useAppState(catalog: Catalog, seed: CustomerSeed) {
 
   return {
     catalog, idx, coById, sharePage, lang, setLang, ar, t, stack, top, page, scroller, tab, setTab, go, back, replace, reset, toast, showToast,
-    fav, toggleFav, f, setF, sheet, setSheet, previewCo, openPreview, exCat, setExCat, notifsSeen, setNotifsSeen, ofCat, setOfCat, ofSort, setOfSort,
+    fav, toggleFav, f, setF, sheet, setSheet, previewCo, openPreview, notifsSeen, setNotifsSeen, ofCat, setOfCat, ofSort, setOfSort,
     bookings, setBookings,
     bk, setBk, startBk, submitBooking, days, seen, markSeen, follows, toggleFollow,
     wilayat, setWilayat, places, locLabel: wilayat === ALL_OMAN ? t.allOman : wilayatLabel(places, wilayat, ar),
